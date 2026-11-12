@@ -1,0 +1,13 @@
+
+services:
+  app:
+    # Image is built by "initializeCommand" in devcontainer.json (plain `docker build`).
+    # Don't use `build:` here: Compose 5 builds via buildx bake, which rejects the
+    # Dockerfile the Dev Containers extension generates outside the build context.
+    image: lead-roll-devcontainer
+    volumes:
+      - ../:/workspace
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: sleep infinity
+    ports:
+      - "3000:3000"
