@@ -3,8 +3,7 @@
 CRM para cadastrar, distribuir e acompanhar leads imobiliários entre
 corretores. O login usa **Supabase Auth**, e o perfil de cada usuário (gestor
 ou corretor) fica na tabela `profiles`, protegida por RLS. Leads, observações,
-distribuição e presença ainda são fictícios: voltam ao estado inicial quando a
-página é recarregada.
+distribuição e presença ainda não estão implementados: as telas aparecem vazias.
 
 Stack: Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS v4,
 shadcn/ui e Supabase (`@supabase/ssr`).
@@ -67,7 +66,7 @@ O script é idempotente e cria (ou atualiza) estas contas, todas com a senha
 | `ana@leadroll.demo` | corretora |
 | `carlos@leadroll.demo` | corretor |
 | `juliana@leadroll.demo` | corretora |
-| `marcos@leadroll.demo` | corretor (começa ausente) |
+| `marcos@leadroll.demo` | corretor |
 
 Todo usuário criado de outra forma (pelo painel, por exemplo) entra como
 corretor. Para promover alguém a gestor, rode no SQL Editor:

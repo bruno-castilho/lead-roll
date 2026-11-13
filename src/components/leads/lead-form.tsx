@@ -25,7 +25,6 @@ import { LEAD_INTERESTS, LEAD_SOURCES } from "@/lib/constants";
 import { formatPhone } from "@/lib/format";
 import type { Lead, LeadInput } from "@/lib/types";
 import { fieldErrors, leadSchema } from "@/lib/validation";
-import { useAppStore } from "@/store/app-store";
 
 interface LeadFormProps {
   open: boolean;
@@ -94,7 +93,6 @@ function Field({
 }
 
 export function LeadForm({ open, onOpenChange, lead }: LeadFormProps) {
-  const { createLead, updateLead } = useAppStore();
   const isEdit = !!lead;
   const [values, setValues] = useState<FormState>(() => toFormState(lead));
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -137,10 +135,10 @@ export function LeadForm({ open, onOpenChange, lead }: LeadFormProps) {
     };
 
     if (lead) {
-      updateLead(lead.id, input);
+      // Sem implementação.
       toast.success("Lead atualizado com sucesso", { description: input.name });
     } else {
-      createLead(input);
+      // Sem implementação.
       toast.success("Lead cadastrado com sucesso", {
         description: `${input.name} foi adicionado aos leads sem responsável.`,
       });

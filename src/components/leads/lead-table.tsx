@@ -12,18 +12,18 @@ import {
 } from "@/components/ui/table";
 import { INTEREST_LABEL, SOURCE_LABEL } from "@/lib/constants";
 import { formatDate, formatDateTime } from "@/lib/format";
-import type { Lead } from "@/lib/types";
-import { useAppStore } from "@/store/app-store";
+import type { Lead, User } from "@/lib/types";
 import { BrokerCell } from "./broker-cell";
 import { type LeadActionHandlers, LeadRowActions } from "./lead-row-actions";
 
 interface LeadTableProps extends LeadActionHandlers {
   leads: Lead[];
+  brokers: User[];
 }
 
 /** Tabela de leads do gestor (desktop) + listagem compacta em cards (mobile). */
-export function LeadTable({ leads, ...handlers }: LeadTableProps) {
-  const { getUser } = useAppStore();
+export function LeadTable({ leads, brokers, ...handlers }: LeadTableProps) {
+  const getBroker = (id: string | null) => brokers.find((b) => b.id === id);
 
   return (
     <Fragment>
@@ -70,7 +70,7 @@ export function LeadTable({ leads, ...handlers }: LeadTableProps) {
                   <StageBadge stage={lead.stage} />
                 </TableCell>
                 <TableCell className="max-w-44">
-                  <BrokerCell broker={getUser(lead.brokerId)} />
+                  <BrokerCell broker={getBroker(lead.brokerId)} />
                 </TableCell>
                 <TableCell className="hidden whitespace-nowrap text-muted-foreground text-xs lg:table-cell">
                   {formatDateTime(lead.assignedAt)}
@@ -122,7 +122,7 @@ export function LeadTable({ leads, ...handlers }: LeadTableProps) {
                 </span>
               </div>
               <div className="mt-3 flex items-center justify-between gap-2 border-t pt-2.5">
-                <BrokerCell broker={getUser(lead.brokerId)} />
+                <BrokerCell broker={getBroker(lead.brokerId)} />
                 <span className="shrink-0 text-muted-foreground text-xs">
                   {lead.assignedAt ? formatDate(lead.assignedAt) : "—"}
                 </span>

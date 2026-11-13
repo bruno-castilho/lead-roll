@@ -9,7 +9,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useLeadStats } from "@/hooks/use-lead-stats";
 import type { UserRole } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { NAV_ITEMS } from "./nav-items";
@@ -26,14 +25,11 @@ export function SidebarNav({
   onNavigate,
 }: SidebarNavProps) {
   const pathname = usePathname();
-  const { unassigned } = useLeadStats();
 
   return (
     <nav className="flex flex-col gap-0.5" aria-label="Navegação principal">
       {NAV_ITEMS[role].map((item) => {
         const active = pathname === item.href;
-        const badge =
-          item.label === "Leads" && unassigned > 0 ? unassigned : null;
         const link = (
           <Link
             key={item.href}
@@ -53,11 +49,6 @@ export function SidebarNav({
               aria-hidden
             />
             {!collapsed && <span className="truncate">{item.label}</span>}
-            {!collapsed && badge !== null && (
-              <span className="ml-auto rounded-full bg-primary/10 px-1.5 py-0.5 font-medium text-[11px] text-primary tabular-nums">
-                {badge}
-              </span>
-            )}
             {collapsed && <span className="sr-only">{item.label}</span>}
           </Link>
         );

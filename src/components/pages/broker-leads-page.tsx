@@ -9,10 +9,16 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
 import { useChangeStage } from "@/hooks/use-change-stage";
 import { useResetOnHide } from "@/hooks/use-reset-on-hide";
-import { useAppStore } from "@/store/app-store";
+import { useSession } from "@/hooks/use-session";
+import type { Lead, User } from "@/lib/types";
+
+// Leads, corretores e presença ainda sem fonte de dados.
+const leads: Lead[] = [];
+const brokers: User[] = [];
+const isPresent = false;
 
 export function BrokerLeadsPage() {
-  const { leads, currentUser } = useAppStore();
+  const { profile } = useSession();
   const changeStage = useChangeStage();
   const [viewingId, setViewingId] = useState<string | null>(null);
 
@@ -20,15 +26,15 @@ export function BrokerLeadsPage() {
 
   // Permissão: o corretor enxerga exclusivamente os leads atribuídos a ele.
   const myLeads = useMemo(
-    () => leads.filter((l) => currentUser && l.brokerId === currentUser.id),
-    [leads, currentUser],
+    () => leads.filter((l) => profile && l.brokerId === profile.id),
+    [profile],
   );
 
   return (
     <div className="space-y-5">
       <PageHeader title="Meus leads" />
 
-      {currentUser && !currentUser.isPresent && (
+      {!isPresent && (
         <div className="flex flex-col gap-3 rounded-xl border border-dashed p-4 sm:flex-row sm:items-center">
           <div className="flex-1">
             <p className="font-medium text-sm">Você está ausente</p>
@@ -47,7 +53,7 @@ export function BrokerLeadsPage() {
             icon={Inbox}
             title="Nenhum lead atribuído a você"
             description={
-              currentUser?.isPresent
+              isPresent
                 ? "Você está disponível. Novos leads aparecerão aqui após a próxima distribuição do gestor."
                 : "Confirme sua presença para participar da próxima distribuição de leads."
             }
@@ -62,6 +68,8 @@ export function BrokerLeadsPage() {
       )}
 
       <LeadDetails
+        leads={leads}
+        brokers={brokers}
         mode="broker"
         leadId={viewingId}
         onOpenChange={(open) => !open && setViewingId(null)}

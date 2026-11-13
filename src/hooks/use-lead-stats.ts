@@ -2,11 +2,9 @@
 
 import { useMemo } from "react";
 import { ACTIVE_STAGES } from "@/lib/constants";
-import { useAppStore } from "@/store/app-store";
+import type { Lead, User } from "@/lib/types";
 
-export function useLeadStats() {
-  const { leads, brokers } = useAppStore();
-
+export function useLeadStats(leads: Lead[], brokers: User[]) {
   return useMemo(() => {
     const unassigned = leads.filter((l) => l.brokerId === null).length;
     const byBroker = brokers.map((broker) => {

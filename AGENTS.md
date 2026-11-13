@@ -13,8 +13,9 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 CRM para gerenciamento e distribuição de leads imobiliários entre corretores.
 Etapa atual: **frontend com autenticação real**. O login usa Supabase Auth, e o
 perfil (gestor ou corretor) fica na tabela `profiles`, protegida por RLS. Leads,
-observações, distribuição e presença continuam fictícios, no estado local do
-React. A interface e os textos são em português (pt-BR).
+observações, distribuição e presença ainda **não têm fonte de dados**: os dados
+chegam vazios e as ações não fazem nada. A interface e os textos são em
+português (pt-BR).
 
 ## Regras desta etapa
 
@@ -25,9 +26,13 @@ React. A interface e os textos são em português (pt-BR).
 - Continua proibido criar API routes, Route Handlers, Server Actions,
   `proxy.ts`, leitura de `cookies()` em Server Components e outras integrações
   externas. Nada além da tabela `profiles` vai para o banco nesta etapa.
-- Leads, observações, distribuição e presença vêm de `src/data/mock.ts` e do
-  estado em `src/store`. Ao recarregar a página, eles voltam ao estado inicial
-  (a sessão continua).
+- Não há mocks, store nem implementação local. As páginas
+  (`manager-leads-page`, `manager-brokers-page`, `broker-leads-page`) declaram
+  `leads` e `brokers` como `[]` e repassam por props; `isPresent` é `false`.
+  Os pontos que executariam ações (salvar e excluir lead, mudar etapa,
+  adicionar observação, distribuir, alternar presença) estão marcados com
+  `// Sem implementação.`, à espera dos serviços reais. Não recriar dados
+  fictícios nem lógica local para eles.
 - Variáveis de ambiente (modelo em `.env.example`; `.env.local` não é
   versionado): `NEXT_PUBLIC_SUPABASE_URL` e
   `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`. A chave `service_role` nunca entra no
@@ -82,9 +87,7 @@ Antes de concluir qualquer mudança, rode `npm run lint`, `npx tsc --noEmit` e
 - A tela "Visão geral" (dashboard) foi **removida de propósito**. Não recriar
   sem pedido.
 - As contas são criadas no painel do Supabase (Authentication → Users). O
-  trigger cria o perfil como corretor; o gestor é promovido por SQL. Os leads
-  mock usam os e-mails `ana@`, `carlos@`, `juliana@` e `marcos@leadroll.demo`
-  (Marcos começa ausente).
+  trigger cria o perfil como corretor; o gestor é promovido por SQL.
 
 ## Estrutura de pastas
 
@@ -99,42 +102,28 @@ src/
     observations/      ObservationForm, ObservationList
     brokers/           BrokerCard
     shared/            EmptyState, LoadingState, PageHeader, Pagination, SearchInput, badges, Kbd
-    providers/         ThemeProvider, SessionProvider, AppStoreProvider, TooltipProvider, Toaster
+    providers/         ThemeProvider, SessionProvider, TooltipProvider, Toaster
     ui/                shadcn/ui (gerado; o lint fica desligado aqui)
-  store/               reducer.ts (transições puras) e app-store.tsx (Context + ações)
   contexts/session.tsx SessionProvider: user, session, profile e ready da sessão do Supabase
-  services/            auth-service.ts (AuthService: signIn, signOut, getProfile, restoreSession, listProfiles, onSignedOut)
+  services/            auth-service.ts (AuthService: signIn, signOut, getProfile, restoreSession, onSignedOut)
   errors/              SignInError, SignOutError, ProfileError e AuthServiceError
-  lib/                 tipos, constantes, distribuição, filtros, formatação, validação (Zod)
+  lib/                 tipos, constantes, filtros, formatação, validação (Zod)
     supabase/          client.ts (getSupabaseClient) e database.types.ts
   hooks/               useSession, useLeadStats, useChangeStage, useHotkey, useMediaQuery, useResetOnHide
-  data/mock.ts         leads fictícios e presença inicial dos corretores
 supabase/migrations/   SQL da tabela profiles, trigger e RLS
 ```
 
 ## Estado e dados
 
-- Há **uma única fonte de verdade**: `AppStoreProvider` (`src/store/app-store.tsx`).
-  Os componentes leem e alteram dados apenas por `useAppStore()`. Não criar
-  estados paralelos de leads ou usuários.
-- As mudanças passam pelo `appReducer`, que é puro. Para um recurso novo, crie a
-  ação no reducer e exponha um método no store. Isso mantém fácil trocar os mocks
-  por serviços reais no futuro.
-- Os leads são criados no `useEffect` que acompanha a sessão (`session/login`), não no
-  initializer do `useState`. Com `cacheComponents`, chamar `Date.now()` ou
-  `new Date()` durante a renderização quebra o prerender. Gere datas e ids só
-  em efeitos ou handlers.
-- A autenticação fica no `SessionProvider` (`useSession()`), que envolve o
-  `AppStoreProvider`. Ele restaura a sessão (`AuthService.restoreSession`) e
-  assina `onSignedOut` (logout em outra aba, sessão revogada), limpando a
-  sessão. O store não faz login nem logout: ele observa `profile` e, quando
-  muda, carrega `listProfiles` e despacha `session/login`, ou `session/logout`
-  quando é `null`. `session/logout` zera usuários, leads e cursor, para nada
-  vazar ao próximo login na mesma aba.
-- `ready` (no store) indica que a sessão foi restaurada **e** o estado local
-  corresponde a ela (`currentUserId === profile?.id`). Antes disso o estado
-  está vazio. Como depende da rede, o `LoadingState` pode aparecer por mais
-  tempo.
+- Com `cacheComponents`, chamar `Date.now()` ou `new Date()` durante a
+  renderização quebra o prerender. Gere datas e ids só em efeitos ou handlers.
+- A sessão fica no `SessionProvider` (`useSession()`). Ele restaura a sessão
+  (`AuthService.restoreSession`) e assina `onSignedOut` (logout em outra aba,
+  sessão revogada), limpando a sessão. O usuário conectado é `profile`
+  (`AuthProfile`), usado pelo `RoleGuard`, pelo menu do usuário e pela página
+  `/`.
+- `ready` (no `useSession()`) indica que a restauração da sessão terminou.
+  Como depende da rede, o `LoadingState` pode aparecer por mais tempo.
 - Login: `AuthService.signIn({ email, password })` retorna
   `{ user, session, weakPassword }` ou lança `SignInError` (mensagem pronta em
   pt-BR). O perfil é buscado depois, por `AuthService.getProfile(user.id)`
@@ -145,28 +134,23 @@ supabase/migrations/   SQL da tabela profiles, trigger e RLS
 - Logout: `clearSession()` limpa o estado na hora e depois
   `AuthService.signOut()` avisa o servidor (lança `SignOutError` se ele não
   confirmou; o usuário sai mesmo assim).
-- `users` vem de `listProfiles()`: o gestor vê todos os perfis e o corretor só
-  o próprio (RLS). O perfil vem **sempre** da tabela `profiles`, nunca de
-  `user_metadata` (o usuário pode alterá-lo). `isPresent` é local e começa por
-  `initialPresence` (`INITIAL_PRESENCE_BY_EMAIL` em `mock.ts`).
-- Os leads mock são ligados aos perfis por `brokerEmail`
-  (`createMockLeads(now, brokerIdByEmail)`). E-mail sem perfil visível deixa o
-  lead sem responsável.
-- O responsável do lead é guardado como `brokerId`. Para obter o nome, use
-  `getUser(id)`.
+- O perfil vem **sempre** da tabela `profiles`, nunca de `user_metadata` (o
+  usuário pode alterá-lo). A RLS deixa o gestor ler todos os perfis e o
+  corretor só o próprio.
+- O responsável do lead é guardado como `brokerId`. O nome vem da lista
+  `brokers` recebida por props.
 - Etapas (`LeadStage`): `new`, `contacted`, `visit_scheduled`, `proposal`,
   `won`, `lost`. Os rótulos e as cores de cada etapa estão em `constants.ts`.
   `ACTIVE_STAGES` define o que conta como "em atendimento".
 
 ### Distribuição (round-robin)
 
-- Toda a lógica fica em `src/lib/distribution.ts`. `planDistribution` gera a
-  prévia e `applyDistribution` aplica o resultado. O diálogo e o reducer usam
-  as mesmas funções, para que a prévia e o resultado nunca divirjam.
-- Entram somente leads sem responsável (os mais antigos primeiro) e corretores
-  com `isPresent`. Cada lead distribuído recebe `stage: "new"` e `assignedAt`.
-- `roundRobinCursor` guarda o último corretor que recebeu um lead. A próxima
-  distribuição começa no corretor seguinte da lista completa.
+- A confirmação da distribuição ainda está vazia; a regra fica para o serviço real. O
+  diálogo só mostra quantos leads estão sem responsável e quantos corretores
+  estão com `isPresent`.
+- Regra esperada: entram somente leads sem responsável (os mais antigos
+  primeiro) e corretores presentes, em rodízio que continua do último corretor
+  atendido. Cada lead distribuído recebe `stage: "new"` e `assignedAt`.
 
 ## Permissões
 
@@ -185,7 +169,7 @@ supabase/migrations/   SQL da tabela profiles, trigger e RLS
   - Sem sessão, o guard redireciona para `/login`. Com o perfil errado,
     redireciona para a página inicial do próprio perfil, e o conteúdo protegido
     não é renderizado.
-- O corretor vê apenas leads com `brokerId === currentUser.id`. Ele não
+- O corretor vê apenas leads com `brokerId === profile.id`. Ele não
   cadastra, não exclui, não muda o responsável e não distribui leads.
 - O gestor não altera a etapa de um lead. Nos detalhes, ele vê as observações
   apenas para leitura.
@@ -262,6 +246,5 @@ supabase/migrations/   SQL da tabela profiles, trigger e RLS
 Não há suíte de testes no repositório. Para validar fluxos, configure um
 projeto Supabase em `.env.local` (veja o `README.md`), crie as contas,
 rode `npm run build` e `npx next start -p <porta>` e use Playwright (instalado fora do projeto) para
-percorrer login, cadastro, distribuição, Kanban (arrastar e menu "Mover para"),
-observações, guard de perfil, mobile (360/390px), dark mode e console sem
-erros. Não encerre um `next dev` do usuário que já esteja rodando na porta 3000.
+percorrer login, logout, guard de perfil, estados vazios, mobile (360/390px),
+dark mode e console sem erros. Não encerre um `next dev` do usuário que já esteja rodando na porta 3000.

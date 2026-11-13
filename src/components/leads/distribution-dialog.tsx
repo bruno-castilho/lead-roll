@@ -2,11 +2,8 @@
 
 import { ArrowRight, Inbox, Shuffle, UserX } from "lucide-react";
 import Link from "next/link";
-import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { EmptyState } from "@/components/shared/empty-state";
-import { Spinner } from "@/components/shared/loading-state";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -18,41 +15,33 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ROUTES } from "@/lib/constants";
-import { planDistribution } from "@/lib/distribution";
-import { getInitials, pluralize } from "@/lib/format";
-import { useAppStore } from "@/store/app-store";
+import { pluralize } from "@/lib/format";
+import type { Lead, User } from "@/lib/types";
 
 interface DistributionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  leads: Lead[];
+  brokers: User[];
 }
 
-/** Confirmação e prévia da distribuição em rodízio dos leads sem responsável. */
+/** Confirmação da distribuição em rodízio dos leads sem responsável. */
 export function DistributionDialog({
   open,
   onOpenChange,
+  leads,
+  brokers,
 }: DistributionDialogProps) {
-  const { leads, users, brokers, roundRobinCursor, distributeLeads } =
-    useAppStore();
-  const [running, setRunning] = useState(false);
-
-  const plan = useMemo(
-    () => planDistribution(leads, users, roundRobinCursor),
-    [leads, users, roundRobinCursor],
-  );
-  const pendingCount = plan.leads.length;
-  const brokerCount = plan.brokers.length;
+  const pendingCount = leads.filter((l) => l.brokerId === null).length;
+  const brokerCount = brokers.filter((b) => b.isPresent).length;
   const absentCount = brokers.length - brokerCount;
   const canDistribute = pendingCount > 0 && brokerCount > 0;
 
   function handleConfirm() {
-    setRunning(true);
-    // Operação síncrona no estado local; o indicador fica pronto para uma futura API.
-    const count = distributeLeads();
-    setRunning(false);
+    // Sem implementação.
     onOpenChange(false);
     toast.success("Distribuição realizada com sucesso", {
-      description: `${pluralize(count, "lead distribuído", "leads distribuídos")} entre ${pluralize(brokerCount, "corretor", "corretores")}.`,
+      description: `${pluralize(pendingCount, "lead distribuído", "leads distribuídos")} entre ${pluralize(brokerCount, "corretor", "corretores")}.`,
     });
   }
 
@@ -120,49 +109,16 @@ export function DistributionDialog({
               </div>
             </div>
 
-            <div>
-              <p className="mb-2 font-medium text-sm">Prévia por corretor</p>
-              <ul className="divide-y rounded-lg border">
-                {plan.brokers.map((broker, index) => {
-                  const count = plan.countByBroker.get(broker.id) ?? 0;
-                  return (
-                    <li
-                      key={broker.id}
-                      className="flex items-center gap-3 px-3 py-2.5"
-                    >
-                      <Avatar className="size-7">
-                        <AvatarFallback className="text-[11px]">
-                          {getInitials(broker.name)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate font-medium text-sm">
-                          {broker.name}
-                        </p>
-                        {index === 0 && (
-                          <p className="text-muted-foreground text-xs">
-                            Próximo no rodízio
-                          </p>
-                        )}
-                      </div>
-                      <span className="font-medium text-sm tabular-nums">
-                        {pluralize(count, "lead", "leads")}
-                      </span>
-                    </li>
-                  );
-                })}
-              </ul>
-              {absentCount > 0 && (
-                <p className="mt-2 text-muted-foreground text-xs">
-                  {pluralize(
-                    absentCount,
-                    "corretor ausente não participará",
-                    "corretores ausentes não participarão",
-                  )}{" "}
-                  desta distribuição.
-                </p>
-              )}
-            </div>
+            {absentCount > 0 && (
+              <p className="mt-2 text-muted-foreground text-xs">
+                {pluralize(
+                  absentCount,
+                  "corretor ausente não participará",
+                  "corretores ausentes não participarão",
+                )}{" "}
+                desta distribuição.
+              </p>
+            )}
           </div>
         )}
 
@@ -173,13 +129,8 @@ export function DistributionDialog({
             </Button>
           </DialogClose>
           {canDistribute && (
-            <Button
-              size="lg"
-              onClick={handleConfirm}
-              disabled={running}
-              autoFocus
-            >
-              {running ? <Spinner /> : <Shuffle />}
+            <Button size="lg" onClick={handleConfirm} autoFocus>
+              <Shuffle />
               Confirmar distribuição
             </Button>
           )}

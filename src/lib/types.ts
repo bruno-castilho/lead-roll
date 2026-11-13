@@ -5,7 +5,7 @@ export interface User {
   name: string;
   email: string;
   role: UserRole;
-  /** Presença local (ainda não persistida no banco). */
+  /** Presença do corretor (ainda sem fonte de dados). */
   isPresent: boolean;
 }
 

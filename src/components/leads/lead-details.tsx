@@ -29,11 +29,12 @@ import {
 import { useChangeStage } from "@/hooks/use-change-stage";
 import { INTEREST_LABEL, SOURCE_LABEL } from "@/lib/constants";
 import { formatDateTime, phoneDigits } from "@/lib/format";
-import type { Lead } from "@/lib/types";
-import { useAppStore } from "@/store/app-store";
+import type { Lead, User } from "@/lib/types";
 import { StageSelect } from "./stage-select";
 
 interface LeadDetailsProps {
+  leads: Lead[];
+  brokers: User[];
   leadId: string | null;
   onOpenChange: (open: boolean) => void;
   /** Gestor consulta e administra; corretor altera etapa e registra observações. */
@@ -66,20 +67,21 @@ function InfoRow({
 }
 
 export function LeadDetails({
+  leads,
+  brokers,
   leadId,
   onOpenChange,
   mode,
   onEdit,
   onDelete,
 }: LeadDetailsProps) {
-  const { leads, getUser, addObservation } = useAppStore();
   const changeStage = useChangeStage();
-  // Busca o lead no estado compartilhado para refletir alterações em tempo real.
+  // Busca o lead na lista recebida para refletir alterações em tempo real.
   const current = leadId ? leads.find((l) => l.id === leadId) : undefined;
   // Mantém o último lead exibido durante a animação de fechamento.
   const [lead, setLead] = useState<Lead | undefined>(current);
   if (current && current !== lead) setLead(current);
-  const broker = getUser(lead?.brokerId ?? null);
+  const broker = brokers.find((b) => b.id === lead?.brokerId);
 
   return (
     <Sheet open={!!current} onOpenChange={onOpenChange}>
@@ -215,7 +217,9 @@ export function LeadDetails({
                 </div>
                 {mode === "broker" && (
                   <ObservationForm
-                    onSubmit={(content) => addObservation(lead.id, content)}
+                    onSubmit={() => {
+                      // Sem implementação.
+                    }}
                   />
                 )}
                 <ObservationList observations={lead.observations} />

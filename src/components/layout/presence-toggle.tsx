@@ -8,8 +8,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useSession } from "@/hooks/use-session";
 import { cn } from "@/lib/utils";
-import { useAppStore } from "@/store/app-store";
 
 /** Controle de presença do corretor (Disponível / Ausente). */
 export function PresenceToggle({
@@ -20,14 +20,14 @@ export function PresenceToggle({
   /** Versão reduzida para o cabeçalho em telas pequenas. */
   compact?: boolean;
 }) {
-  const { currentUser, setPresence } = useAppStore();
-  if (!currentUser || currentUser.role !== "broker") return null;
+  const { profile } = useSession();
+  if (profile?.role !== "broker") return null;
 
-  const isPresent = currentUser.isPresent;
+  // Presença ainda sem fonte de dados.
+  const isPresent = false;
 
   function toggle() {
-    if (!currentUser) return;
-    setPresence(currentUser.id, !isPresent);
+    // Sem implementação.
     if (isPresent) {
       toast("Disponibilidade desativada", {
         description: "Você não receberá novos leads até confirmar presença.",

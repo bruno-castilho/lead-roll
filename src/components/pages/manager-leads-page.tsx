@@ -35,9 +35,8 @@ import {
   filterLeads,
   type LeadFilterState,
 } from "@/lib/lead-filters";
-import type { Lead } from "@/lib/types";
+import type { Lead, User } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { useAppStore } from "@/store/app-store";
 
 const QUICK_FILTERS: {
   value: BrokerFilter;
@@ -69,9 +68,12 @@ const QUICK_FILTERS: {
   },
 ];
 
+// Leads e corretores ainda sem fonte de dados.
+const leads: Lead[] = [];
+const brokers: User[] = [];
+
 export function ManagerLeadsPage() {
-  const { leads, brokers } = useAppStore();
-  const stats = useLeadStats();
+  const stats = useLeadStats(leads, brokers);
 
   const [filters, setFilters] = useState<LeadFilterState>(DEFAULT_LEAD_FILTERS);
   const [page, setPage] = useState(1);
@@ -83,7 +85,7 @@ export function ManagerLeadsPage() {
   const [deleting, setDeleting] = useState<Lead | null>(null);
   const [distributing, setDistributing] = useState(false);
 
-  const filtered = useMemo(() => filterLeads(leads, filters), [leads, filters]);
+  const filtered = useMemo(() => filterLeads(leads, filters), [filters]);
   const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
   const currentPage = Math.min(page, pageCount);
   const pageItems = filtered.slice(
@@ -276,7 +278,7 @@ export function ManagerLeadsPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          <LeadTable leads={pageItems} {...handlers} />
+          <LeadTable leads={pageItems} brokers={brokers} {...handlers} />
           <Pagination
             page={currentPage}
             pageSize={pageSize}
@@ -292,6 +294,8 @@ export function ManagerLeadsPage() {
 
       <LeadForm open={formOpen} onOpenChange={setFormOpen} lead={editing} />
       <LeadDetails
+        leads={leads}
+        brokers={brokers}
         mode="manager"
         leadId={viewingId}
         onOpenChange={(open) => !open && setViewingId(null)}
@@ -302,7 +306,12 @@ export function ManagerLeadsPage() {
         lead={deleting}
         onOpenChange={(open) => !open && setDeleting(null)}
       />
-      <DistributionDialog open={distributing} onOpenChange={setDistributing} />
+      <DistributionDialog
+        open={distributing}
+        onOpenChange={setDistributing}
+        leads={leads}
+        brokers={brokers}
+      />
     </div>
   );
 }

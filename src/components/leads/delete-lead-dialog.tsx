@@ -15,7 +15,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import type { Lead } from "@/lib/types";
-import { useAppStore } from "@/store/app-store";
 
 interface DeleteLeadDialogProps {
   lead: Lead | null;
@@ -28,13 +27,12 @@ export function DeleteLeadDialog({
   onOpenChange,
   onDeleted,
 }: DeleteLeadDialogProps) {
-  const { deleteLead } = useAppStore();
   const [shown, setShown] = useState<Lead | null>(lead);
   if (lead && lead !== shown) setShown(lead);
 
   function handleConfirm() {
     if (!lead) return;
-    deleteLead(lead.id);
+    // Sem implementação.
     toast.success("Lead excluído com sucesso", { description: lead.name });
     onDeleted?.(lead);
     onOpenChange(false);

@@ -17,11 +17,9 @@ import { useSession } from "@/hooks/use-session";
 import { ROUTES } from "@/lib/constants";
 import { getInitials } from "@/lib/format";
 import { AuthService } from "@/services/auth-service";
-import { useAppStore } from "@/store/app-store";
 
 export function UserMenu() {
-  const { currentUser } = useAppStore();
-  const { clearSession } = useSession();
+  const { profile: currentUser, clearSession } = useSession();
   const router = useRouter();
   if (!currentUser) return null;
 

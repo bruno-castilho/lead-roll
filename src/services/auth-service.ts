@@ -101,16 +101,6 @@ export const AuthService = {
     return { user: data.session.user, session: data.session };
   },
 
-  /** Perfis visíveis pela RLS: todos para o gestor, só o próprio para o corretor. */
-  async listProfiles(): Promise<AuthProfile[]> {
-    const { data, error } = await getSupabaseClient()
-      .from("profiles")
-      .select(PROFILE_COLUMNS)
-      .order("name");
-    if (error) throw new AuthServiceError(error);
-    return data.flatMap((row) => toProfile(row) ?? []);
-  },
-
   /**
    * Chama `callback` quando a sessão termina fora do fluxo normal (logout em
    * outra aba, sessão revogada, falha ao renovar o token).

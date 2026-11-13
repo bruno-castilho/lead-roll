@@ -7,11 +7,16 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLeadStats } from "@/hooks/use-lead-stats";
+import type { Lead, User } from "@/lib/types";
 
 type PresenceFilter = "all" | "present" | "absent";
 
+// Leads e corretores ainda sem fonte de dados.
+const leads: Lead[] = [];
+const brokers: User[] = [];
+
 export function ManagerBrokersPage() {
-  const { byBroker, availableBrokers } = useLeadStats();
+  const { byBroker, availableBrokers } = useLeadStats(leads, brokers);
   const [filter, setFilter] = useState<PresenceFilter>("all");
 
   const absent = byBroker.length - availableBrokers;
