@@ -4,6 +4,7 @@ import { ThemeProvider } from "next-themes";
 import type { ReactNode } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { SessionProvider } from "@/contexts/session";
 import { AppStoreProvider } from "@/store/app-store";
 
 export function Providers({ children }: { children: ReactNode }) {
@@ -14,12 +15,14 @@ export function Providers({ children }: { children: ReactNode }) {
       enableSystem
       disableTransitionOnChange
     >
-      <AppStoreProvider>
-        <TooltipProvider delayDuration={300}>
-          {children}
-          <Toaster position="bottom-right" closeButton />
-        </TooltipProvider>
-      </AppStoreProvider>
+      <SessionProvider>
+        <AppStoreProvider>
+          <TooltipProvider delayDuration={300}>
+            {children}
+            <Toaster position="bottom-right" closeButton />
+          </TooltipProvider>
+        </AppStoreProvider>
+      </SessionProvider>
     </ThemeProvider>
   );
 }

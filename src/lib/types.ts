@@ -4,9 +4,8 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  /** Somente para a simulação de login. Nunca usar em produção. */
-  password: string;
   role: UserRole;
+  /** Presença local (ainda não persistida no banco). */
   isPresent: boolean;
 }
 

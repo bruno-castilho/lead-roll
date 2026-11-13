@@ -47,6 +47,8 @@ export const loginSchema = z.object({
   password: z.string().min(1, "Informe a senha."),
 });
 
+export type LoginSchemaType = z.infer<typeof loginSchema>;
+
 export const observationSchema = z
   .string()
   .trim()

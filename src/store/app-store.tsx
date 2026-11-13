@@ -8,20 +8,18 @@ import {
   useEffect,
   useMemo,
   useReducer,
-  useState,
 } from "react";
-import { createMockLeads, createMockUsers } from "@/data/mock";
+import { toast } from "sonner";
+import { createMockLeads, initialPresence } from "@/data/mock";
+import { useSession } from "@/hooks/use-session";
 import { planDistribution } from "@/lib/distribution";
 import { createId } from "@/lib/format";
 import type { Lead, LeadInput, LeadStage, User } from "@/lib/types";
-import { type AppState, appReducer } from "./reducer";
-
-const SESSION_KEY = "leadroll:session";
-
-type LoginResult = { ok: true; user: User } | { ok: false; error: string };
+import { type AuthProfile, AuthService } from "@/services/auth-service";
+import { appReducer, initialAppState } from "./reducer";
 
 interface AppStore {
-  /** Indica que a sessão simulada já foi restaurada no navegador. */
+  /** Sessão restaurada e dados do usuário conectado carregados. */
   ready: boolean;
   users: User[];
   brokers: User[];
@@ -29,8 +27,6 @@ interface AppStore {
   currentUser: User | null;
   roundRobinCursor: string | null;
   getUser: (id: string | null) => User | undefined;
-  login: (email: string, password: string) => LoginResult;
-  logout: () => void;
   createLead: (input: LeadInput) => Lead;
   updateLead: (id: string, input: LeadInput) => void;
   deleteLead: (id: string) => void;
@@ -43,51 +39,64 @@ interface AppStore {
 
 const AppStoreContext = createContext<AppStore | null>(null);
 
-function createInitialState(): AppState {
-  return {
-    users: createMockUsers(),
-    // Os leads dependem da data atual e são criados somente no navegador.
-    leads: [],
-    currentUserId: null,
-    roundRobinCursor: null,
-  };
-}
-
-function readSession(): string | null {
-  try {
-    return window.sessionStorage.getItem(SESSION_KEY);
-  } catch {
-    return null;
-  }
-}
-
-function writeSession(userId: string | null) {
-  try {
-    if (userId) window.sessionStorage.setItem(SESSION_KEY, userId);
-    else window.sessionStorage.removeItem(SESSION_KEY);
-  } catch {
-    // Armazenamento indisponível: a sessão simulada fica apenas em memória.
-  }
+/**
+ * Monta os usuários (perfis do Supabase + presença local) e os leads mock
+ * ligados a eles. Usa a data atual: chamar só em efeitos ou handlers.
+ */
+function createSessionData(
+  profile: AuthProfile,
+  profiles: AuthProfile[],
+): { users: User[]; leads: Lead[] } {
+  const visible = profiles.some((p) => p.id === profile.id)
+    ? profiles
+    : [profile, ...profiles];
+  const users: User[] = visible.map((p) => ({
+    ...p,
+    isPresent: initialPresence(p.email, p.role),
+  }));
+  const brokerIdByEmail = new Map(
+    users
+      .filter((u) => u.role === "broker")
+      .map((u) => [u.email.toLowerCase(), u.id]),
+  );
+  return { users, leads: createMockLeads(Date.now(), brokerIdByEmail) };
 }
 
 export function AppStoreProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(
-    appReducer,
-    undefined,
-    createInitialState,
-  );
-  const [ready, setReady] = useState(false);
+  const [state, dispatch] = useReducer(appReducer, initialAppState);
+  const { ready: sessionReady, profile, clearSession } = useSession();
 
-  // Carrega os dados fictícios e restaura apenas o usuário conectado
-  // (não há autenticação real). Executado uma única vez no navegador.
+  // Acompanha o perfil da sessão (login, restauração, logout, outra aba):
+  // carrega os perfis visíveis e recria os leads mock, ou limpa tudo.
   useEffect(() => {
-    dispatch({
-      type: "app/init",
-      leads: createMockLeads(Date.now()),
-      userId: readSession(),
-    });
-    setReady(true);
-  }, []);
+    if (!profile) {
+      dispatch({ type: "session/logout" });
+      return;
+    }
+    let cancelled = false;
+    AuthService.listProfiles()
+      .then((profiles) => {
+        if (cancelled) return;
+        dispatch({
+          type: "session/login",
+          userId: profile.id,
+          ...createSessionData(profile, profiles),
+        });
+      })
+      .catch((error: unknown) => {
+        if (cancelled) return;
+        // Sem a lista de perfis a sessão ficaria incompleta: sai de novo.
+        toast.error(error instanceof Error ? error.message : String(error));
+        clearSession();
+        void AuthService.signOut().catch(() => {});
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [profile, clearSession]);
+
+  // Pronto quando o estado local corresponde à sessão (com ou sem usuário).
+  const ready = sessionReady && state.currentUserId === (profile?.id ?? null);
 
   const usersById = useMemo(
     () => new Map(state.users.map((u) => [u.id, u])),
@@ -105,26 +114,6 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     (id: string | null) => (id ? usersById.get(id) : undefined),
     [usersById],
   );
-
-  const login = useCallback(
-    (email: string, password: string): LoginResult => {
-      const user = state.users.find(
-        (u) => u.email.toLowerCase() === email.trim().toLowerCase(),
-      );
-      if (!user || user.password !== password) {
-        return { ok: false, error: "E-mail ou senha inválidos." };
-      }
-      dispatch({ type: "session/login", userId: user.id });
-      writeSession(user.id);
-      return { ok: true, user };
-    },
-    [state.users],
-  );
-
-  const logout = useCallback(() => {
-    dispatch({ type: "session/logout" });
-    writeSession(null);
-  }, []);
 
   const createLead = useCallback((input: LeadInput) => {
     const lead: Lead = {
@@ -191,8 +180,6 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
       currentUser,
       roundRobinCursor: state.roundRobinCursor,
       getUser,
-      login,
-      logout,
       createLead,
       updateLead,
       deleteLead,
@@ -209,8 +196,6 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
       brokers,
       currentUser,
       getUser,
-      login,
-      logout,
       createLead,
       updateLead,
       deleteLead,

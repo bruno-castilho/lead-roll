@@ -9,5 +9,6 @@ services:
       - ../:/workspace
       - /var/run/docker.sock:/var/run/docker.sock
     command: sleep infinity
-    ports:
-      - "3000:3000"
+    group_add:
+      - "984"            
+    network_mode: host   

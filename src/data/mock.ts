@@ -4,7 +4,7 @@ import type {
   LeadSource,
   LeadStage,
   Observation,
-  User,
+  UserRole,
 } from "@/lib/types";
 
 /**
@@ -12,50 +12,19 @@ import type {
  * Substituir por chamadas a serviços reais em uma etapa futura.
  */
 
-export const DEMO_PASSWORD = "123456";
+/**
+ * Presença inicial de cada corretor (ainda local, não vai para o banco).
+ * E-mail fora do mapa: corretor começa presente e gestor, ausente.
+ */
+const INITIAL_PRESENCE_BY_EMAIL: ReadonlyMap<string, boolean> = new Map([
+  ["marcos@leadroll.demo", false],
+]);
 
-export const MOCK_USERS: User[] = [
-  {
-    id: "u_manager",
-    name: "Administrador",
-    email: "gestor@leadroll.demo",
-    password: DEMO_PASSWORD,
-    role: "manager",
-    isPresent: false,
-  },
-  {
-    id: "u_ana",
-    name: "Ana Martins",
-    email: "ana@leadroll.demo",
-    password: DEMO_PASSWORD,
-    role: "broker",
-    isPresent: true,
-  },
-  {
-    id: "u_carlos",
-    name: "Carlos Oliveira",
-    email: "carlos@leadroll.demo",
-    password: DEMO_PASSWORD,
-    role: "broker",
-    isPresent: true,
-  },
-  {
-    id: "u_juliana",
-    name: "Juliana Costa",
-    email: "juliana@leadroll.demo",
-    password: DEMO_PASSWORD,
-    role: "broker",
-    isPresent: true,
-  },
-  {
-    id: "u_marcos",
-    name: "Marcos Souza",
-    email: "marcos@leadroll.demo",
-    password: DEMO_PASSWORD,
-    role: "broker",
-    isPresent: false,
-  },
-];
+export function initialPresence(email: string, role: UserRole): boolean {
+  return (
+    INITIAL_PRESENCE_BY_EMAIL.get(email.toLowerCase()) ?? role === "broker"
+  );
+}
 
 type Seed = {
   name: string;
@@ -64,7 +33,8 @@ type Seed = {
   source: LeadSource;
   interest: LeadInterest;
   stage?: LeadStage;
-  brokerId?: string;
+  /** E-mail do corretor responsável (resolvido para o id do perfil). */
+  brokerEmail?: string;
   /** Há quantas horas o lead foi cadastrado. */
   createdHoursAgo: number;
   /** Há quantas horas o lead foi atribuído (quando houver responsável). */
@@ -81,7 +51,7 @@ const SEEDS: Seed[] = [
     source: "portal",
     interest: "apartment",
     stage: "visit_scheduled",
-    brokerId: "u_ana",
+    brokerEmail: "ana@leadroll.demo",
     createdHoursAgo: 240,
     assignedHoursAgo: 238,
     notes: [
@@ -103,7 +73,7 @@ const SEEDS: Seed[] = [
     source: "instagram",
     interest: "rent",
     stage: "contacted",
-    brokerId: "u_ana",
+    brokerEmail: "ana@leadroll.demo",
     createdHoursAgo: 120,
     assignedHoursAgo: 118,
     notes: [
@@ -120,7 +90,7 @@ const SEEDS: Seed[] = [
     source: "site",
     interest: "house",
     stage: "new",
-    brokerId: "u_ana",
+    brokerEmail: "ana@leadroll.demo",
     createdHoursAgo: 30,
     assignedHoursAgo: 28,
   },
@@ -131,7 +101,7 @@ const SEEDS: Seed[] = [
     source: "referral",
     interest: "buy",
     stage: "won",
-    brokerId: "u_ana",
+    brokerEmail: "ana@leadroll.demo",
     createdHoursAgo: 600,
     assignedHoursAgo: 596,
     notes: [
@@ -146,7 +116,7 @@ const SEEDS: Seed[] = [
     source: "whatsapp",
     interest: "commercial",
     stage: "proposal",
-    brokerId: "u_carlos",
+    brokerEmail: "carlos@leadroll.demo",
     createdHoursAgo: 300,
     assignedHoursAgo: 299,
     notes: [
@@ -163,7 +133,7 @@ const SEEDS: Seed[] = [
     source: "campaign",
     interest: "apartment",
     stage: "new",
-    brokerId: "u_carlos",
+    brokerEmail: "carlos@leadroll.demo",
     createdHoursAgo: 20,
     assignedHoursAgo: 19,
   },
@@ -173,7 +143,7 @@ const SEEDS: Seed[] = [
     source: "portal",
     interest: "land",
     stage: "lost",
-    brokerId: "u_carlos",
+    brokerEmail: "carlos@leadroll.demo",
     createdHoursAgo: 480,
     assignedHoursAgo: 470,
     notes: [
@@ -191,7 +161,7 @@ const SEEDS: Seed[] = [
     source: "site",
     interest: "rent",
     stage: "contacted",
-    brokerId: "u_juliana",
+    brokerEmail: "juliana@leadroll.demo",
     createdHoursAgo: 72,
     assignedHoursAgo: 70,
   },
@@ -201,7 +171,7 @@ const SEEDS: Seed[] = [
     source: "referral",
     interest: "house",
     stage: "visit_scheduled",
-    brokerId: "u_juliana",
+    brokerEmail: "juliana@leadroll.demo",
     createdHoursAgo: 160,
     assignedHoursAgo: 158,
     notes: [
@@ -218,7 +188,7 @@ const SEEDS: Seed[] = [
     source: "instagram",
     interest: "buy",
     stage: "new",
-    brokerId: "u_juliana",
+    brokerEmail: "juliana@leadroll.demo",
     createdHoursAgo: 10,
     assignedHoursAgo: 9,
   },
@@ -229,7 +199,7 @@ const SEEDS: Seed[] = [
     source: "whatsapp",
     interest: "apartment",
     stage: "proposal",
-    brokerId: "u_marcos",
+    brokerEmail: "marcos@leadroll.demo",
     createdHoursAgo: 360,
     assignedHoursAgo: 355,
     notes: [
@@ -246,7 +216,7 @@ const SEEDS: Seed[] = [
     source: "portal",
     interest: "rent",
     stage: "won",
-    brokerId: "u_marcos",
+    brokerEmail: "marcos@leadroll.demo",
     createdHoursAgo: 720,
     assignedHoursAgo: 715,
   },
@@ -325,10 +295,20 @@ function hoursAgo(now: number, hours: number): string {
   return new Date(now - hours * 60 * 60 * 1000).toISOString();
 }
 
-/** Cria o estado inicial dos leads com datas relativas ao momento atual. */
-export function createMockLeads(now: number = Date.now()): Lead[] {
+/**
+ * Cria o estado inicial dos leads com datas relativas a `now`.
+ * `brokerIdByEmail` liga os seeds aos perfis carregados; e-mail desconhecido
+ * (ou perfil não visível) deixa o lead sem responsável.
+ */
+export function createMockLeads(
+  now: number,
+  brokerIdByEmail: ReadonlyMap<string, string>,
+): Lead[] {
   return SEEDS.map((seed, index) => {
     const id = `lead_${String(index + 1).padStart(3, "0")}`;
+    const brokerId = seed.brokerEmail
+      ? (brokerIdByEmail.get(seed.brokerEmail) ?? null)
+      : null;
     const observations: Observation[] = (seed.notes ?? [])
       .map((note, i) => ({
         id: `${id}_obs_${i + 1}`,
@@ -344,18 +324,14 @@ export function createMockLeads(now: number = Date.now()): Lead[] {
       email: seed.email,
       source: seed.source,
       interest: seed.interest,
-      stage: seed.stage ?? "new",
-      brokerId: seed.brokerId ?? null,
+      stage: brokerId ? (seed.stage ?? "new") : "new",
+      brokerId,
       createdAt: hoursAgo(now, seed.createdHoursAgo),
       assignedAt:
-        seed.brokerId && seed.assignedHoursAgo !== undefined
+        brokerId && seed.assignedHoursAgo !== undefined
           ? hoursAgo(now, seed.assignedHoursAgo)
           : null,
       observations,
     };
   });
-}
-
-export function createMockUsers(): User[] {
-  return MOCK_USERS.map((u) => ({ ...u }));
 }

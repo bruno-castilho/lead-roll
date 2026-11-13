@@ -19,9 +19,15 @@ export interface AppState {
   roundRobinCursor: string | null;
 }
 
+export const initialAppState: AppState = {
+  users: [],
+  leads: [],
+  currentUserId: null,
+  roundRobinCursor: null,
+};
+
 export type AppAction =
-  | { type: "app/init"; leads: Lead[]; userId: string | null }
-  | { type: "session/login"; userId: string }
+  | { type: "session/login"; userId: string; users: User[]; leads: Lead[] }
   | { type: "session/logout" }
   | { type: "lead/create"; lead: Lead }
   | { type: "lead/update"; id: string; input: LeadInput }
@@ -41,12 +47,16 @@ function updateLead(
 
 export function appReducer(state: AppState, action: AppAction): AppState {
   switch (action.type) {
-    case "app/init":
-      return { ...state, leads: action.leads, currentUserId: action.userId };
     case "session/login":
-      return { ...state, currentUserId: action.userId };
+      return {
+        users: action.users,
+        leads: action.leads,
+        currentUserId: action.userId,
+        roundRobinCursor: null,
+      };
     case "session/logout":
-      return { ...state, currentUserId: null };
+      // Nada do usuário anterior pode sobrar para o próximo login na aba.
+      return initialAppState;
     case "lead/create":
       return { ...state, leads: [action.lead, ...state.leads] };
     case "lead/update":

@@ -1,36 +1,105 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# LeadRoll
 
-## Getting Started
+CRM para cadastrar, distribuir e acompanhar leads imobiliários entre
+corretores. O login usa **Supabase Auth**, e o perfil de cada usuário (gestor
+ou corretor) fica na tabela `profiles`, protegida por RLS. Leads, observações,
+distribuição e presença ainda são fictícios: voltam ao estado inicial quando a
+página é recarregada.
 
-First, run the development server:
+Stack: Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS v4,
+shadcn/ui e Supabase (`@supabase/ssr`).
+
+## Configuração
+
+### 1. Criar o projeto no Supabase
+
+Crie um projeto em [supabase.com](https://supabase.com). Em
+**Project Settings → API**, anote a URL do projeto, a chave pública
+(publishable/anon) e a chave `service_role`.
+
+### 2. Aplicar a migration
+
+Aplique `supabase/migrations/20261113000000_profiles.sql`, que cria a tabela
+`profiles`, o trigger que gera o perfil de cada usuário novo e as policies de
+RLS. Há duas formas:
+
+- com a CLI: `supabase link --project-ref <ref>` e depois `supabase db push`;
+- ou colando o conteúdo do arquivo no **SQL Editor** do painel.
+
+### 3. Configurar a autenticação no painel
+
+Em **Authentication**:
+
+- **Sign In / Providers → Email:** habilitado.
+- **Allow new users to sign up:** **desabilitado** (não há cadastro público).
+- **Senha mínima:** 6 caracteres ou mais. As contas de demonstração usam
+  `123456`. Em produção, use senhas fortes e não rode o seed.
+- **URL Configuration → Site URL:** `http://localhost:3000`.
+
+### 4. Variáveis de ambiente
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env.local
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+| Variável | Uso |
+| --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` | URL do projeto |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | chave pública (publishable/anon) |
+| `SUPABASE_SERVICE_ROLE_KEY` | **somente** para o script de seed. Nunca use o prefixo `NEXT_PUBLIC_` |
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+As variáveis `NEXT_PUBLIC_*` são embutidas no build: depois de alterá-las,
+reinicie o `npm run dev` ou gere o build de novo.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 5. Criar as contas de demonstração
 
-## Learn More
+```bash
+npm install
+npm run seed:auth
+```
 
-To learn more about Next.js, take a look at the following resources:
+O script é idempotente e cria (ou atualiza) estas contas, todas com a senha
+`123456`:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| E-mail | Perfil |
+| --- | --- |
+| `gestor@leadroll.demo` | gestor |
+| `ana@leadroll.demo` | corretora |
+| `carlos@leadroll.demo` | corretor |
+| `juliana@leadroll.demo` | corretora |
+| `marcos@leadroll.demo` | corretor (começa ausente) |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Todo usuário criado de outra forma (pelo painel, por exemplo) entra como
+corretor. Para promover alguém a gestor, rode no SQL Editor:
 
-## Deploy on Vercel
+```sql
+update public.profiles set role = 'manager' where email = 'pessoa@empresa.com';
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 6. Rodar
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm run dev    # http://localhost:3000
+```
+
+## Comandos
+
+```bash
+npm run dev          # servidor de desenvolvimento
+npm run build        # build de produção (funciona mesmo sem .env.local)
+npm run lint         # Biome
+npx tsc --noEmit     # checagem de tipos
+npm run seed:auth    # contas de demonstração no Supabase
+```
+
+## Segurança
+
+- O perfil (`role`) vem sempre da tabela `profiles`, nunca de
+  `user_metadata`, que o próprio usuário pode alterar.
+- A RLS permite que cada usuário leia apenas o próprio perfil, e o gestor leia
+  todos. Ninguém altera perfis pelo app: não há policies de escrita para
+  `anon` ou `authenticated`.
+- A chave `service_role` só é usada em `scripts/seed-demo-users.mjs` e nunca
+  chega ao navegador.
+- O controle de acesso às rotas (`RoleGuard`) é feito no cliente e serve à
+  experiência de uso. A proteção dos dados está na RLS.

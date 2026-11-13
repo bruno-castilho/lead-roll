@@ -11,16 +11,29 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 # LeadRoll
 
 CRM para gerenciamento e distribuição de leads imobiliários entre corretores.
-Etapa atual: **somente frontend (UI-first)**. Todos os dados são fictícios e
-vivem no estado local do React. A interface e os textos são em português (pt-BR).
+Etapa atual: **frontend com autenticação real**. O login usa Supabase Auth, e o
+perfil (gestor ou corretor) fica na tabela `profiles`, protegida por RLS. Leads,
+observações, distribuição e presença continuam fictícios, no estado local do
+React. A interface e os textos são em português (pt-BR).
 
 ## Regras desta etapa
 
-- Não criar backend, banco de dados, API routes, Server Actions, autenticação real
-  (JWT/cookies) nem integrações externas (Supabase, Firebase etc.).
-- Usar apenas `src/data/mock.ts` e o estado em `src/store`. Ao recarregar a página
-  os dados voltam ao estado inicial. Só o id do usuário conectado fica em
-  `sessionStorage` (`leadroll:session`).
+- A autenticação usa **Supabase Auth** (e-mail e senha), só pelo cliente do
+  navegador (`src/lib/supabase/client.ts`) e pela camada de serviço
+  `AuthService` (`src/services/auth-service.ts`). A sessão fica nos cookies do
+  Supabase e, no React, no `SessionProvider` (`src/contexts/session.tsx`).
+- Continua proibido criar API routes, Route Handlers, Server Actions,
+  `proxy.ts`, leitura de `cookies()` em Server Components e outras integrações
+  externas. Nada além da tabela `profiles` vai para o banco nesta etapa.
+- Leads, observações, distribuição e presença vêm de `src/data/mock.ts` e do
+  estado em `src/store`. Ao recarregar a página, eles voltam ao estado inicial
+  (a sessão continua).
+- Variáveis de ambiente (modelo em `.env.example`; `.env.local` não é
+  versionado): `NEXT_PUBLIC_SUPABASE_URL` e
+  `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`. A chave `service_role` nunca entra no
+  projeto.
+- O build precisa passar sem as variáveis. Nunca crie o cliente Supabase em
+  escopo de módulo nem durante a renderização: só em efeitos e handlers.
 - Links nativos são permitidos: `tel:`, `mailto:` e `https://wa.me/55<número>`
   (botão "WhatsApp" nos detalhes do lead).
 - Não adicionar funcionalidades não pedidas: nada de imóveis, contratos,
@@ -42,7 +55,7 @@ vivem no estado local do React. A interface e os textos são em português (pt-B
 
 ```bash
 npm run dev          # servidor de desenvolvimento (porta 3000)
-npm run build        # build de produção (precisa passar)
+npm run build        # build de produção (precisa passar, mesmo sem .env.local)
 npm run lint         # biome check
 npx biome check --write src   # formata e aplica correções seguras
 npx tsc --noEmit
@@ -56,7 +69,7 @@ Antes de concluir qualquer mudança, rode `npm run lint`, `npx tsc --noEmit` e
 | Rota | Acesso | Conteúdo |
 | --- | --- | --- |
 | `/` | todos | redireciona para `/login` ou para a página inicial do perfil |
-| `/login` | público | login simulado, com seletor de contas de demonstração |
+| `/login` | público | login com e-mail e senha (Supabase Auth) |
 | `/gestor` | gestor | redireciona para `/gestor/leads` |
 | `/gestor/leads` | gestor | página inicial do gestor: tabela, filtros, CRUD e distribuição |
 | `/gestor/corretores` | gestor | presença e carga de leads de cada corretor |
@@ -68,9 +81,10 @@ Antes de concluir qualquer mudança, rode `npm run lint`, `npx tsc --noEmit` e
   `ROUTES`, em `src/lib/constants.ts`.
 - A tela "Visão geral" (dashboard) foi **removida de propósito**. Não recriar
   sem pedido.
-- Contas de demonstração (senha `123456`): `gestor@leadroll.demo`, e para os
-  corretores `ana@`, `carlos@`, `juliana@` e `marcos@leadroll.demo`. Marcos
-  começa ausente.
+- As contas são criadas no painel do Supabase (Authentication → Users). O
+  trigger cria o perfil como corretor; o gestor é promovido por SQL. Os leads
+  mock usam os e-mails `ana@`, `carlos@`, `juliana@` e `marcos@leadroll.demo`
+  (Marcos começa ausente).
 
 ## Estrutura de pastas
 
@@ -85,12 +99,17 @@ src/
     observations/      ObservationForm, ObservationList
     brokers/           BrokerCard
     shared/            EmptyState, LoadingState, PageHeader, Pagination, SearchInput, badges, Kbd
-    providers/         ThemeProvider, AppStoreProvider, TooltipProvider, Toaster
+    providers/         ThemeProvider, SessionProvider, AppStoreProvider, TooltipProvider, Toaster
     ui/                shadcn/ui (gerado; o lint fica desligado aqui)
   store/               reducer.ts (transições puras) e app-store.tsx (Context + ações)
+  contexts/session.tsx SessionProvider: user, session, profile e ready da sessão do Supabase
+  services/            auth-service.ts (AuthService: signIn, signOut, getProfile, restoreSession, listProfiles, onSignedOut)
+  errors/              SignInError, SignOutError, ProfileError e AuthServiceError
   lib/                 tipos, constantes, distribuição, filtros, formatação, validação (Zod)
-  hooks/               useLeadStats, useChangeStage, useHotkey, useMediaQuery, useResetOnHide
-  data/mock.ts         usuários e leads fictícios
+    supabase/          client.ts (getSupabaseClient) e database.types.ts
+  hooks/               useSession, useLeadStats, useChangeStage, useHotkey, useMediaQuery, useResetOnHide
+  data/mock.ts         leads fictícios e presença inicial dos corretores
+supabase/migrations/   SQL da tabela profiles, trigger e RLS
 ```
 
 ## Estado e dados
@@ -101,12 +120,38 @@ src/
 - As mudanças passam pelo `appReducer`, que é puro. Para um recurso novo, crie a
   ação no reducer e exponha um método no store. Isso mantém fácil trocar os mocks
   por serviços reais no futuro.
-- Os leads são criados no `useEffect` de inicialização (`app/init`), não no
+- Os leads são criados no `useEffect` que acompanha a sessão (`session/login`), não no
   initializer do `useState`. Com `cacheComponents`, chamar `Date.now()` ou
   `new Date()` durante a renderização quebra o prerender. Gere datas e ids só
   em efeitos ou handlers.
-- `ready` indica que a sessão foi restaurada no navegador. Antes disso o estado
-  está vazio.
+- A autenticação fica no `SessionProvider` (`useSession()`), que envolve o
+  `AppStoreProvider`. Ele restaura a sessão (`AuthService.restoreSession`) e
+  assina `onSignedOut` (logout em outra aba, sessão revogada), limpando a
+  sessão. O store não faz login nem logout: ele observa `profile` e, quando
+  muda, carrega `listProfiles` e despacha `session/login`, ou `session/logout`
+  quando é `null`. `session/logout` zera usuários, leads e cursor, para nada
+  vazar ao próximo login na mesma aba.
+- `ready` (no store) indica que a sessão foi restaurada **e** o estado local
+  corresponde a ela (`currentUserId === profile?.id`). Antes disso o estado
+  está vazio. Como depende da rede, o `LoadingState` pode aparecer por mais
+  tempo.
+- Login: `AuthService.signIn({ email, password })` retorna
+  `{ user, session, weakPassword }` ou lança `SignInError` (mensagem pronta em
+  pt-BR). O perfil é buscado depois, por `AuthService.getProfile(user.id)`
+  (lança `ProfileError`), e então chama-se `onSession(user, session, profile)`.
+  A restauração da sessão faz o mesmo no `SessionProvider`. O
+  redirecionamento usa `HOME_BY_ROLE[profile.role]`. **Nunca** use `user.role`
+  do Supabase: é o papel do Postgres (`"authenticated"`), não gestor/corretor.
+- Logout: `clearSession()` limpa o estado na hora e depois
+  `AuthService.signOut()` avisa o servidor (lança `SignOutError` se ele não
+  confirmou; o usuário sai mesmo assim).
+- `users` vem de `listProfiles()`: o gestor vê todos os perfis e o corretor só
+  o próprio (RLS). O perfil vem **sempre** da tabela `profiles`, nunca de
+  `user_metadata` (o usuário pode alterá-lo). `isPresent` é local e começa por
+  `initialPresence` (`INITIAL_PRESENCE_BY_EMAIL` em `mock.ts`).
+- Os leads mock são ligados aos perfis por `brokerEmail`
+  (`createMockLeads(now, brokerIdByEmail)`). E-mail sem perfil visível deixa o
+  lead sem responsável.
 - O responsável do lead é guardado como `brokerId`. Para obter o nome, use
   `getUser(id)`.
 - Etapas (`LeadStage`): `new`, `contacted`, `visit_scheduled`, `proposal`,
@@ -123,8 +168,12 @@ src/
 - `roundRobinCursor` guarda o último corretor que recebeu um lead. A próxima
   distribuição começa no corretor seguinte da lista completa.
 
-## Permissões (simuladas)
+## Permissões
 
+- A segurança real está no banco (RLS em `profiles`: `select` do próprio
+  perfil ou de todos para o gestor; nenhuma escrita por `anon` ou
+  `authenticated`). Novos usuários entram como `broker` pelo trigger; gestores
+  são promovidos por SQL. O guard no cliente é UX.
 - `RoleGuard` (`components/layout/role-guard.tsx`) é usado em
   `app/gestor/layout.tsx` e `app/corretor/layout.tsx`. Não remover o
   comportamento abaixo:
@@ -185,6 +234,7 @@ src/
 - **Ajustes já pedidos pelo usuário (não reverter):**
   - A página `/corretor/leads` **não tem** a linha de resumo nem a barra de
     busca e filtros.
+  - A tela de login **não tem** seletor nem lista de contas de demonstração.
   - O formulário de observação **não mostra** a dica de atalhos de teclado.
   - O botão de contato nos detalhes do lead é "WhatsApp" (não "Ligar").
 - Listas renderizadas com `.map` precisam de `key` única e estável. Nunca use
@@ -209,8 +259,9 @@ src/
 
 ## Verificação manual
 
-Não há suíte de testes no repositório. Para validar fluxos, rode `npm run build`
-e `npx next start -p <porta>` e use Playwright (instalado fora do projeto) para
+Não há suíte de testes no repositório. Para validar fluxos, configure um
+projeto Supabase em `.env.local` (veja o `README.md`), crie as contas,
+rode `npm run build` e `npx next start -p <porta>` e use Playwright (instalado fora do projeto) para
 percorrer login, cadastro, distribuição, Kanban (arrastar e menu "Mover para"),
 observações, guard de perfil, mobile (360/390px), dark mode e console sem
 erros. Não encerre um `next dev` do usuário que já esteja rodando na porta 3000.
