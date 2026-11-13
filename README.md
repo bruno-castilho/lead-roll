@@ -2,8 +2,10 @@
 
 CRM para cadastrar, distribuir e acompanhar leads imobiliários entre
 corretores. O login usa **Supabase Auth**, e o perfil de cada usuário (gestor
-ou corretor) fica na tabela `profiles`, protegida por RLS. Leads, observações,
-distribuição e presença ainda não estão implementados: as telas aparecem vazias.
+ou corretor) fica na tabela `profiles`, protegida por RLS. O gestor já cadastra
+leads (tabela `leads`). A listagem, a edição e a exclusão de leads, as
+observações, a distribuição e a presença ainda não estão implementadas: as
+telas aparecem vazias.
 
 Stack: Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS v4,
 shadcn/ui e Supabase (`@supabase/ssr`).
@@ -16,11 +18,17 @@ Crie um projeto em [supabase.com](https://supabase.com). Em
 **Project Settings → API**, anote a URL do projeto, a chave pública
 (publishable/anon) e a chave `service_role`.
 
-### 2. Aplicar a migration
+### 2. Aplicar as migrations
 
-Aplique `supabase/migrations/20261113000000_profiles.sql`, que cria a tabela
-`profiles`, o trigger que gera o perfil de cada usuário novo e as policies de
-RLS. Há duas formas:
+Aplique, nesta ordem:
+
+1. `supabase/migrations/20261113000000_profiles.sql`, que cria a tabela
+   `profiles`, o trigger que gera o perfil de cada usuário novo e as policies
+   de RLS;
+2. `supabase/migrations/20261113010000_leads.sql`, que cria a tabela `leads` e
+   as policies de RLS (só o gestor cadastra).
+
+Há duas formas:
 
 - com a CLI: `supabase link --project-ref <ref>` e depois `supabase db push`;
 - ou colando o conteúdo do arquivo no **SQL Editor** do painel.
@@ -100,5 +108,7 @@ npm run seed:auth    # contas de demonstração no Supabase
   `anon` ou `authenticated`.
 - A chave `service_role` só é usada em `scripts/seed-demo-users.mjs` e nunca
   chega ao navegador.
+- Na tabela `leads`, o gestor lê todos os leads e o corretor só os próprios.
+  Só o gestor cadastra, e o lead nasce na etapa "Novo", sem responsável.
 - O controle de acesso às rotas (`RoleGuard`) é feito no cliente e serve à
   experiência de uso. A proteção dos dados está na RLS.

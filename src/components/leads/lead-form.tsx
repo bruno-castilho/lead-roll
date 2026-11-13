@@ -3,6 +3,7 @@
 import { Save, UserPlus } from "lucide-react";
 import { type FormEvent, type ReactNode, useState } from "react";
 import { toast } from "sonner";
+import { Spinner } from "@/components/shared/loading-state";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,10 +22,12 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { useResetOnHide } from "@/hooks/use-reset-on-hide";
 import { LEAD_INTERESTS, LEAD_SOURCES } from "@/lib/constants";
 import { formatPhone } from "@/lib/format";
 import type { Lead, LeadInput } from "@/lib/types";
 import { fieldErrors, leadSchema } from "@/lib/validation";
+import { LeadsService } from "@/services/leads-service";
 
 interface LeadFormProps {
   open: boolean;
@@ -96,7 +99,10 @@ export function LeadForm({ open, onOpenChange, lead }: LeadFormProps) {
   const isEdit = !!lead;
   const [values, setValues] = useState<FormState>(() => toFormState(lead));
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitting, setSubmitting] = useState(false);
   const [prevOpen, setPrevOpen] = useState(open);
+
+  useResetOnHide(() => setSubmitting(false));
 
   // Reinicia o formulário sempre que o painel é aberto.
   if (open !== prevOpen) {
@@ -104,6 +110,7 @@ export function LeadForm({ open, onOpenChange, lead }: LeadFormProps) {
     if (open) {
       setValues(toFormState(lead));
       setErrors({});
+      setSubmitting(false);
     }
   }
 
@@ -112,8 +119,9 @@ export function LeadForm({ open, onOpenChange, lead }: LeadFormProps) {
     if (errors[key]) setErrors((e) => ({ ...e, [key]: "" }));
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (submitting) return;
     const parsed = leadSchema.safeParse(values);
     if (!parsed.success) {
       const errs = fieldErrors(parsed.error);
@@ -137,13 +145,22 @@ export function LeadForm({ open, onOpenChange, lead }: LeadFormProps) {
     if (lead) {
       // Sem implementação.
       toast.success("Lead atualizado com sucesso", { description: input.name });
-    } else {
-      // Sem implementação.
-      toast.success("Lead cadastrado com sucesso", {
-        description: `${input.name} foi adicionado aos leads sem responsável.`,
-      });
+      onOpenChange(false);
+      return;
     }
-    onOpenChange(false);
+
+    setSubmitting(true);
+    try {
+      const created = await LeadsService.createLead(input);
+      toast.success("Lead cadastrado com sucesso", {
+        description: `${created.name} foi adicionado aos leads sem responsável.`,
+      });
+      onOpenChange(false);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : String(error));
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   const invalid = (key: keyof FormState) => ({
@@ -280,8 +297,13 @@ export function LeadForm({ open, onOpenChange, lead }: LeadFormProps) {
           >
             Cancelar
           </Button>
-          <Button type="submit" form="lead-form" size="lg">
-            {isEdit ? <Save /> : <UserPlus />}
+          <Button
+            type="submit"
+            form="lead-form"
+            size="lg"
+            disabled={submitting}
+          >
+            {submitting ? <Spinner /> : isEdit ? <Save /> : <UserPlus />}
             {isEdit ? "Salvar alterações" : "Cadastrar lead"}
           </Button>
         </SheetFooter>
