@@ -1,4 +1,5 @@
 import type { PostgrestError } from "@supabase/supabase-js";
+import { ChangeStageError } from "@/errors/change-stage-error";
 import {
   CreateLeadError,
   type CreateLeadFailure,
@@ -11,7 +12,7 @@ import {
 } from "@/errors/update-lead-error";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import type { Database } from "@/lib/supabase/database.types";
-import type { Lead, LeadInput } from "@/lib/types";
+import type { Lead, LeadInput, LeadStage } from "@/lib/types";
 
 type LeadRow = Database["public"]["Tables"]["leads"]["Row"];
 
@@ -35,7 +36,7 @@ function toLead(row: LeadRow): Lead {
   };
 }
 
-/** Motivo de falha comum a cadastro e edição. */
+/** Motivo de falha comum a cadastro, edição e mudança de etapa. */
 function writeFailure(
   error: PostgrestError,
   status: number,
@@ -123,6 +124,30 @@ export const LeadsService = {
     }
     return toLead(data);
   },
+
+  /**
+   * Muda a etapa de um lead. Só o corretor responsável pode mudar: a RLS de
+   * `leads` não deixa o corretor atualizar leads de outros, e o trigger
+   * recusa a mudança de etapa pelo gestor e qualquer outra coluna pelo
+   * corretor. Lança `ChangeStageError` se não conseguir salvar.
+   */
+  async changeStage(id: string, stage: LeadStage): Promise<Lead> {
+    const { data, error, status } = await getSupabaseClient()
+      .from("leads")
+      .update({ stage })
+      .eq("id", id)
+      .select(LEAD_COLUMNS)
+      .single();
+    if (error) {
+      // PGRST116: nenhuma linha atualizada (lead excluído, reatribuído ou
+      // fora da RLS).
+      const reason =
+        error.code === "PGRST116" ? "not_found" : writeFailure(error, status);
+      throw new ChangeStageError(reason, error);
+    }
+    return toLead(data);
+  },
+
   /**
    * Exclui um lead. Só o gestor pode excluir: a RLS de `leads` não deixa o
    * corretor remover nenhuma linha. Lança `DeleteLeadError` se não conseguir

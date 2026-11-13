@@ -26,10 +26,9 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { useChangeStage } from "@/hooks/use-change-stage";
 import { INTEREST_LABEL, SOURCE_LABEL } from "@/lib/constants";
 import { formatDateTime, phoneDigits } from "@/lib/format";
-import type { Lead, User } from "@/lib/types";
+import type { Lead, LeadStage, User } from "@/lib/types";
 import { StageSelect } from "./stage-select";
 
 interface LeadDetailsProps {
@@ -41,6 +40,8 @@ interface LeadDetailsProps {
   mode: "manager" | "broker";
   onEdit?: (lead: Lead) => void;
   onDelete?: (lead: Lead) => void;
+  /** Só o corretor responsável muda a etapa. */
+  onStageChange?: (lead: Lead, stage: LeadStage) => void;
 }
 
 function InfoRow({
@@ -74,8 +75,8 @@ export function LeadDetails({
   mode,
   onEdit,
   onDelete,
+  onStageChange,
 }: LeadDetailsProps) {
-  const changeStage = useChangeStage();
   // Busca o lead na lista recebida para refletir alterações em tempo real.
   const current = leadId ? leads.find((l) => l.id === leadId) : undefined;
   // Mantém o último lead exibido durante a animação de fechamento.
@@ -141,7 +142,7 @@ export function LeadDetails({
                 )}
               </div>
 
-              {mode === "broker" && (
+              {mode === "broker" && onStageChange && (
                 <div className="space-y-1.5 rounded-lg border bg-muted/30 p-3">
                   <label htmlFor="detail-stage" className="font-medium text-sm">
                     Etapa do atendimento
@@ -149,7 +150,7 @@ export function LeadDetails({
                   <StageSelect
                     id="detail-stage"
                     value={lead.stage}
-                    onChange={(stage) => changeStage(lead, stage)}
+                    onChange={(stage) => onStageChange(lead, stage)}
                     className="w-full bg-background"
                   />
                 </div>
@@ -215,7 +216,7 @@ export function LeadDetails({
                     {lead.observations.length}
                   </span>
                 </div>
-                {mode === "broker" && (
+                {mode === "broker" && onStageChange && (
                   <ObservationForm
                     onSubmit={() => {
                       // Sem implementação.

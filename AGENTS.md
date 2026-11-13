@@ -18,7 +18,8 @@ a exclusão de leads gravam na tabela `leads` (`LeadsService.createLead`,
 `LeadsService.updateLead` e `LeadsService.deleteLead`), só para o gestor, e a
 página `/gestor/leads` lista os leads do banco (`LeadsService.listLeads`). A
 página `/corretor/leads` lista só os leads atribuídos ao corretor
-(`LeadsService.listLeads({ brokerId })`). As observações, a mudança de etapa, a
+(`LeadsService.listLeads({ brokerId })`), e o corretor responsável muda a etapa
+deles (`LeadsService.changeStage`). As observações, a
 distribuição e a presença ainda **não têm fonte de dados**: os dados chegam vazios e essas ações
 não fazem nada. A interface e os textos são em
 português (pt-BR).
@@ -41,8 +42,9 @@ português (pt-BR).
   corretor, a RLS devolve só o próprio perfil).
   O cadastro e a edição de lead já chamam `LeadsService.createLead` e
   `LeadsService.updateLead` (`LeadForm`), e a exclusão chama
-  `LeadsService.deleteLead` (`DeleteLeadDialog`). Os pontos que executariam as
-  demais ações (mudar etapa,
+  `LeadsService.deleteLead` (`DeleteLeadDialog`). A mudança de etapa pelo
+  corretor chama `LeadsService.changeStage` (`useChangeStage`). Os pontos que
+  executariam as demais ações (
   adicionar observação, distribuir, alternar presença) estão marcados com
   `// Sem implementação.`, à espera dos serviços reais. Não recriar dados
   fictícios nem lógica local para eles.
@@ -120,8 +122,8 @@ src/
   contexts/session.tsx SessionProvider: user, session, profile e ready da sessão do Supabase
   services/            auth-service.ts (AuthService: signIn, signOut, getProfile, restoreSession, onSignedOut)
                        brokers-service.ts (BrokersService: listBrokers)
-                       leads-service.ts (LeadsService: listLeads, createLead, updateLead, deleteLead)
-  errors/              SignInError, SignOutError, ProfileError, BrokersError, LeadsError, CreateLeadError, UpdateLeadError, DeleteLeadError e AuthServiceError
+                       leads-service.ts (LeadsService: listLeads, createLead, updateLead, changeStage, deleteLead)
+  errors/              SignInError, SignOutError, ProfileError, BrokersError, LeadsError, CreateLeadError, UpdateLeadError, ChangeStageError, DeleteLeadError e AuthServiceError
   lib/                 tipos, constantes, filtros, formatação, validação (Zod)
     supabase/          client.ts (getSupabaseClient) e database.types.ts
   hooks/               useSession, useBrokers, useLeads, useLeadStats, useChangeStage, useHotkey, useMediaQuery, useResetOnHide
@@ -176,6 +178,14 @@ supabase/migrations/   SQL das tabelas profiles e leads, trigger e RLS
   linha foi removida, o que também acontece se a RLS recusar). Durante o
   envio, o `DeleteLeadDialog` não fecha e mostra `Spinner`; o lead sai da
   lista pelo `onDeleted` (`removeLead`).
+- Mudança de etapa (só o corretor responsável): `useChangeStage(replaceLead)`
+  move o lead na hora (o card não volta ao soltar no Kanban), chama
+  `LeadsService.changeStage(id, stage)` e substitui o lead pelo salvo; se o
+  banco recusar, devolve o lead à etapa anterior e mostra o erro. Lança
+  `ChangeStageError` (mensagem pronta em pt-BR; `not_found` quando nenhuma
+  linha foi atualizada, como num lead reatribuído). Vale para o Kanban, o
+  menu do card e o seletor nos detalhes (`LeadDetails` recebe
+  `onStageChange`; sem ele, o seletor não aparece).
 - O responsável do lead é guardado como `brokerId`. O nome vem da lista
   `brokers` recebida por props.
 - Etapas (`LeadStage`): `new`, `contacted`, `visit_scheduled`, `proposal`,
@@ -197,8 +207,11 @@ supabase/migrations/   SQL das tabelas profiles e leads, trigger e RLS
   perfil ou de todos para o gestor; nenhuma escrita por `anon` ou
   `authenticated`. RLS em `leads`: o gestor lê todos e o corretor só os
   próprios; só o gestor insere, na etapa `new`, sem responsável, e apenas as
-  colunas do formulário; só o gestor faz `update`, e apenas nas colunas do
-  formulário; só o gestor faz `delete`). Novos usuários entram como `broker` pelo trigger; gestores
+  colunas do formulário; o gestor faz `update` só nas colunas do formulário e
+  o corretor só na `stage` dos próprios leads, separados pelo trigger
+  `leads_enforce_update_columns`; só o gestor faz `delete`). A distribuição,
+  quando vier, precisa ajustar esse trigger, que hoje recusa mudança de etapa
+  pelo gestor. Novos usuários entram como `broker` pelo trigger; gestores
   são promovidos por SQL. O guard no cliente é UX.
 - `RoleGuard` (`components/layout/role-guard.tsx`) é usado em
   `app/gestor/layout.tsx` e `app/corretor/layout.tsx`. Não remover o

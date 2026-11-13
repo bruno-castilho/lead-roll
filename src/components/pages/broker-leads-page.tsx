@@ -21,9 +21,9 @@ export function BrokerLeadsPage() {
   const { profile } = useSession();
   // A consulta já filtra por `broker_id` e a RLS só devolve os leads do
   // corretor. A RLS de `profiles` devolve só o perfil dele em `brokers`.
-  const { leads, loading } = useLeads({ own: true });
+  const { leads, loading, replaceLead } = useLeads({ own: true });
   const { brokers } = useBrokers();
-  const changeStage = useChangeStage();
+  const changeStage = useChangeStage(replaceLead);
   const [viewingId, setViewingId] = useState<string | null>(null);
 
   useResetOnHide(() => setViewingId(null));
@@ -85,6 +85,7 @@ export function BrokerLeadsPage() {
         mode="broker"
         leadId={viewingId}
         onOpenChange={(open) => !open && setViewingId(null)}
+        onStageChange={changeStage}
       />
     </div>
   );

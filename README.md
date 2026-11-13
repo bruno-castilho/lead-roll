@@ -30,7 +30,9 @@ Aplique, nesta ordem:
 3. `supabase/migrations/20261113020000_leads_update.sql`, que permite ao
    gestor editar os dados de contato e interesse dos leads;
 4. `supabase/migrations/20261113030000_leads_delete.sql`, que permite ao
-   gestor excluir leads.
+   gestor excluir leads;
+5. `supabase/migrations/20261113040000_leads_stage.sql`, que permite ao
+   corretor responsável mudar a etapa dos próprios leads.
 
 Há duas formas:
 
@@ -114,6 +116,7 @@ npm run seed:auth    # contas de demonstração no Supabase
   chega ao navegador.
 - Na tabela `leads`, o gestor lê todos os leads e o corretor só os próprios.
   Só o gestor cadastra, e o lead nasce na etapa "Novo", sem responsável. Só o
-  gestor edita, e apenas os dados de contato e interesse. Só o gestor exclui.
+  gestor edita, e apenas os dados de contato e interesse. Só o corretor
+  responsável muda a etapa, e apenas dos próprios leads. Só o gestor exclui.
 - O controle de acesso às rotas (`RoleGuard`) é feito no cliente e serve à
   experiência de uso. A proteção dos dados está na RLS.
