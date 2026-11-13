@@ -37,6 +37,8 @@ export function useHotkey(
   useEffect(() => {
     if (!enabled) return;
     function onKeyDown(event: KeyboardEvent) {
+      // O autocompletar do navegador dispara `keydown` sem `key`.
+      if (typeof event.key !== "string") return;
       if (event.key.toLowerCase() !== key.toLowerCase()) return;
       const hasMod = event.metaKey || event.ctrlKey;
       if (mod !== hasMod || event.altKey) return;
