@@ -17,7 +17,8 @@ corretores são lidos de `profiles` (`BrokersService`). O cadastro, a edição e
 a exclusão de leads gravam na tabela `leads` (`LeadsService.createLead`,
 `LeadsService.updateLead` e `LeadsService.deleteLead`), só para o gestor, e a
 página `/gestor/leads` lista os leads do banco (`LeadsService.listLeads`). A
-listagem do corretor, as observações, a
+página `/corretor/leads` lista só os leads atribuídos ao corretor
+(`LeadsService.listLeads({ brokerId })`). As observações, a mudança de etapa, a
 distribuição e a presença ainda **não têm fonte de dados**: os dados chegam vazios e essas ações
 não fazem nada. A interface e os textos são em
 português (pt-BR).
@@ -33,11 +34,11 @@ português (pt-BR).
   externas. Nada além das tabelas `profiles` e `leads` vai para o banco nesta
   etapa.
 - Não há mocks, store nem implementação local. `manager-leads-page` busca
-  `leads` com `useLeads()` (`LeadsService.listLeads`); `manager-brokers-page` e
-  `broker-leads-page` ainda declaram `leads` como `[]` e repassam por props;
-  `isPresent` é `false`. As páginas do
-  gestor buscam `brokers` com `useBrokers()` (`BrokersService.listBrokers`);
-  `broker-leads-page` ainda declara `brokers` como `[]`.
+  `leads` com `useLeads()` e `broker-leads-page` com `useLeads({ own: true })`
+  (`LeadsService.listLeads`); `manager-brokers-page` ainda declara `leads`
+  como `[]` e repassa por props; `isPresent` é `false`. As páginas buscam
+  `brokers` com `useBrokers()` (`BrokersService.listBrokers`; para o
+  corretor, a RLS devolve só o próprio perfil).
   O cadastro e a edição de lead já chamam `LeadsService.createLead` e
   `LeadsService.updateLead` (`LeadForm`), e a exclusão chama
   `LeadsService.deleteLead` (`DeleteLeadDialog`). Os pontos que executariam as
@@ -154,7 +155,11 @@ supabase/migrations/   SQL das tabelas profiles e leads, trigger e RLS
 - Listagem: `LeadsService.listLeads()` devolve os leads do mais recente para o
   mais antigo (a RLS filtra por perfil) e lança `LeadsError` (mensagem pronta
   em pt-BR). `useLeads()` busca quando há `profile`; enquanto carrega, a
-  página mostra `TableSkeleton`. O lead cadastrado entra na lista pelo
+  página do gestor mostra `TableSkeleton` e a do corretor, um `Spinner`.
+  `useLeads({ own: true })` passa `brokerId: profile.id`, e a consulta filtra
+  por `broker_id` além da RLS; a página ainda filtra por
+  `brokerId === profile.id` no cliente. Lead sem responsável ou de outro
+  corretor nunca chega ao corretor. O lead cadastrado entra na lista pelo
   `onCreated` do `LeadForm` (`addLead`), sem buscar tudo de novo.
 - Cadastro: `LeadsService.createLead(input)` insere só os campos do
   formulário; o banco gera `id` e `createdAt`, e o lead nasce com

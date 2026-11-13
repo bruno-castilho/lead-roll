@@ -53,14 +53,16 @@ function writeFailure(
 export const LeadsService = {
   /**
    * Lista os leads, dos mais recentes para os mais antigos. A RLS devolve
-   * todos para o gestor e só os próprios para o corretor. Lança `LeadsError`
-   * se não conseguir buscar.
+   * todos para o gestor e só os próprios para o corretor. Com `brokerId`, a
+   * consulta também filtra pelo responsável (defesa em profundidade na
+   * listagem do corretor). Lança `LeadsError` se não conseguir buscar.
    */
-  async listLeads(): Promise<Lead[]> {
-    const { data, error, status } = await getSupabaseClient()
-      .from("leads")
-      .select(LEAD_COLUMNS)
-      .order("created_at", { ascending: false });
+  async listLeads(options: { brokerId?: string } = {}): Promise<Lead[]> {
+    let query = getSupabaseClient().from("leads").select(LEAD_COLUMNS);
+    if (options.brokerId) query = query.eq("broker_id", options.brokerId);
+    const { data, error, status } = await query.order("created_at", {
+      ascending: false,
+    });
     if (error) {
       if (status === 0) throw new LeadsError("network", error);
       // 401 / PGRST30x: JWT ausente, inválido ou expirado.

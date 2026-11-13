@@ -6,28 +6,33 @@ import { LeadKanban } from "@/components/kanban/lead-kanban";
 import { PresenceToggle } from "@/components/layout/presence-toggle";
 import { LeadDetails } from "@/components/leads/lead-details";
 import { EmptyState } from "@/components/shared/empty-state";
+import { Spinner } from "@/components/shared/loading-state";
 import { PageHeader } from "@/components/shared/page-header";
+import { useBrokers } from "@/hooks/use-brokers";
 import { useChangeStage } from "@/hooks/use-change-stage";
+import { useLeads } from "@/hooks/use-leads";
 import { useResetOnHide } from "@/hooks/use-reset-on-hide";
 import { useSession } from "@/hooks/use-session";
-import type { Lead, User } from "@/lib/types";
 
-// Leads, corretores e presença ainda sem fonte de dados.
-const leads: Lead[] = [];
-const brokers: User[] = [];
+// Presença ainda sem fonte de dados.
 const isPresent = false;
 
 export function BrokerLeadsPage() {
   const { profile } = useSession();
+  // A consulta já filtra por `broker_id` e a RLS só devolve os leads do
+  // corretor. A RLS de `profiles` devolve só o perfil dele em `brokers`.
+  const { leads, loading } = useLeads({ own: true });
+  const { brokers } = useBrokers();
   const changeStage = useChangeStage();
   const [viewingId, setViewingId] = useState<string | null>(null);
 
   useResetOnHide(() => setViewingId(null));
 
-  // Permissão: o corretor enxerga exclusivamente os leads atribuídos a ele.
+  // Permissão: o corretor enxerga exclusivamente os leads atribuídos a ele
+  // (última barreira no cliente, além do filtro da consulta e da RLS).
   const myLeads = useMemo(
     () => leads.filter((l) => profile && l.brokerId === profile.id),
-    [profile],
+    [leads, profile],
   );
 
   return (
@@ -47,7 +52,14 @@ export function BrokerLeadsPage() {
         </div>
       )}
 
-      {myLeads.length === 0 ? (
+      {loading ? (
+        <output
+          aria-label="Carregando leads"
+          className="flex justify-center rounded-xl border border-dashed py-16"
+        >
+          <Spinner className="size-5 text-muted-foreground" />
+        </output>
+      ) : myLeads.length === 0 ? (
         <div className="rounded-xl border border-dashed">
           <EmptyState
             icon={Inbox}
@@ -68,7 +80,7 @@ export function BrokerLeadsPage() {
       )}
 
       <LeadDetails
-        leads={leads}
+        leads={myLeads}
         brokers={brokers}
         mode="broker"
         leadId={viewingId}

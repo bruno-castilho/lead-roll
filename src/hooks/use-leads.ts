@@ -11,8 +11,11 @@ import { LeadsService } from "@/services/leads-service";
  * todos para o gestor e só os próprios para o corretor. A página é renderizada
  * (oculta) antes da sessão ser restaurada, então a busca espera o `profile` e
  * é refeita quando o usuário muda.
+ *
+ * Com `own`, busca só os leads atribuídos ao usuário conectado (a consulta
+ * filtra por `broker_id`, além da RLS). Usado na listagem do corretor.
  */
-export function useLeads() {
+export function useLeads({ own = false }: { own?: boolean } = {}) {
   const { profile } = useSession();
   const profileId = profile?.id ?? null;
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -26,7 +29,7 @@ export function useLeads() {
     }
     let cancelled = false;
     setLoading(true);
-    LeadsService.listLeads()
+    LeadsService.listLeads(own ? { brokerId: profileId } : {})
       .then((list) => {
         if (!cancelled) setLeads(list);
       })
@@ -41,7 +44,7 @@ export function useLeads() {
     return () => {
       cancelled = true;
     };
-  }, [profileId]);
+  }, [profileId, own]);
 
   /** Inclui na lista um lead que o banco acabou de cadastrar. */
   const addLead = useCallback((lead: Lead) => {
