@@ -8,6 +8,7 @@ import { LeadDetails } from "@/components/leads/lead-details";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Spinner } from "@/components/shared/loading-state";
 import { PageHeader } from "@/components/shared/page-header";
+import { useAddObservation } from "@/hooks/use-add-observation";
 import { useBrokers } from "@/hooks/use-brokers";
 import { useChangeStage } from "@/hooks/use-change-stage";
 import { useLeads } from "@/hooks/use-leads";
@@ -21,9 +22,12 @@ export function BrokerLeadsPage() {
   const { profile } = useSession();
   // A consulta já filtra por `broker_id` e a RLS só devolve os leads do
   // corretor. A RLS de `profiles` devolve só o perfil dele em `brokers`.
-  const { leads, loading, replaceLead } = useLeads({ own: true });
+  const { leads, loading, replaceLead, addObservation } = useLeads({
+    own: true,
+  });
   const { brokers } = useBrokers();
   const changeStage = useChangeStage(replaceLead);
+  const addLeadObservation = useAddObservation(addObservation);
   const [viewingId, setViewingId] = useState<string | null>(null);
 
   useResetOnHide(() => setViewingId(null));
@@ -86,6 +90,7 @@ export function BrokerLeadsPage() {
         leadId={viewingId}
         onOpenChange={(open) => !open && setViewingId(null)}
         onStageChange={changeStage}
+        onAddObservation={addLeadObservation}
       />
     </div>
   );

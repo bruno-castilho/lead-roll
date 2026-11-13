@@ -42,6 +42,11 @@ interface LeadDetailsProps {
   onDelete?: (lead: Lead) => void;
   /** Só o corretor responsável muda a etapa. */
   onStageChange?: (lead: Lead, stage: LeadStage) => void;
+  /**
+   * Só o corretor responsável registra observações; sem ele, o formulário
+   * não aparece. Devolve `true` se o banco registrou.
+   */
+  onAddObservation?: (lead: Lead, content: string) => Promise<boolean>;
 }
 
 function InfoRow({
@@ -76,6 +81,7 @@ export function LeadDetails({
   onEdit,
   onDelete,
   onStageChange,
+  onAddObservation,
 }: LeadDetailsProps) {
   // Busca o lead na lista recebida para refletir alterações em tempo real.
   const current = leadId ? leads.find((l) => l.id === leadId) : undefined;
@@ -216,11 +222,10 @@ export function LeadDetails({
                     {lead.observations.length}
                   </span>
                 </div>
-                {mode === "broker" && onStageChange && (
+                {mode === "broker" && onAddObservation && (
                   <ObservationForm
-                    onSubmit={() => {
-                      // Sem implementação.
-                    }}
+                    key={lead.id}
+                    onSubmit={(content) => onAddObservation(lead, content)}
                   />
                 )}
                 <ObservationList observations={lead.observations} />

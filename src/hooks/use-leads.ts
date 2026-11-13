@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useSession } from "@/hooks/use-session";
-import type { Lead } from "@/lib/types";
+import type { Lead, Observation } from "@/lib/types";
 import { LeadsService } from "@/services/leads-service";
 
 /**
@@ -61,5 +61,28 @@ export function useLeads({ own = false }: { own?: boolean } = {}) {
     setLeads((list) => list.filter((l) => l.id !== lead.id));
   }, []);
 
-  return { leads, loading, addLead, replaceLead, removeLead };
+  /**
+   * Inclui uma observação que o banco acabou de registrar. Atualiza só as
+   * observações, para não desfazer uma mudança de etapa em andamento.
+   */
+  const addObservation = useCallback(
+    (leadId: string, observation: Observation) => {
+      setLeads((list) =>
+        list.map((l) =>
+          l.id === leadId
+            ? {
+                ...l,
+                observations: [
+                  ...l.observations.filter((o) => o.id !== observation.id),
+                  observation,
+                ],
+              }
+            : l,
+        ),
+      );
+    },
+    [],
+  );
+
+  return { leads, loading, addLead, replaceLead, removeLead, addObservation };
 }

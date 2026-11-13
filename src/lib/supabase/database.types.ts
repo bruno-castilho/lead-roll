@@ -102,6 +102,45 @@ export interface Database {
           },
         ];
       };
+      lead_observations: {
+        Row: {
+          id: string;
+          lead_id: string;
+          author_id: string;
+          content: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          lead_id: string;
+          author_id?: string;
+          content: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          lead_id?: string;
+          author_id?: string;
+          content?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "lead_observations_lead_id_fkey";
+            columns: ["lead_id"];
+            isOneToOne: false;
+            referencedRelation: "leads";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "lead_observations_author_id_fkey";
+            columns: ["author_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: Record<never, never>;
     Functions: {

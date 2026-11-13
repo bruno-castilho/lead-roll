@@ -1,4 +1,5 @@
 import type { PostgrestError } from "@supabase/supabase-js";
+import { AddObservationError } from "@/errors/add-observation-error";
 import { ChangeStageError } from "@/errors/change-stage-error";
 import {
   CreateLeadError,
@@ -12,12 +13,23 @@ import {
 } from "@/errors/update-lead-error";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import type { Database } from "@/lib/supabase/database.types";
-import type { Lead, LeadInput, LeadStage } from "@/lib/types";
+import type { Lead, LeadInput, LeadStage, Observation } from "@/lib/types";
 
-type LeadRow = Database["public"]["Tables"]["leads"]["Row"];
+type Tables = Database["public"]["Tables"];
+type ObservationRow = Pick<
+  Tables["lead_observations"]["Row"],
+  "id" | "content" | "created_at"
+>;
+type LeadRow = Tables["leads"]["Row"] & { lead_observations: ObservationRow[] };
 
-const LEAD_COLUMNS =
-  "id, name, phone, email, source, interest, stage, broker_id, created_at, assigned_at";
+const OBSERVATION_COLUMNS = "id, content, created_at";
+
+/** Colunas do lead com as observações embutidas (a RLS também vale nelas). */
+const LEAD_COLUMNS = `id, name, phone, email, source, interest, stage, broker_id, created_at, assigned_at, lead_observations(${OBSERVATION_COLUMNS})`;
+
+function toObservation(row: ObservationRow): Observation {
+  return { id: row.id, content: row.content, createdAt: row.created_at };
+}
 
 function toLead(row: LeadRow): Lead {
   return {
@@ -31,12 +43,11 @@ function toLead(row: LeadRow): Lead {
     brokerId: row.broker_id,
     createdAt: row.created_at,
     assignedAt: row.assigned_at,
-    // Observações ainda sem fonte de dados.
-    observations: [],
+    observations: row.lead_observations.map(toObservation),
   };
 }
 
-/** Motivo de falha comum a cadastro, edição e mudança de etapa. */
+/** Motivo de falha comum a cadastro, edição, mudança de etapa e observação. */
 function writeFailure(
   error: PostgrestError,
   status: number,
@@ -146,6 +157,24 @@ export const LeadsService = {
       throw new ChangeStageError(reason, error);
     }
     return toLead(data);
+  },
+
+  /**
+   * Registra uma observação no lead. Só o corretor responsável pode
+   * registrar: a RLS de `lead_observations` recusa o gestor e os demais
+   * corretores. O banco gera `id`, autor e data. Lança `AddObservationError`
+   * se não conseguir registrar.
+   */
+  async addObservation(leadId: string, content: string): Promise<Observation> {
+    const { data, error, status } = await getSupabaseClient()
+      .from("lead_observations")
+      .insert({ lead_id: leadId, content })
+      .select(OBSERVATION_COLUMNS)
+      .single();
+    if (error) {
+      throw new AddObservationError(writeFailure(error, status), error);
+    }
+    return toObservation(data);
   },
 
   /**

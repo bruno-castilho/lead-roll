@@ -3,19 +3,23 @@
 import { Plus } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import { toast } from "sonner";
+import { Spinner } from "@/components/shared/loading-state";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { observationSchema } from "@/lib/validation";
 
 interface ObservationFormProps {
-  onSubmit: (content: string) => void;
+  /** Registra a observação; devolve `true` se salvou (o texto é limpo). */
+  onSubmit: (content: string) => Promise<boolean>;
 }
 
 export function ObservationForm({ onSubmit }: ObservationFormProps) {
   const [content, setContent] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  function submit() {
+  async function submit() {
+    if (submitting) return;
     const parsed = observationSchema.safeParse(content);
     if (!parsed.success) {
       const message = parsed.error.issues[0]?.message ?? "Observação inválida.";
@@ -23,10 +27,13 @@ export function ObservationForm({ onSubmit }: ObservationFormProps) {
       toast.error(message);
       return;
     }
-    onSubmit(parsed.data);
-    setContent("");
     setError(null);
-    toast.success("Observação adicionada");
+    setSubmitting(true);
+    try {
+      if (await onSubmit(parsed.data)) setContent("");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -56,6 +63,7 @@ export function ObservationForm({ onSubmit }: ObservationFormProps) {
         placeholder="Escreva uma observação sobre o atendimento…"
         rows={3}
         maxLength={1000}
+        readOnly={submitting}
         aria-invalid={!!error}
         aria-describedby={error ? "observation-error" : undefined}
         className="min-h-20 resize-none"
@@ -70,9 +78,9 @@ export function ObservationForm({ onSubmit }: ObservationFormProps) {
           type="submit"
           size="lg"
           className="ml-auto shrink-0"
-          disabled={!content.trim()}
+          disabled={submitting || !content.trim()}
         >
-          <Plus />
+          {submitting ? <Spinner /> : <Plus />}
           Adicionar observação
         </Button>
       </div>

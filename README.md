@@ -3,9 +3,10 @@
 CRM para cadastrar, distribuir e acompanhar leads imobiliários entre
 corretores. O login usa **Supabase Auth**, e o perfil de cada usuário (gestor
 ou corretor) fica na tabela `profiles`, protegida por RLS. O gestor já cadastra,
-edita, exclui e lista os leads (tabela `leads`). A listagem do corretor, as
-observações, a distribuição e a presença ainda não estão
-implementadas: as telas aparecem vazias.
+edita, exclui e lista os leads (tabela `leads`). O corretor vê os próprios
+leads, muda a etapa e registra observações neles (tabela
+`lead_observations`). A distribuição e a presença ainda não estão
+implementadas.
 
 Stack: Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS v4,
 shadcn/ui e Supabase (`@supabase/ssr`).
@@ -32,7 +33,10 @@ Aplique, nesta ordem:
 4. `supabase/migrations/20261113030000_leads_delete.sql`, que permite ao
    gestor excluir leads;
 5. `supabase/migrations/20261113040000_leads_stage.sql`, que permite ao
-   corretor responsável mudar a etapa dos próprios leads.
+   corretor responsável mudar a etapa dos próprios leads;
+6. `supabase/migrations/20261113050000_lead_observations.sql`, que cria a
+   tabela `lead_observations` (só o corretor responsável registra
+   observações).
 
 Há duas formas:
 
@@ -118,5 +122,8 @@ npm run seed:auth    # contas de demonstração no Supabase
   Só o gestor cadastra, e o lead nasce na etapa "Novo", sem responsável. Só o
   gestor edita, e apenas os dados de contato e interesse. Só o corretor
   responsável muda a etapa, e apenas dos próprios leads. Só o gestor exclui.
+- Na tabela `lead_observations`, só o corretor responsável pelo lead registra
+  observações, sempre em nome próprio. O gestor lê todas; o corretor, só as
+  dos próprios leads. Observações não são editadas nem excluídas.
 - O controle de acesso às rotas (`RoleGuard`) é feito no cliente e serve à
   experiência de uso. A proteção dos dados está na RLS.
