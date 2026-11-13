@@ -4,18 +4,20 @@ import { Users, UserX } from "lucide-react";
 import { useState } from "react";
 import { BrokerCard } from "@/components/brokers/broker-card";
 import { EmptyState } from "@/components/shared/empty-state";
+import { CardSkeleton } from "@/components/shared/loading-state";
 import { PageHeader } from "@/components/shared/page-header";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useBrokers } from "@/hooks/use-brokers";
 import { useLeadStats } from "@/hooks/use-lead-stats";
-import type { Lead, User } from "@/lib/types";
+import type { Lead } from "@/lib/types";
 
 type PresenceFilter = "all" | "present" | "absent";
 
-// Leads e corretores ainda sem fonte de dados.
+// Leads ainda sem fonte de dados.
 const leads: Lead[] = [];
-const brokers: User[] = [];
 
 export function ManagerBrokersPage() {
+  const { brokers, loading } = useBrokers();
   const { byBroker, availableBrokers } = useLeadStats(leads, brokers);
   const [filter, setFilter] = useState<PresenceFilter>("all");
 
@@ -53,7 +55,17 @@ export function ManagerBrokersPage() {
         </p>
       </div>
 
-      {rows.length === 0 ? (
+      {loading ? (
+        <div
+          className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3"
+          aria-busy="true"
+        >
+          <span className="sr-only">Carregando…</span>
+          <CardSkeleton />
+          <CardSkeleton />
+          <CardSkeleton />
+        </div>
+      ) : rows.length === 0 ? (
         <div className="rounded-xl border border-dashed">
           {filter === "present" ? (
             <EmptyState

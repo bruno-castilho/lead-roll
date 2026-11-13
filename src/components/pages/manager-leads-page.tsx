@@ -25,6 +25,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useBrokers } from "@/hooks/use-brokers";
 import { useHotkey } from "@/hooks/use-hotkey";
 import { useLeadStats } from "@/hooks/use-lead-stats";
 import { useResetOnHide } from "@/hooks/use-reset-on-hide";
@@ -35,7 +36,7 @@ import {
   filterLeads,
   type LeadFilterState,
 } from "@/lib/lead-filters";
-import type { Lead, User } from "@/lib/types";
+import type { Lead } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const QUICK_FILTERS: {
@@ -68,11 +69,11 @@ const QUICK_FILTERS: {
   },
 ];
 
-// Leads e corretores ainda sem fonte de dados.
+// Leads ainda sem fonte de dados.
 const leads: Lead[] = [];
-const brokers: User[] = [];
 
 export function ManagerLeadsPage() {
+  const { brokers } = useBrokers();
   const stats = useLeadStats(leads, brokers);
 
   const [filters, setFilters] = useState<LeadFilterState>(DEFAULT_LEAD_FILTERS);

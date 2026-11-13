@@ -12,8 +12,9 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 CRM para gerenciamento e distribuição de leads imobiliários entre corretores.
 Etapa atual: **frontend com autenticação real**. O login usa Supabase Auth, e o
-perfil (gestor ou corretor) fica na tabela `profiles`, protegida por RLS. Leads,
-observações, distribuição e presença ainda **não têm fonte de dados**: os dados
+perfil (gestor ou corretor) fica na tabela `profiles`, protegida por RLS. Os
+corretores são lidos de `profiles` (`BrokersService`). Leads, observações,
+distribuição e presença ainda **não têm fonte de dados**: os dados
 chegam vazios e as ações não fazem nada. A interface e os textos são em
 português (pt-BR).
 
@@ -28,7 +29,9 @@ português (pt-BR).
   externas. Nada além da tabela `profiles` vai para o banco nesta etapa.
 - Não há mocks, store nem implementação local. As páginas
   (`manager-leads-page`, `manager-brokers-page`, `broker-leads-page`) declaram
-  `leads` e `brokers` como `[]` e repassam por props; `isPresent` é `false`.
+  `leads` como `[]` e repassam por props; `isPresent` é `false`. As páginas do
+  gestor buscam `brokers` com `useBrokers()` (`BrokersService.listBrokers`);
+  `broker-leads-page` ainda declara `brokers` como `[]`.
   Os pontos que executariam ações (salvar e excluir lead, mudar etapa,
   adicionar observação, distribuir, alternar presença) estão marcados com
   `// Sem implementação.`, à espera dos serviços reais. Não recriar dados
@@ -106,10 +109,11 @@ src/
     ui/                shadcn/ui (gerado; o lint fica desligado aqui)
   contexts/session.tsx SessionProvider: user, session, profile e ready da sessão do Supabase
   services/            auth-service.ts (AuthService: signIn, signOut, getProfile, restoreSession, onSignedOut)
-  errors/              SignInError, SignOutError, ProfileError e AuthServiceError
+                       brokers-service.ts (BrokersService: listBrokers)
+  errors/              SignInError, SignOutError, ProfileError, BrokersError e AuthServiceError
   lib/                 tipos, constantes, filtros, formatação, validação (Zod)
     supabase/          client.ts (getSupabaseClient) e database.types.ts
-  hooks/               useSession, useLeadStats, useChangeStage, useHotkey, useMediaQuery, useResetOnHide
+  hooks/               useSession, useBrokers, useLeadStats, useChangeStage, useHotkey, useMediaQuery, useResetOnHide
 supabase/migrations/   SQL da tabela profiles, trigger e RLS
 ```
 
