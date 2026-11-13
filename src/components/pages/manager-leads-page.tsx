@@ -73,7 +73,7 @@ const QUICK_FILTERS: {
 
 export function ManagerLeadsPage() {
   const { brokers } = useBrokers();
-  const { leads, loading, addLead, replaceLead } = useLeads();
+  const { leads, loading, addLead, replaceLead, removeLead } = useLeads();
   const stats = useLeadStats(leads, brokers);
 
   const [filters, setFilters] = useState<LeadFilterState>(DEFAULT_LEAD_FILTERS);
@@ -314,6 +314,7 @@ export function ManagerLeadsPage() {
       <DeleteLeadDialog
         lead={deleting}
         onOpenChange={(open) => !open && setDeleting(null)}
+        onDeleted={removeLead}
       />
       <DistributionDialog
         open={distributing}

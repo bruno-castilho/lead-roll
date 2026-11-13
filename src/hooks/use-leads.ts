@@ -53,5 +53,10 @@ export function useLeads() {
     setLeads((list) => list.map((l) => (l.id === lead.id ? lead : l)));
   }, []);
 
-  return { leads, loading, addLead, replaceLead };
+  /** Retira da lista um lead que o banco acabou de excluir. */
+  const removeLead = useCallback((lead: Lead) => {
+    setLeads((list) => list.filter((l) => l.id !== lead.id));
+  }, []);
+
+  return { leads, loading, addLead, replaceLead, removeLead };
 }

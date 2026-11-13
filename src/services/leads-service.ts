@@ -3,6 +3,7 @@ import {
   CreateLeadError,
   type CreateLeadFailure,
 } from "@/errors/create-lead-error";
+import { DeleteLeadError } from "@/errors/delete-lead-error";
 import { LeadsError } from "@/errors/leads-error";
 import {
   UpdateLeadError,
@@ -119,5 +120,28 @@ export const LeadsService = {
       throw new UpdateLeadError(reason, error);
     }
     return toLead(data);
+  },
+  /**
+   * Exclui um lead. Só o gestor pode excluir: a RLS de `leads` não deixa o
+   * corretor remover nenhuma linha. Lança `DeleteLeadError` se não conseguir
+   * excluir (`not_found` quando nenhuma linha foi removida).
+   */
+  async deleteLead(id: string): Promise<void> {
+    const { data, error, status } = await getSupabaseClient()
+      .from("leads")
+      .delete()
+      .eq("id", id)
+      .select("id");
+    if (error) {
+      const reason = writeFailure(error, status);
+      // Exclusão não valida dados: "invalid" aqui seria inesperado.
+      throw new DeleteLeadError(
+        reason === "invalid" ? "unknown" : reason,
+        error,
+      );
+    }
+    // A RLS filtra o delete sem erro: nenhuma linha removida significa lead
+    // inexistente ou fora do alcance do usuário.
+    if (data.length === 0) throw new DeleteLeadError("not_found");
   },
 };
