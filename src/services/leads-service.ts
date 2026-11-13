@@ -4,6 +4,10 @@ import {
   type CreateLeadFailure,
 } from "@/errors/create-lead-error";
 import { LeadsError } from "@/errors/leads-error";
+import {
+  UpdateLeadError,
+  type UpdateLeadFailure,
+} from "@/errors/update-lead-error";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import type { Database } from "@/lib/supabase/database.types";
 import type { Lead, LeadInput } from "@/lib/types";
@@ -30,10 +34,11 @@ function toLead(row: LeadRow): Lead {
   };
 }
 
-function createFailure(
+/** Motivo de falha comum a cadastro e edição. */
+function writeFailure(
   error: PostgrestError,
   status: number,
-): CreateLeadFailure {
+): CreateLeadFailure & UpdateLeadFailure {
   if (status === 0) return "network";
   // 401 / PGRST30x: JWT ausente, inválido ou expirado.
   if (status === 401 || error.code.startsWith("PGRST30")) return "auth";
@@ -84,7 +89,34 @@ export const LeadsService = {
       .select(LEAD_COLUMNS)
       .single();
     if (error) {
-      throw new CreateLeadError(createFailure(error, status), error);
+      throw new CreateLeadError(writeFailure(error, status), error);
+    }
+    return toLead(data);
+  },
+
+  /**
+   * Atualiza os dados de contato e interesse de um lead. Etapa, responsável e
+   * datas não mudam. Só o gestor pode editar: a RLS de `leads` recusa os
+   * demais. Lança `UpdateLeadError` se não conseguir salvar.
+   */
+  async updateLead(id: string, input: LeadInput): Promise<Lead> {
+    const { data, error, status } = await getSupabaseClient()
+      .from("leads")
+      .update({
+        name: input.name,
+        phone: input.phone,
+        email: input.email ?? null,
+        source: input.source,
+        interest: input.interest,
+      })
+      .eq("id", id)
+      .select(LEAD_COLUMNS)
+      .single();
+    if (error) {
+      // PGRST116: nenhuma linha atualizada (lead excluído ou fora da RLS).
+      const reason =
+        error.code === "PGRST116" ? "not_found" : writeFailure(error, status);
+      throw new UpdateLeadError(reason, error);
     }
     return toLead(data);
   },

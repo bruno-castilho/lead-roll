@@ -36,6 +36,8 @@ interface LeadFormProps {
   lead?: Lead | null;
   /** Chamado com o lead que o banco acabou de cadastrar. */
   onCreated?: (lead: Lead) => void;
+  /** Chamado com o lead que o banco acabou de atualizar. */
+  onUpdated?: (lead: Lead) => void;
 }
 
 type FormState = {
@@ -102,6 +104,7 @@ export function LeadForm({
   onOpenChange,
   lead,
   onCreated,
+  onUpdated,
 }: LeadFormProps) {
   const isEdit = !!lead;
   const [values, setValues] = useState<FormState>(() => toFormState(lead));
@@ -149,15 +152,17 @@ export function LeadForm({
       interest: parsed.data.interest,
     };
 
-    if (lead) {
-      // Sem implementação.
-      toast.success("Lead atualizado com sucesso", { description: input.name });
-      onOpenChange(false);
-      return;
-    }
-
     setSubmitting(true);
     try {
+      if (lead) {
+        const updated = await LeadsService.updateLead(lead.id, input);
+        onUpdated?.(updated);
+        toast.success("Lead atualizado com sucesso", {
+          description: updated.name,
+        });
+        onOpenChange(false);
+        return;
+      }
       const created = await LeadsService.createLead(input);
       onCreated?.(created);
       toast.success("Lead cadastrado com sucesso", {

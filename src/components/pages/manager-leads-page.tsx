@@ -73,7 +73,7 @@ const QUICK_FILTERS: {
 
 export function ManagerLeadsPage() {
   const { brokers } = useBrokers();
-  const { leads, loading, addLead } = useLeads();
+  const { leads, loading, addLead, replaceLead } = useLeads();
   const stats = useLeadStats(leads, brokers);
 
   const [filters, setFilters] = useState<LeadFilterState>(DEFAULT_LEAD_FILTERS);
@@ -300,6 +300,7 @@ export function ManagerLeadsPage() {
         onOpenChange={setFormOpen}
         lead={editing}
         onCreated={addLead}
+        onUpdated={replaceLead}
       />
       <LeadDetails
         leads={leads}

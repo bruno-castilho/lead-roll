@@ -13,10 +13,11 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 CRM para gerenciamento e distribuição de leads imobiliários entre corretores.
 Etapa atual: **frontend com autenticação real**. O login usa Supabase Auth, e o
 perfil (gestor ou corretor) fica na tabela `profiles`, protegida por RLS. Os
-corretores são lidos de `profiles` (`BrokersService`). O cadastro de leads
-grava na tabela `leads` (`LeadsService.createLead`), só para o gestor, e a
-página `/gestor/leads` lista os leads do banco (`LeadsService.listLeads`). A
-listagem do corretor, a edição e a exclusão de leads, as observações, a
+corretores são lidos de `profiles` (`BrokersService`). O cadastro e a edição
+de leads gravam na tabela `leads` (`LeadsService.createLead` e
+`LeadsService.updateLead`), só para o gestor, e a página `/gestor/leads` lista
+os leads do banco (`LeadsService.listLeads`). A listagem do corretor, a
+exclusão de leads, as observações, a
 distribuição e a presença ainda **não têm fonte de dados**: os dados chegam vazios e essas ações
 não fazem nada. A interface e os textos são em
 português (pt-BR).
@@ -37,8 +38,9 @@ português (pt-BR).
   `isPresent` é `false`. As páginas do
   gestor buscam `brokers` com `useBrokers()` (`BrokersService.listBrokers`);
   `broker-leads-page` ainda declara `brokers` como `[]`.
-  O cadastro de lead já chama `LeadsService.createLead` (`LeadForm`). Os
-  pontos que executariam as demais ações (editar e excluir lead, mudar etapa,
+  O cadastro e a edição de lead já chamam `LeadsService.createLead` e
+  `LeadsService.updateLead` (`LeadForm`). Os pontos que executariam as demais
+  ações (excluir lead, mudar etapa,
   adicionar observação, distribuir, alternar presença) estão marcados com
   `// Sem implementação.`, à espera dos serviços reais. Não recriar dados
   fictícios nem lógica local para eles.
@@ -116,8 +118,8 @@ src/
   contexts/session.tsx SessionProvider: user, session, profile e ready da sessão do Supabase
   services/            auth-service.ts (AuthService: signIn, signOut, getProfile, restoreSession, onSignedOut)
                        brokers-service.ts (BrokersService: listBrokers)
-                       leads-service.ts (LeadsService: listLeads, createLead)
-  errors/              SignInError, SignOutError, ProfileError, BrokersError, LeadsError, CreateLeadError e AuthServiceError
+                       leads-service.ts (LeadsService: listLeads, createLead, updateLead)
+  errors/              SignInError, SignOutError, ProfileError, BrokersError, LeadsError, CreateLeadError, UpdateLeadError e AuthServiceError
   lib/                 tipos, constantes, filtros, formatação, validação (Zod)
     supabase/          client.ts (getSupabaseClient) e database.types.ts
   hooks/               useSession, useBrokers, useLeads, useLeadStats, useChangeStage, useHotkey, useMediaQuery, useResetOnHide
@@ -158,6 +160,11 @@ supabase/migrations/   SQL das tabelas profiles e leads, trigger e RLS
   `stage: "new"` e sem responsável. Lança `CreateLeadError` (mensagem pronta
   em pt-BR). Durante o envio, o botão do `LeadForm` fica desabilitado com
   `Spinner`.
+- Edição (só gestor): `LeadsService.updateLead(id, input)` atualiza só os
+  campos do formulário (nome, telefone, e-mail, origem e interesse); etapa,
+  responsável e datas não mudam. Lança `UpdateLeadError` (mensagem pronta em
+  pt-BR; `not_found` quando nenhuma linha foi atualizada). O lead salvo
+  substitui o antigo na lista pelo `onUpdated` do `LeadForm` (`replaceLead`).
 - O responsável do lead é guardado como `brokerId`. O nome vem da lista
   `brokers` recebida por props.
 - Etapas (`LeadStage`): `new`, `contacted`, `visit_scheduled`, `proposal`,
@@ -179,7 +186,8 @@ supabase/migrations/   SQL das tabelas profiles e leads, trigger e RLS
   perfil ou de todos para o gestor; nenhuma escrita por `anon` ou
   `authenticated`. RLS em `leads`: o gestor lê todos e o corretor só os
   próprios; só o gestor insere, na etapa `new`, sem responsável, e apenas as
-  colunas do formulário; ainda sem `update`/`delete`). Novos usuários entram como `broker` pelo trigger; gestores
+  colunas do formulário; só o gestor faz `update`, e apenas nas colunas do
+  formulário; ainda sem `delete`). Novos usuários entram como `broker` pelo trigger; gestores
   são promovidos por SQL. O guard no cliente é UX.
 - `RoleGuard` (`components/layout/role-guard.tsx`) é usado em
   `app/gestor/layout.tsx` e `app/corretor/layout.tsx`. Não remover o

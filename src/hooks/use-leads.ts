@@ -48,5 +48,10 @@ export function useLeads() {
     setLeads((list) => [lead, ...list.filter((l) => l.id !== lead.id)]);
   }, []);
 
-  return { leads, loading, addLead };
+  /** Substitui na lista um lead que o banco acabou de atualizar. */
+  const replaceLead = useCallback((lead: Lead) => {
+    setLeads((list) => list.map((l) => (l.id === lead.id ? lead : l)));
+  }, []);
+
+  return { leads, loading, addLead, replaceLead };
 }
