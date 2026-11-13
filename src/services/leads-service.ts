@@ -3,6 +3,7 @@ import {
   CreateLeadError,
   type CreateLeadFailure,
 } from "@/errors/create-lead-error";
+import { LeadsError } from "@/errors/leads-error";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import type { Database } from "@/lib/supabase/database.types";
 import type { Lead, LeadInput } from "@/lib/types";
@@ -44,6 +45,27 @@ function createFailure(
 }
 
 export const LeadsService = {
+  /**
+   * Lista os leads, dos mais recentes para os mais antigos. A RLS devolve
+   * todos para o gestor e só os próprios para o corretor. Lança `LeadsError`
+   * se não conseguir buscar.
+   */
+  async listLeads(): Promise<Lead[]> {
+    const { data, error, status } = await getSupabaseClient()
+      .from("leads")
+      .select(LEAD_COLUMNS)
+      .order("created_at", { ascending: false });
+    if (error) {
+      if (status === 0) throw new LeadsError("network", error);
+      // 401 / PGRST30x: JWT ausente, inválido ou expirado.
+      if (status === 401 || error.code.startsWith("PGRST30")) {
+        throw new LeadsError("auth", error);
+      }
+      throw new LeadsError("unknown", error);
+    }
+    return data.map(toLead);
+  },
+
   /**
    * Cadastra um lead na etapa "new", sem responsável (aguardando
    * distribuição). Só o gestor pode cadastrar: a RLS de `leads` recusa os

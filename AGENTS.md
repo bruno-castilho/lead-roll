@@ -14,9 +14,10 @@ CRM para gerenciamento e distribuição de leads imobiliários entre corretores.
 Etapa atual: **frontend com autenticação real**. O login usa Supabase Auth, e o
 perfil (gestor ou corretor) fica na tabela `profiles`, protegida por RLS. Os
 corretores são lidos de `profiles` (`BrokersService`). O cadastro de leads
-grava na tabela `leads` (`LeadsService.createLead`), só para o gestor. A
-listagem, a edição e a exclusão de leads, as observações, a distribuição e a
-presença ainda **não têm fonte de dados**: os dados chegam vazios e essas ações
+grava na tabela `leads` (`LeadsService.createLead`), só para o gestor, e a
+página `/gestor/leads` lista os leads do banco (`LeadsService.listLeads`). A
+listagem do corretor, a edição e a exclusão de leads, as observações, a
+distribuição e a presença ainda **não têm fonte de dados**: os dados chegam vazios e essas ações
 não fazem nada. A interface e os textos são em
 português (pt-BR).
 
@@ -30,9 +31,10 @@ português (pt-BR).
   `proxy.ts`, leitura de `cookies()` em Server Components e outras integrações
   externas. Nada além das tabelas `profiles` e `leads` vai para o banco nesta
   etapa.
-- Não há mocks, store nem implementação local. As páginas
-  (`manager-leads-page`, `manager-brokers-page`, `broker-leads-page`) declaram
-  `leads` como `[]` e repassam por props; `isPresent` é `false`. As páginas do
+- Não há mocks, store nem implementação local. `manager-leads-page` busca
+  `leads` com `useLeads()` (`LeadsService.listLeads`); `manager-brokers-page` e
+  `broker-leads-page` ainda declaram `leads` como `[]` e repassam por props;
+  `isPresent` é `false`. As páginas do
   gestor buscam `brokers` com `useBrokers()` (`BrokersService.listBrokers`);
   `broker-leads-page` ainda declara `brokers` como `[]`.
   O cadastro de lead já chama `LeadsService.createLead` (`LeadForm`). Os
@@ -114,11 +116,11 @@ src/
   contexts/session.tsx SessionProvider: user, session, profile e ready da sessão do Supabase
   services/            auth-service.ts (AuthService: signIn, signOut, getProfile, restoreSession, onSignedOut)
                        brokers-service.ts (BrokersService: listBrokers)
-                       leads-service.ts (LeadsService: createLead)
-  errors/              SignInError, SignOutError, ProfileError, BrokersError, CreateLeadError e AuthServiceError
+                       leads-service.ts (LeadsService: listLeads, createLead)
+  errors/              SignInError, SignOutError, ProfileError, BrokersError, LeadsError, CreateLeadError e AuthServiceError
   lib/                 tipos, constantes, filtros, formatação, validação (Zod)
     supabase/          client.ts (getSupabaseClient) e database.types.ts
-  hooks/               useSession, useBrokers, useLeadStats, useChangeStage, useHotkey, useMediaQuery, useResetOnHide
+  hooks/               useSession, useBrokers, useLeads, useLeadStats, useChangeStage, useHotkey, useMediaQuery, useResetOnHide
 supabase/migrations/   SQL das tabelas profiles e leads, trigger e RLS
 ```
 
@@ -146,6 +148,11 @@ supabase/migrations/   SQL das tabelas profiles e leads, trigger e RLS
 - O perfil vem **sempre** da tabela `profiles`, nunca de `user_metadata` (o
   usuário pode alterá-lo). A RLS deixa o gestor ler todos os perfis e o
   corretor só o próprio.
+- Listagem: `LeadsService.listLeads()` devolve os leads do mais recente para o
+  mais antigo (a RLS filtra por perfil) e lança `LeadsError` (mensagem pronta
+  em pt-BR). `useLeads()` busca quando há `profile`; enquanto carrega, a
+  página mostra `TableSkeleton`. O lead cadastrado entra na lista pelo
+  `onCreated` do `LeadForm` (`addLead`), sem buscar tudo de novo.
 - Cadastro: `LeadsService.createLead(input)` insere só os campos do
   formulário; o banco gera `id` e `createdAt`, e o lead nasce com
   `stage: "new"` e sem responsável. Lança `CreateLeadError` (mensagem pronta

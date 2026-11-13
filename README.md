@@ -2,10 +2,10 @@
 
 CRM para cadastrar, distribuir e acompanhar leads imobiliários entre
 corretores. O login usa **Supabase Auth**, e o perfil de cada usuário (gestor
-ou corretor) fica na tabela `profiles`, protegida por RLS. O gestor já cadastra
-leads (tabela `leads`). A listagem, a edição e a exclusão de leads, as
-observações, a distribuição e a presença ainda não estão implementadas: as
-telas aparecem vazias.
+ou corretor) fica na tabela `profiles`, protegida por RLS. O gestor já cadastra e
+lista os leads (tabela `leads`). A listagem do corretor, a edição e a exclusão
+de leads, as observações, a distribuição e a presença ainda não estão
+implementadas: as telas aparecem vazias.
 
 Stack: Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS v4,
 shadcn/ui e Supabase (`@supabase/ssr`).

@@ -34,6 +34,8 @@ interface LeadFormProps {
   onOpenChange: (open: boolean) => void;
   /** Quando informado, o formulário funciona em modo de edição. */
   lead?: Lead | null;
+  /** Chamado com o lead que o banco acabou de cadastrar. */
+  onCreated?: (lead: Lead) => void;
 }
 
 type FormState = {
@@ -95,7 +97,12 @@ function Field({
   );
 }
 
-export function LeadForm({ open, onOpenChange, lead }: LeadFormProps) {
+export function LeadForm({
+  open,
+  onOpenChange,
+  lead,
+  onCreated,
+}: LeadFormProps) {
   const isEdit = !!lead;
   const [values, setValues] = useState<FormState>(() => toFormState(lead));
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -152,6 +159,7 @@ export function LeadForm({ open, onOpenChange, lead }: LeadFormProps) {
     setSubmitting(true);
     try {
       const created = await LeadsService.createLead(input);
+      onCreated?.(created);
       toast.success("Lead cadastrado com sucesso", {
         description: `${created.name} foi adicionado aos leads sem responsável.`,
       });

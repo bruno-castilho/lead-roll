@@ -17,6 +17,7 @@ import { LeadForm } from "@/components/leads/lead-form";
 import { LeadTable } from "@/components/leads/lead-table";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Kbd } from "@/components/shared/kbd";
+import { TableSkeleton } from "@/components/shared/loading-state";
 import { PageHeader } from "@/components/shared/page-header";
 import { Pagination } from "@/components/shared/pagination";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,7 @@ import {
 import { useBrokers } from "@/hooks/use-brokers";
 import { useHotkey } from "@/hooks/use-hotkey";
 import { useLeadStats } from "@/hooks/use-lead-stats";
+import { useLeads } from "@/hooks/use-leads";
 import { useResetOnHide } from "@/hooks/use-reset-on-hide";
 import {
   type BrokerFilter,
@@ -69,11 +71,9 @@ const QUICK_FILTERS: {
   },
 ];
 
-// Leads ainda sem fonte de dados.
-const leads: Lead[] = [];
-
 export function ManagerLeadsPage() {
   const { brokers } = useBrokers();
+  const { leads, loading, addLead } = useLeads();
   const stats = useLeadStats(leads, brokers);
 
   const [filters, setFilters] = useState<LeadFilterState>(DEFAULT_LEAD_FILTERS);
@@ -86,7 +86,7 @@ export function ManagerLeadsPage() {
   const [deleting, setDeleting] = useState<Lead | null>(null);
   const [distributing, setDistributing] = useState(false);
 
-  const filtered = useMemo(() => filterLeads(leads, filters), [filters]);
+  const filtered = useMemo(() => filterLeads(leads, filters), [leads, filters]);
   const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
   const currentPage = Math.min(page, pageCount);
   const pageItems = filtered.slice(
@@ -229,7 +229,9 @@ export function ManagerLeadsPage() {
         brokers={brokers}
       />
 
-      {leads.length === 0 ? (
+      {loading ? (
+        <TableSkeleton />
+      ) : leads.length === 0 ? (
         <div className="rounded-xl border border-dashed">
           <EmptyState
             icon={Inbox}
@@ -293,7 +295,12 @@ export function ManagerLeadsPage() {
         </div>
       )}
 
-      <LeadForm open={formOpen} onOpenChange={setFormOpen} lead={editing} />
+      <LeadForm
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        lead={editing}
+        onCreated={addLead}
+      />
       <LeadDetails
         leads={leads}
         brokers={brokers}
