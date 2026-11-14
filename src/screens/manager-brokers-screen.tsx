@@ -15,7 +15,7 @@ type PresenceFilter = "all" | "present" | "absent";
 // Leads ainda sem fonte de dados.
 const leads: Lead[] = [];
 
-export function ManagerBrokersPage() {
+export function ManagerBrokersScreen() {
   const { brokers, loading } = useBrokers();
   const { byBroker, availableBrokers } = useLeadStats(leads, brokers);
   const [filter, setFilter] = useState<PresenceFilter>("all");

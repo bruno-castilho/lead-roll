@@ -10,7 +10,7 @@ import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SessionProvider } from "@/contexts/session";
 import { PresenceProvider } from "@/modules/brokers";
-import { ManagerBrokersPage } from "@/screens/manager-brokers-screen";
+import { ManagerBrokersScreen } from "@/screens/manager-brokers-screen";
 import { TooltipProvider } from "@/shared/ui/primitives/tooltip";
 import { supabaseFake } from "@/test/fake-supabase";
 import {
@@ -254,11 +254,11 @@ describe("BrokerLeadsPage", () => {
   });
 });
 
-describe("ManagerBrokersPage", () => {
+describe("ManagerBrokersScreen", () => {
   async function renderPage(rows = brokers) {
     arrangeSession(MANAGER);
     supabaseFake.respondWith({ on: "profiles", data: rows });
-    render(<ManagerBrokersPage />, { wrapper: Providers });
+    render(<ManagerBrokersScreen />, { wrapper: Providers });
     await waitFor(() => expect(screen.queryByText("Carregando…")).toBeNull());
   }
 
