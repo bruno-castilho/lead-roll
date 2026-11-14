@@ -9,19 +9,17 @@ import {
   Shuffle,
 } from "lucide-react";
 import { useMemo, useState } from "react";
+import { useBrokers } from "@/modules/brokers";
+import type { Lead } from "@/modules/leads";
 import {
   type BrokerFilter,
   countActiveFilters,
   DEFAULT_LEAD_FILTERS,
-  filterLeads,
-  type LeadFilterState,
-} from "@/lib/lead-filters";
-import type { Lead } from "@/lib/types";
-import { useBrokers } from "@/modules/brokers";
-import {
   DeleteLeadDialog,
   DistributionDialog,
+  filterLeads,
   LeadDetails,
+  type LeadFilterState,
   LeadFilters,
   LeadForm,
   LeadTable,

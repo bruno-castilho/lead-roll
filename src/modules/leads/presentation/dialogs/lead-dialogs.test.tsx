@@ -2,11 +2,11 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { Lead } from "@/lib/types";
 import type { Broker } from "@/modules/brokers";
 import { toast } from "@/test/app-mocks";
 import { postgrestError, supabaseFake } from "@/test/fake-supabase";
 import { leadRow } from "@/test/fixtures";
+import type { Lead } from "../../domain/lead";
 import { LeadForm } from "../form/lead-form";
 import { DeleteLeadDialog } from "./delete-lead-dialog";
 import { DistributionDialog } from "./distribution-dialog";
@@ -30,7 +30,7 @@ function lead(id: string, overrides: Partial<Lead> = {}): Lead {
     id,
     name: `Lead ${id}`,
     phone: "(11) 98765-4321",
-    email: undefined,
+    email: null,
     source: "site",
     interest: "buy",
     stage: "new",

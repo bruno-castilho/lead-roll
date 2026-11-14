@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { fieldErrors } from "@/shared/ui/form-errors";
-import { leadSchema, observationSchema } from "./validation";
+import { leadSchema } from "./lead-form-schema";
 
 const validLead = {
   name: "Ana Souza",
@@ -70,23 +70,6 @@ describe("leadSchema", () => {
     expect(leadErrors({ source: "tv" }).source).toBe("Selecione a origem.");
     expect(leadErrors({ interest: "" }).interest).toBe(
       "Selecione o interesse.",
-    );
-  });
-});
-
-describe("observationSchema", () => {
-  it("apara o texto", () => {
-    expect(observationSchema.parse("  ligou  ")).toBe("ligou");
-  });
-
-  it.each([
-    ["", "Escreva a observação antes de adicionar."],
-    ["   ", "Escreva a observação antes de adicionar."],
-    ["a".repeat(1001), "A observação deve ter no máximo 1000 caracteres."],
-  ])("%j → %j", (content, message) => {
-    const result = observationSchema.safeParse(content);
-    expect(result.success ? null : result.error.issues[0]?.message).toBe(
-      message,
     );
   });
 });

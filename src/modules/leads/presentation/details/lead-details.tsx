@@ -14,10 +14,8 @@ import {
   UserRound,
 } from "lucide-react";
 import { type ReactNode, useState } from "react";
-import { INTEREST_LABEL, SOURCE_LABEL } from "@/lib/constants";
-import type { Lead, LeadStage } from "@/lib/types";
 import type { Broker } from "@/modules/brokers";
-import { formatDateTime, phoneDigits } from "@/shared/ui/format";
+import { formatDateTime } from "@/shared/ui/format";
 import { Button } from "@/shared/ui/primitives/button";
 import { Separator } from "@/shared/ui/primitives/separator";
 import {
@@ -27,6 +25,9 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/shared/ui/primitives/sheet";
+import type { Lead, LeadStage } from "../../domain/lead";
+import { phoneDigits } from "../../domain/phone";
+import { INTEREST_LABEL, SOURCE_LABEL } from "../lead-labels";
 import { ObservationForm } from "../observations/observation-form";
 import { ObservationList } from "../observations/observation-list";
 import { StageBadge } from "../stage-badge";

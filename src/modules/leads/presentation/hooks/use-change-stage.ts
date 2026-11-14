@@ -2,9 +2,9 @@
 
 import { useCallback } from "react";
 import { toast } from "sonner";
-import { STAGE_LABEL } from "@/lib/constants";
-import type { Lead, LeadStage } from "@/lib/types";
 import { LeadsService } from "@/services/leads-service";
+import type { Lead, LeadStage } from "../../domain/lead";
+import { STAGE_LABEL } from "../lead-labels";
 
 /**
  * Muda a etapa de um lead no banco e confirma com um toast. A lista é

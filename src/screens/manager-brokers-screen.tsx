@@ -2,8 +2,8 @@
 
 import { Users, UserX } from "lucide-react";
 import { useState } from "react";
-import type { Lead } from "@/lib/types";
 import { BrokerCard, useBrokers } from "@/modules/brokers";
+import type { Lead } from "@/modules/leads";
 import { useLeadStats } from "@/modules/leads";
 import { EmptyState } from "@/shared/ui/components/empty-state";
 import { CardSkeleton } from "@/shared/ui/components/loading-state";

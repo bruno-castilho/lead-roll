@@ -1,9 +1,9 @@
 "use client";
 
 import { useMemo } from "react";
-import { ACTIVE_STAGES } from "@/lib/constants";
-import type { Lead } from "@/lib/types";
 import type { Broker } from "@/modules/brokers";
+import type { Lead } from "../../domain/lead";
+import { ACTIVE_STAGES } from "../../domain/lead";
 
 export function useLeadStats(leads: Lead[], brokers: Broker[]) {
   return useMemo(() => {

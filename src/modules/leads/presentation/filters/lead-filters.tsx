@@ -1,12 +1,6 @@
 "use client";
 
 import { ArrowDownWideNarrow, FilterX } from "lucide-react";
-import { LEAD_INTERESTS, LEAD_SOURCES, LEAD_STAGES } from "@/lib/constants";
-import {
-  countActiveFilters,
-  DEFAULT_LEAD_FILTERS,
-  type LeadFilterState,
-} from "@/lib/lead-filters";
 import type { Broker } from "@/modules/brokers";
 import { cn } from "@/shared/ui/cn";
 import { SearchInput } from "@/shared/ui/components/search-input";
@@ -21,6 +15,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/ui/primitives/select";
+import {
+  INTEREST_OPTIONS,
+  SOURCE_OPTIONS,
+  STAGE_OPTIONS,
+} from "../lead-labels";
+import {
+  countActiveFilters,
+  DEFAULT_LEAD_FILTERS,
+  type LeadFilterState,
+} from "./filter-leads";
 
 interface FilterSelectProps {
   label: string;
@@ -99,7 +103,7 @@ export function LeadFilters({
           allLabel="Todas as origens"
           value={filters.source}
           onChange={(v) => set("source", v as LeadFilterState["source"])}
-          options={LEAD_SOURCES}
+          options={SOURCE_OPTIONS}
         />
         {variant === "broker" && (
           <FilterSelect
@@ -107,7 +111,7 @@ export function LeadFilters({
             allLabel="Todos os interesses"
             value={filters.interest}
             onChange={(v) => set("interest", v as LeadFilterState["interest"])}
-            options={LEAD_INTERESTS}
+            options={INTEREST_OPTIONS}
           />
         )}
         {variant === "manager" && (
@@ -117,7 +121,7 @@ export function LeadFilters({
               allLabel="Todas as etapas"
               value={filters.stage}
               onChange={(v) => set("stage", v as LeadFilterState["stage"])}
-              options={LEAD_STAGES}
+              options={STAGE_OPTIONS}
             />
             <Select
               value={filters.broker}

@@ -12,7 +12,7 @@ import {
   UpdateLeadError,
   type UpdateLeadFailure,
 } from "@/errors/update-lead-error";
-import type { Lead, LeadInput, LeadStage, Observation } from "@/lib/types";
+import type { Lead, LeadInput, LeadStage, Observation } from "@/modules/leads";
 import { getSupabaseClient } from "@/shared/infrastructure/supabase/client";
 import type { Database } from "@/shared/infrastructure/supabase/database.types";
 
@@ -37,7 +37,7 @@ function toLead(row: LeadRow): Lead {
     id: row.id,
     name: row.name,
     phone: row.phone,
-    email: row.email ?? undefined,
+    email: row.email,
     source: row.source,
     interest: row.interest,
     stage: row.stage,

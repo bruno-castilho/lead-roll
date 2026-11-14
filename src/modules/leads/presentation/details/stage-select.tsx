@@ -1,7 +1,5 @@
 "use client";
 
-import { LEAD_STAGES } from "@/lib/constants";
-import type { LeadStage } from "@/lib/types";
 import { cn } from "@/shared/ui/cn";
 import {
   Select,
@@ -10,6 +8,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/ui/primitives/select";
+import type { LeadStage } from "../../domain/lead";
+import { STAGE_OPTIONS } from "../lead-labels";
 import { StageDot } from "../stage-badge";
 
 interface StageSelectProps {
@@ -35,7 +35,7 @@ export function StageSelect({
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
-        {LEAD_STAGES.map((s) => (
+        {STAGE_OPTIONS.map((s) => (
           <SelectItem key={s.value} value={s.value}>
             <StageDot stage={s.value} />
             {s.label}

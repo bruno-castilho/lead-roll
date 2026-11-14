@@ -1,17 +1,18 @@
 import { describe, expect, it } from "vitest";
+import type { Lead } from "../../domain/lead";
 import {
   countActiveFilters,
   DEFAULT_LEAD_FILTERS,
   filterLeads,
   type LeadFilterState,
   matchesQuery,
-} from "./lead-filters";
-import type { Lead } from "./types";
+} from "./filter-leads";
 
 function lead(overrides: Partial<Lead> & { id: string }): Lead {
   return {
     name: "Lead",
     phone: "(11) 98765-4321",
+    email: null,
     source: "site",
     interest: "buy",
     stage: "new",

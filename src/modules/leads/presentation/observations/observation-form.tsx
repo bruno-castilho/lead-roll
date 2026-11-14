@@ -3,10 +3,10 @@
 import { Plus } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import { toast } from "sonner";
-import { observationSchema } from "@/lib/validation";
 import { Spinner } from "@/shared/ui/components/loading-state";
 import { Button } from "@/shared/ui/primitives/button";
 import { Textarea } from "@/shared/ui/primitives/textarea";
+import { observationSchema } from "./observation-schema";
 
 interface ObservationFormProps {
   /** Registra a observação; devolve `true` se salvou (o texto é limpo). */

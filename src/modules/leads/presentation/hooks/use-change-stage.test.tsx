@@ -1,10 +1,10 @@
 // @vitest-environment jsdom
 import { renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { Lead } from "@/lib/types";
 import { toast } from "@/test/app-mocks";
 import { postgrestError, supabaseFake } from "@/test/fake-supabase";
 import { leadRow } from "@/test/fixtures";
+import type { Lead } from "../../domain/lead";
 import { useAddObservation } from "./use-add-observation";
 import { useChangeStage } from "./use-change-stage";
 
@@ -21,7 +21,7 @@ const lead: Lead = {
   id: "lead-1",
   name: "Ana Souza",
   phone: "(11) 98765-4321",
-  email: undefined,
+  email: null,
   source: "site",
   interest: "buy",
   stage: "new",

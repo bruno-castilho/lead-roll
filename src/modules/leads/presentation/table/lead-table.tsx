@@ -1,8 +1,6 @@
 "use client";
 
 import { Fragment } from "react";
-import { INTEREST_LABEL, SOURCE_LABEL } from "@/lib/constants";
-import type { Lead } from "@/lib/types";
 import type { Broker } from "@/modules/brokers";
 import { formatDate, formatDateTime } from "@/shared/ui/format";
 import {
@@ -13,6 +11,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/shared/ui/primitives/table";
+import type { Lead } from "../../domain/lead";
+import { INTEREST_LABEL, SOURCE_LABEL } from "../lead-labels";
 import { StageBadge } from "../stage-badge";
 import { BrokerCell } from "./broker-cell";
 import { type LeadActionHandlers, LeadRowActions } from "./lead-row-actions";

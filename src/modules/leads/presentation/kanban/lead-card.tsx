@@ -8,8 +8,6 @@ import {
   MoreHorizontal,
   Phone,
 } from "lucide-react";
-import { INTEREST_LABEL, LEAD_STAGES, SOURCE_LABEL } from "@/lib/constants";
-import type { Lead, LeadStage } from "@/lib/types";
 import { cn } from "@/shared/ui/cn";
 import { formatShortDateTime } from "@/shared/ui/format";
 import { Button } from "@/shared/ui/primitives/button";
@@ -23,6 +21,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/shared/ui/primitives/dropdown-menu";
+import type { Lead, LeadStage } from "../../domain/lead";
+import { INTEREST_LABEL, SOURCE_LABEL, STAGE_OPTIONS } from "../lead-labels";
 import { StageDot } from "../stage-badge";
 
 interface LeadCardProps {
@@ -83,7 +83,7 @@ export function LeadCardContent({
                 value={lead.stage}
                 onValueChange={(v) => onStageChange(lead, v as LeadStage)}
               >
-                {LEAD_STAGES.map((s) => (
+                {STAGE_OPTIONS.map((s) => (
                   <DropdownMenuRadioItem key={s.value} value={s.value}>
                     <StageDot stage={s.value} />
                     {s.label}

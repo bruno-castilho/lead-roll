@@ -1,5 +1,11 @@
-import { normalize, phoneDigits } from "@/shared/ui/format";
-import type { Lead, LeadInterest, LeadSource, LeadStage } from "./types";
+import { normalize } from "@/shared/ui/format";
+import type {
+  Lead,
+  LeadInterest,
+  LeadSource,
+  LeadStage,
+} from "../../domain/lead";
+import { phoneDigits } from "../../domain/phone";
 
 /** "all" | "none" (sem responsável) | "assigned" (qualquer corretor) | id do corretor */
 export type BrokerFilter = "all" | "none" | "assigned" | (string & {});

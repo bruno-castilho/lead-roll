@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import type { Lead, Observation } from "@/lib/types";
 import { useSession } from "@/modules/auth";
 import { LeadsService } from "@/services/leads-service";
+import type { Lead, Observation } from "../../domain/lead";
 
 /**
  * Busca os leads no Supabase assim que há um perfil conectado. A RLS devolve

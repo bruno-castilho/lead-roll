@@ -1,7 +1,6 @@
 "use client";
 
 import { Eye, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
-import type { Lead } from "@/lib/types";
 import { Button } from "@/shared/ui/primitives/button";
 import {
   DropdownMenu,
@@ -10,6 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/shared/ui/primitives/dropdown-menu";
+import type { Lead } from "../../domain/lead";
 
 export interface LeadActionHandlers {
   onView: (lead: Lead) => void;

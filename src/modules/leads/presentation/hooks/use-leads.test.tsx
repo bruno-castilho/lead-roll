@@ -1,11 +1,11 @@
 // @vitest-environment jsdom
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { Lead } from "@/lib/types";
 import { SessionProvider } from "@/modules/auth";
 import { toast } from "@/test/app-mocks";
 import { postgrestError, supabaseFake } from "@/test/fake-supabase";
 import { arrangeSession, BROKER, leadRow, MANAGER } from "@/test/fixtures";
+import type { Lead } from "../../domain/lead";
 import { useLeads } from "./use-leads";
 
 vi.mock("@/shared/infrastructure/supabase/client", async (importOriginal) => {
@@ -22,7 +22,7 @@ function lead(id: string, overrides: Partial<Lead> = {}): Lead {
     id,
     name: `Lead ${id}`,
     phone: "(11) 98765-4321",
-    email: undefined,
+    email: null,
     source: "site",
     interest: "buy",
     stage: "new",

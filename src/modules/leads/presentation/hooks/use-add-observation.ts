@@ -2,8 +2,8 @@
 
 import { useCallback } from "react";
 import { toast } from "sonner";
-import type { Lead, Observation } from "@/lib/types";
 import { LeadsService } from "@/services/leads-service";
+import type { Lead, Observation } from "../../domain/lead";
 
 /**
  * Registra uma observação no lead e confirma com um toast. A observação salva

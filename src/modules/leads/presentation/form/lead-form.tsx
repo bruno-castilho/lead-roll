@@ -3,13 +3,9 @@
 import { Save, UserPlus } from "lucide-react";
 import { type FormEvent, type ReactNode, useState } from "react";
 import { toast } from "sonner";
-import { LEAD_INTERESTS, LEAD_SOURCES } from "@/lib/constants";
-import type { Lead, LeadInput } from "@/lib/types";
-import { leadSchema } from "@/lib/validation";
 import { LeadsService } from "@/services/leads-service";
 import { Spinner } from "@/shared/ui/components/loading-state";
 import { fieldErrors } from "@/shared/ui/form-errors";
-import { formatPhone } from "@/shared/ui/format";
 import { useResetOnHide } from "@/shared/ui/hooks/use-reset-on-hide";
 import { Button } from "@/shared/ui/primitives/button";
 import { Input } from "@/shared/ui/primitives/input";
@@ -29,6 +25,11 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/shared/ui/primitives/sheet";
+import type { Lead } from "../../domain/lead";
+import { toLeadInput } from "../../domain/lead-input";
+import { formatPhone } from "../../domain/phone";
+import { INTEREST_OPTIONS, SOURCE_OPTIONS } from "../lead-labels";
+import { leadSchema } from "./lead-form-schema";
 
 interface LeadFormProps {
   open: boolean;
@@ -145,13 +146,7 @@ export function LeadForm({
       return;
     }
 
-    const input: LeadInput = {
-      name: parsed.data.name,
-      phone: formatPhone(parsed.data.phone),
-      email: parsed.data.email || undefined,
-      source: parsed.data.source,
-      interest: parsed.data.interest,
-    };
+    const input = toLeadInput(parsed.data);
 
     setSubmitting(true);
     try {
@@ -262,7 +257,7 @@ export function LeadForm({
                   <SelectValue placeholder="Selecione" />
                 </SelectTrigger>
                 <SelectContent>
-                  {LEAD_SOURCES.map((o) => (
+                  {SOURCE_OPTIONS.map((o) => (
                     <SelectItem key={o.value} value={o.value}>
                       {o.label}
                     </SelectItem>
@@ -289,7 +284,7 @@ export function LeadForm({
                   <SelectValue placeholder="Selecione" />
                 </SelectTrigger>
                 <SelectContent>
-                  {LEAD_INTERESTS.map((o) => (
+                  {INTEREST_OPTIONS.map((o) => (
                     <SelectItem key={o.value} value={o.value}>
                       {o.label}
                     </SelectItem>

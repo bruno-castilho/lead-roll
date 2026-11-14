@@ -4,7 +4,6 @@ import { ArrowRight, Inbox, Shuffle, UserX } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
-import type { Lead } from "@/lib/types";
 import type { Broker } from "@/modules/brokers";
 import { LeadsService } from "@/services/leads-service";
 import { EmptyState } from "@/shared/ui/components/empty-state";
@@ -22,6 +21,7 @@ import {
   DialogTitle,
 } from "@/shared/ui/primitives/dialog";
 import { ROUTES } from "@/shared/ui/routes";
+import type { Lead } from "../../domain/lead";
 
 interface DistributionDialogProps {
   open: boolean;

@@ -10,10 +10,10 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import { useMemo, useState } from "react";
-import { LEAD_STAGES } from "@/lib/constants";
-import type { Lead, LeadStage } from "@/lib/types";
 import { cn } from "@/shared/ui/cn";
 import { useMediaQuery } from "@/shared/ui/hooks/use-media-query";
+import type { Lead, LeadStage } from "../../domain/lead";
+import { STAGE_OPTIONS } from "../lead-labels";
 import { StageDot } from "../stage-badge";
 import { KanbanColumn } from "./kanban-column";
 import { LeadCardContent } from "./lead-card";
@@ -26,7 +26,7 @@ interface LeadKanbanProps {
 
 function groupByStage(leads: Lead[]) {
   const groups = Object.fromEntries(
-    LEAD_STAGES.map((s) => [s.value, [] as Lead[]]),
+    STAGE_OPTIONS.map((s) => [s.value, [] as Lead[]]),
   ) as Record<LeadStage, Lead[]>;
   const sorted = [...leads].sort((a, b) =>
     (b.assignedAt ?? b.createdAt).localeCompare(a.assignedAt ?? a.createdAt),
@@ -62,7 +62,8 @@ export function LeadKanban({ leads, onOpen, onStageChange }: LeadKanbanProps) {
 
   if (!isDesktop) {
     const stageLeads = groups[mobileStage];
-    const label = LEAD_STAGES.find((s) => s.value === mobileStage)?.label ?? "";
+    const label =
+      STAGE_OPTIONS.find((s) => s.value === mobileStage)?.label ?? "";
     return (
       <div className="space-y-3">
         <div
@@ -70,7 +71,7 @@ export function LeadKanban({ leads, onOpen, onStageChange }: LeadKanbanProps) {
           aria-label="Etapas"
           className="grid grid-cols-2 gap-1.5 min-[480px]:grid-cols-3"
         >
-          {LEAD_STAGES.map((s) => {
+          {STAGE_OPTIONS.map((s) => {
             const selected = s.value === mobileStage;
             return (
               <button
@@ -126,7 +127,7 @@ export function LeadKanban({ leads, onOpen, onStageChange }: LeadKanbanProps) {
     >
       <div className="-mx-4 overflow-x-auto px-4 pb-3 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
         <div className="grid min-h-[calc(100dvh-20rem)] auto-cols-[minmax(260px,1fr)] grid-flow-col gap-3">
-          {LEAD_STAGES.map((s) => (
+          {STAGE_OPTIONS.map((s) => (
             <KanbanColumn
               key={s.value}
               stage={s.value}

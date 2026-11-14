@@ -6,7 +6,7 @@ import { DeleteLeadError } from "@/errors/delete-lead-error";
 import { DistributeLeadsError } from "@/errors/distribute-leads-error";
 import { LeadsError } from "@/errors/leads-error";
 import { UpdateLeadError } from "@/errors/update-lead-error";
-import type { LeadInput } from "@/lib/types";
+import type { LeadInput } from "@/modules/leads";
 import {
   type FakeResponse,
   postgrestError,
@@ -45,7 +45,7 @@ const lead = {
   id: "lead-1",
   name: "Ana Souza",
   phone: "(11) 98765-4321",
-  email: undefined,
+  email: null,
   source: "site",
   interest: "buy",
   stage: "new",
@@ -60,6 +60,7 @@ const lead = {
 const input: LeadInput = {
   name: "Ana Souza",
   phone: "(11) 98765-4321",
+  email: null,
   source: "site",
   interest: "buy",
 };
