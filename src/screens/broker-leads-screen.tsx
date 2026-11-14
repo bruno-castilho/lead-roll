@@ -86,7 +86,6 @@ export function BrokerLeadsPage() {
       <LeadDetails
         leads={myLeads}
         brokers={brokers}
-        mode="broker"
         leadId={viewingId}
         onOpenChange={(open) => !open && setViewingId(null)}
         onStageChange={changeStage}

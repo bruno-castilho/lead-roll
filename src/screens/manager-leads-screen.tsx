@@ -304,7 +304,6 @@ export function ManagerLeadsPage() {
       <LeadDetails
         leads={leads}
         brokers={brokers}
-        mode="manager"
         leadId={viewingId}
         onOpenChange={(open) => !open && setViewingId(null)}
         onEdit={openEdit}

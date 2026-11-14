@@ -13,7 +13,7 @@ import {
   Trash2,
   UserRound,
 } from "lucide-react";
-import { type ReactNode, useState } from "react";
+import { useState } from "react";
 import type { Broker } from "@/modules/brokers";
 import { formatDateTime } from "@/shared/ui/format";
 import { Button } from "@/shared/ui/primitives/button";
@@ -25,12 +25,13 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/shared/ui/primitives/sheet";
-import type { Lead, LeadStage } from "../../domain/lead";
+import { isUnassigned, type Lead, type LeadStage } from "../../domain/lead";
 import { phoneDigits } from "../../domain/phone";
-import { INTEREST_LABEL, SOURCE_LABEL } from "../lead-labels";
 import { ObservationForm } from "../observations/observation-form";
 import { ObservationList } from "../observations/observation-list";
 import { StageBadge } from "../stage-badge";
+import { UnassignedBadge } from "../unassigned-badge";
+import { LeadInfo } from "./lead-info";
 import { StageSelect } from "./stage-select";
 
 interface LeadDetailsProps {
@@ -38,8 +39,7 @@ interface LeadDetailsProps {
   brokers: Broker[];
   leadId: string | null;
   onOpenChange: (open: boolean) => void;
-  /** Gestor consulta e administra; corretor altera etapa e registra observações. */
-  mode: "manager" | "broker";
+  /** Editar e excluir (o gestor); sem eles, os botões não aparecem. */
   onEdit?: (lead: Lead) => void;
   onDelete?: (lead: Lead) => void;
   /** Só o corretor responsável muda a etapa. */
@@ -51,35 +51,11 @@ interface LeadDetailsProps {
   onAddObservation?: (lead: Lead, content: string) => Promise<boolean>;
 }
 
-function InfoRow({
-  icon: Icon,
-  label,
-  children,
-}: {
-  icon: typeof Phone;
-  label: string;
-  children: ReactNode;
-}) {
-  return (
-    <div className="flex items-start gap-3 py-2">
-      <Icon
-        className="mt-0.5 size-4 shrink-0 text-muted-foreground"
-        aria-hidden
-      />
-      <dt className="w-28 shrink-0 text-muted-foreground text-sm">{label}</dt>
-      <dd className="min-w-0 flex-1 break-words font-medium text-sm">
-        {children}
-      </dd>
-    </div>
-  );
-}
-
 export function LeadDetails({
   leads,
   brokers,
   leadId,
   onOpenChange,
-  mode,
   onEdit,
   onDelete,
   onStageChange,
@@ -100,11 +76,7 @@ export function LeadDetails({
             <SheetHeader className="space-y-2 border-b p-5 pr-12">
               <div className="flex flex-wrap items-center gap-2">
                 <StageBadge stage={lead.stage} />
-                {!lead.brokerId && (
-                  <span className="rounded-full border border-warning/40 bg-warning/10 px-2 py-0.5 font-medium text-warning text-xs">
-                    Sem responsável
-                  </span>
-                )}
+                {isUnassigned(lead) && <UnassignedBadge />}
               </div>
               <SheetTitle className="text-xl">{lead.name}</SheetTitle>
               <SheetDescription>
@@ -130,7 +102,7 @@ export function LeadDetails({
                     </a>
                   </Button>
                 )}
-                {mode === "manager" && onEdit && (
+                {onEdit && (
                   <Button
                     variant="outline"
                     size="lg"
@@ -139,7 +111,7 @@ export function LeadDetails({
                     <Pencil /> Editar
                   </Button>
                 )}
-                {mode === "manager" && onDelete && (
+                {onDelete && (
                   <Button
                     variant="destructive"
                     size="lg"
@@ -150,7 +122,7 @@ export function LeadDetails({
                 )}
               </div>
 
-              {mode === "broker" && onStageChange && (
+              {onStageChange && (
                 <div className="space-y-1.5 rounded-lg border bg-muted/30 p-3">
                   <label htmlFor="detail-stage" className="font-medium text-sm">
                     Etapa do atendimento
@@ -164,52 +136,7 @@ export function LeadDetails({
                 </div>
               )}
 
-              <section>
-                <h3 className="mb-1 font-semibold text-base">Informações</h3>
-                <dl className="divide-y">
-                  <InfoRow icon={Phone} label="Telefone">
-                    <a
-                      href={`tel:+55${phoneDigits(lead.phone)}`}
-                      className="hover:text-primary hover:underline"
-                    >
-                      {lead.phone}
-                    </a>
-                  </InfoRow>
-                  <InfoRow icon={Mail} label="E-mail">
-                    {lead.email ? (
-                      <a
-                        href={`mailto:${lead.email}`}
-                        className="hover:text-primary hover:underline"
-                      >
-                        {lead.email}
-                      </a>
-                    ) : (
-                      <span className="font-normal text-muted-foreground">
-                        Não informado
-                      </span>
-                    )}
-                  </InfoRow>
-                  <InfoRow icon={Tag} label="Origem">
-                    {SOURCE_LABEL[lead.source]}
-                  </InfoRow>
-                  <InfoRow icon={Target} label="Interesse">
-                    {INTEREST_LABEL[lead.interest]}
-                  </InfoRow>
-                  <InfoRow icon={UserRound} label="Responsável">
-                    {broker?.name ?? (
-                      <span className="font-normal text-muted-foreground">
-                        Sem responsável
-                      </span>
-                    )}
-                  </InfoRow>
-                  <InfoRow icon={CalendarClock} label="Atribuição">
-                    {formatDateTime(lead.assignedAt)}
-                  </InfoRow>
-                  <InfoRow icon={CalendarPlus} label="Cadastro">
-                    {formatDateTime(lead.createdAt)}
-                  </InfoRow>
-                </dl>
-              </section>
+              <LeadInfo lead={lead} brokerName={broker?.name} />
 
               <Separator />
 
@@ -224,7 +151,7 @@ export function LeadDetails({
                     {lead.observations.length}
                   </span>
                 </div>
-                {mode === "broker" && onAddObservation && (
+                {onAddObservation && (
                   <ObservationForm
                     key={lead.id}
                     onSubmit={(content) => onAddObservation(lead, content)}
