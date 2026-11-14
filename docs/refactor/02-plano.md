@@ -3,8 +3,8 @@
 Fase 2 do [PRD](PRD.md), a partir do [code review](01-code-review.md). Registro vivo:
 marque cada etapa ao concluir e anote desvios na seção 8.
 
-**Estado:** Parada 1 parcialmente respondida em 2026-11-14 (P-01 e P-03 decididos).
-Aguardando P-02 (dependências de teste) e confirmação de P-04 a P-10. Nenhum código foi alterado.
+**Estado:** Parada 1 aprovada em 2026-11-14 (todas as perguntas da seção 6 decididas).
+Em execução: Fase 3 (rede de segurança).
 
 ## 1. Arquitetura-alvo, adaptada ao LeadRoll
 
@@ -223,23 +223,23 @@ Convenções que valem em todas as etapas:
 | ID | Pergunta | Recomendação |
 | --- | --- | --- |
 | P-01 | Branch `refactor/clean-architecture` (PRD, regra 6) ou commits direto na `main` (memória do projeto)? | **Decidido (2026-11-14): branch `refactor/clean-architecture`** |
-| P-02a | Dependências de teste: `vitest` e `@vitest/coverage-v8` (devDependencies). Motivo: não há runner, e a Fase 3 exige testes. Alternativa nativa: `node --test` do Node 24 (remove tipos sozinho), mas exige extensão `.ts` em todos os imports, `allowImportingTsExtensions`, não aceita `@/` nem parameter properties e não testa componentes | Aprovar `vitest` + `@vitest/coverage-v8` |
-| P-02b | Para caracterizar hooks e providers (login, restauração, reversão otimista, timer de presença): `jsdom` e `@testing-library/react`. Sem eles, esses fluxos ficam protegidos só por teste manual até virarem casos de uso testados sem React | Aprovar (os fluxos de maior risco estão nesses arquivos) |
+| P-02a | Dependências de teste: `vitest` e `@vitest/coverage-v8` (devDependencies). Motivo: não há runner, e a Fase 3 exige testes. Alternativa nativa: `node --test` do Node 24 (remove tipos sozinho), mas exige extensão `.ts` em todos os imports, `allowImportingTsExtensions`, não aceita `@/` nem parameter properties e não testa componentes | **Decidido: aprovado** |
+| P-02b | Para caracterizar hooks e providers (login, restauração, reversão otimista, timer de presença): `jsdom` e `@testing-library/react`. Sem eles, esses fluxos ficam protegidos só por teste manual até virarem casos de uso testados sem React | **Decidido: aprovado** |
 | P-03 | Teste ponta a ponta: o Playwright não está instalado nesta máquina, e o percurso grava dados no seu projeto Supabase (cadastra, distribui e exclui leads). Posso instalar o Playwright fora do projeto e rodar contra o seu Supabase com as contas de demonstração? | **Decidido (2026-11-14): não rodar contra o Supabase.** Verificação no navegador fica com o usuário; relatório marca "não verificado" |
-| P-04 | Composition root e infraestrutura no cliente com `import "client-only"` no lugar de `server-only` (C-02) | Aprovar |
-| P-05 | A apresentação pode importar valores do `domain` (funções puras e constantes), já que o Biome não distingue `import type`? A alternativa é reexportar pela `application`, o que só adiciona arquivos de passagem | Permitir valores do `domain` na apresentação; nenhuma outra camada interna |
-| P-06 | Checagem de permissão nos casos de uso (por exemplo, só o gestor cadastra), além da RLS. Mesmas mensagens; nenhum fluxo legítimo muda | Aprovar |
-| P-07 | Mover `src/components/ui` para `src/shared/ui/primitives` e ajustar os aliases do `components.json` (o `npx shadcn add` passa a gerar lá) | Aprovar; a alternativa é manter `src/components/ui` como exceção documentada |
-| P-08 | Lint da linha de base falha por formatação de `.devcontainer/devcontainer.json`. Formatar (só espaços, commit separado) para o critério 1 ficar verde? | Formatar |
-| P-09 | Bugs BUG-01 a BUG-06: corrigir depois da refatoração, um commit cada, ou só registrar? | Só registrar agora; você escolhe quais corrigir depois |
-| P-10 | Três módulos (`auth`, `brokers` com presença, `leads` com observações e distribuição) + `screens/` e `shell/` para a composição entre módulos | Aprovar |
+| P-04 | Composition root e infraestrutura no cliente com `import "client-only"` no lugar de `server-only` (C-02) | **Decidido: aprovado** |
+| P-05 | A apresentação pode importar valores do `domain` (funções puras e constantes), já que o Biome não distingue `import type`? A alternativa é reexportar pela `application`, o que só adiciona arquivos de passagem | **Decidido: permitir valores do `domain` na apresentação** |
+| P-06 | Checagem de permissão nos casos de uso (por exemplo, só o gestor cadastra), além da RLS. Mesmas mensagens; nenhum fluxo legítimo muda | **Decidido: aprovado** |
+| P-07 | Mover `src/components/ui` para `src/shared/ui/primitives` e ajustar os aliases do `components.json` (o `npx shadcn add` passa a gerar lá) | **Decidido: mover** |
+| P-08 | Lint da linha de base falha por formatação de `.devcontainer/devcontainer.json`. Formatar (só espaços, commit separado) para o critério 1 ficar verde? | **Decidido: formatar** |
+| P-09 | Bugs BUG-01 a BUG-06: corrigir depois da refatoração, um commit cada, ou só registrar? | **Decidido: só registrar** |
+| P-10 | Três módulos (`auth`, `brokers` com presença, `leads` com observações e distribuição) + `screens/` e `shell/` para a composição entre módulos | **Decidido: aprovado** |
 
 ## 7. Progresso
 
 - [x] Fase 0 — Reconhecimento (linha de base em `01-code-review.md`)
 - [x] Fase 1 — Code review (`01-code-review.md`)
 - [x] Fase 2 — Plano (este arquivo)
-- [ ] Parada 1 — aprovação (P-01 e P-03 decididos; P-02 e P-04 a P-10 pendentes)
+- [x] Parada 1 — aprovação (2026-11-14)
 - [x] Etapa 0 — branch e documentos
 - [ ] Etapas 1.1–1.5 — rede de segurança (Fase 3)
 - [ ] Etapa 2 — fundação `shared`
@@ -259,3 +259,4 @@ Convenções que valem em todas as etapas:
 | 2026-11-14 | Documentos da Fase 0–2 escritos sem commit, aguardando P-01 | Não escolher a branch antes da aprovação |
 | 2026-11-14 | Branch `refactor/clean-architecture` criada a partir de `main` (`095c00c`); documentos commitados nela | Decisão P-01 do usuário |
 | 2026-11-14 | Nenhuma execução contra o Supabase real (sem Playwright, sem login na app) | Decisão P-03 do usuário |
+| 2026-11-14 | P-02 (Vitest + jsdom + Testing Library) e P-04 a P-10 aprovados conforme as recomendações | Resposta do usuário na Parada 1 |
