@@ -9,7 +9,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { PAGE_SIZES } from "@/lib/constants";
+
+/** Opções de registros por página. */
+export const PAGE_SIZES = [10, 20, 50] as const;
 
 interface PaginationProps {
   page: number;

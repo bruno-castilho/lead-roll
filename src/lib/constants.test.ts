@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
+import { PAGE_SIZES } from "@/components/shared/pagination";
 import {
   ACTIVE_STAGES,
   INTEREST_LABEL,
   LEAD_INTERESTS,
   LEAD_SOURCES,
   LEAD_STAGES,
-  PAGE_SIZES,
   ROUTES,
   SOURCE_LABEL,
   STAGE_DOT,
