@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { LoginForm } from "@/modules/auth";
+import { ThemeToggle } from "@/shell/theme-toggle";
 
 export const metadata: Metadata = { title: "Entrar" };
 

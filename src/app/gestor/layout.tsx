@@ -1,5 +1,5 @@
-import { AppShell } from "@/components/layout/app-shell";
 import { RoleGuard } from "@/modules/auth";
+import { AppShell } from "@/shell/app-shell";
 
 export default function ManagerLayout({ children }: LayoutProps<"/gestor">) {
   return (
