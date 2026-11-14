@@ -3,7 +3,7 @@
 import { Save, UserPlus } from "lucide-react";
 import { type FormEvent, type ReactNode, useState } from "react";
 import { toast } from "sonner";
-import { LeadsService } from "@/services/leads-service";
+import { useSession } from "@/modules/auth";
 import { Spinner } from "@/shared/ui/components/loading-state";
 import { fieldErrors } from "@/shared/ui/form-errors";
 import { useResetOnHide } from "@/shared/ui/hooks/use-reset-on-hide";
@@ -25,10 +25,11 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/shared/ui/primitives/sheet";
+import { createLead, updateLead } from "../../composition";
 import type { Lead } from "../../domain/lead";
-import { toLeadInput } from "../../domain/lead-input";
 import { formatPhone } from "../../domain/phone";
 import { INTEREST_OPTIONS, SOURCE_OPTIONS } from "../lead-labels";
+import { leadsErrorMessage } from "../leads-messages";
 import { leadSchema } from "./lead-form-schema";
 
 interface LeadFormProps {
@@ -108,6 +109,7 @@ export function LeadForm({
   onCreated,
   onUpdated,
 }: LeadFormProps) {
+  const { profile } = useSession();
   const isEdit = !!lead;
   const [values, setValues] = useState<FormState>(() => toFormState(lead));
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -146,12 +148,12 @@ export function LeadForm({
       return;
     }
 
-    const input = toLeadInput(parsed.data);
-
+    // Só o gestor abre o formulário; sem perfil não há quem grave.
+    if (!profile) return;
     setSubmitting(true);
     try {
       if (lead) {
-        const updated = await LeadsService.updateLead(lead.id, input);
+        const updated = await updateLead(profile, lead.id, parsed.data);
         onUpdated?.(updated);
         toast.success("Lead atualizado com sucesso", {
           description: updated.name,
@@ -159,14 +161,14 @@ export function LeadForm({
         onOpenChange(false);
         return;
       }
-      const created = await LeadsService.createLead(input);
+      const created = await createLead(profile, parsed.data);
       onCreated?.(created);
       toast.success("Lead cadastrado com sucesso", {
         description: `${created.name} foi adicionado aos leads sem responsável.`,
       });
       onOpenChange(false);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : String(error));
+      toast.error(leadsErrorMessage(error));
     } finally {
       setSubmitting(false);
     }

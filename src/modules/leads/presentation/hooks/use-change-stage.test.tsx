@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
-import { renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { toast } from "@/test/app-mocks";
 import { postgrestError, supabaseFake } from "@/test/fake-supabase";
-import { leadRow } from "@/test/fixtures";
+import { arrangeSession, BROKER, leadRow } from "@/test/fixtures";
+import { renderHookSignedIn } from "@/test/signed-in";
 import type { Lead } from "../../domain/lead";
 import { useAddObservation } from "./use-add-observation";
 import { useChangeStage } from "./use-change-stage";
@@ -31,12 +31,17 @@ const lead: Lead = {
   observations: [],
 };
 
-beforeEach(() => supabaseFake.reset());
+beforeEach(() => {
+  supabaseFake.reset();
+  arrangeSession(BROKER);
+});
 
 describe("useChangeStage", () => {
   it("não faz nada se a etapa não mudou", async () => {
     const onChanged = vi.fn();
-    const { result } = renderHook(() => useChangeStage(onChanged));
+    const { result } = await renderHookSignedIn(() =>
+      useChangeStage(onChanged),
+    );
     await result.current(lead, "new");
     expect(onChanged).not.toHaveBeenCalled();
     expect(supabaseFake.queries).toEqual([]);
@@ -52,7 +57,9 @@ describe("useChangeStage", () => {
         assigned_at: "2026-11-02T10:00:00Z",
       }),
     });
-    const { result } = renderHook(() => useChangeStage(onChanged));
+    const { result } = await renderHookSignedIn(() =>
+      useChangeStage(onChanged),
+    );
     await result.current(lead, "contacted");
     expect(onChanged.mock.calls).toEqual([
       [{ ...lead, stage: "contacted" }],
@@ -73,7 +80,9 @@ describe("useChangeStage", () => {
       status: 406,
       error: postgrestError("PGRST116"),
     });
-    const { result } = renderHook(() => useChangeStage(onChanged));
+    const { result } = await renderHookSignedIn(() =>
+      useChangeStage(onChanged),
+    );
     await result.current(lead, "won");
     expect(onChanged.mock.calls).toEqual([[{ ...lead, stage: "won" }], [lead]]);
     expect(toast.error).toHaveBeenCalledWith(
@@ -88,7 +97,9 @@ describe("useAddObservation", () => {
     supabaseFake.respondWith({
       data: { id: "o1", content: "Ligou", created_at: "2026-11-03T10:00:00Z" },
     });
-    const { result } = renderHook(() => useAddObservation(onAdded));
+    const { result } = await renderHookSignedIn(() =>
+      useAddObservation(onAdded),
+    );
     await expect(result.current(lead, "Ligou")).resolves.toBe(true);
     expect(onAdded).toHaveBeenCalledWith("lead-1", {
       id: "o1",
@@ -101,7 +112,9 @@ describe("useAddObservation", () => {
   it("falha: avisa e devolve false", async () => {
     const onAdded = vi.fn();
     supabaseFake.respondWith({ status: 400, error: postgrestError("42501") });
-    const { result } = renderHook(() => useAddObservation(onAdded));
+    const { result } = await renderHookSignedIn(() =>
+      useAddObservation(onAdded),
+    );
     await expect(result.current(lead, "x")).resolves.toBe(false);
     expect(onAdded).not.toHaveBeenCalled();
     expect(toast.error).toHaveBeenCalledWith(

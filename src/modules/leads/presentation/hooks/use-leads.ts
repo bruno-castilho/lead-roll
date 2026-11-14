@@ -3,11 +3,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useSession } from "@/modules/auth";
-import { LeadsService } from "@/services/leads-service";
+import { listLeads } from "../../composition";
 import type { Lead, Observation } from "../../domain/lead";
+import { leadsErrorMessage } from "../leads-messages";
 
 /**
- * Busca os leads no Supabase assim que há um perfil conectado. A RLS devolve
+ * Busca os leads assim que há um perfil conectado. A RLS devolve
  * todos para o gestor e só os próprios para o corretor. A página é renderizada
  * (oculta) antes da sessão ser restaurada, então a busca espera o `profile` e
  * é refeita quando o usuário muda.
@@ -18,25 +19,26 @@ import type { Lead, Observation } from "../../domain/lead";
 export function useLeads({ own = false }: { own?: boolean } = {}) {
   const { profile } = useSession();
   const profileId = profile?.id ?? null;
+  const profileRole = profile?.role ?? null;
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!profileId) {
+    if (!profileId || !profileRole) {
       setLeads([]);
       setLoading(true);
       return;
     }
     let cancelled = false;
     setLoading(true);
-    LeadsService.listLeads(own ? { brokerId: profileId } : {})
+    listLeads({ id: profileId, role: profileRole }, { onlyOwn: own })
       .then((list) => {
         if (!cancelled) setLeads(list);
       })
       .catch((error: unknown) => {
         if (cancelled) return;
         setLeads([]);
-        toast.error(error instanceof Error ? error.message : String(error));
+        toast.error(leadsErrorMessage(error));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -44,7 +46,7 @@ export function useLeads({ own = false }: { own?: boolean } = {}) {
     return () => {
       cancelled = true;
     };
-  }, [profileId, own]);
+  }, [profileId, profileRole, own]);
 
   /** Inclui na lista um lead que o banco acabou de cadastrar. */
   const addLead = useCallback((lead: Lead) => {

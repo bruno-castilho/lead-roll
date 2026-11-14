@@ -4,8 +4,8 @@ import { ArrowRight, Inbox, Shuffle, UserX } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useSession } from "@/modules/auth";
 import type { Broker } from "@/modules/brokers";
-import { LeadsService } from "@/services/leads-service";
 import { EmptyState } from "@/shared/ui/components/empty-state";
 import { Spinner } from "@/shared/ui/components/loading-state";
 import { pluralize } from "@/shared/ui/format";
@@ -21,7 +21,9 @@ import {
   DialogTitle,
 } from "@/shared/ui/primitives/dialog";
 import { ROUTES } from "@/shared/ui/routes";
+import { distributeLeads } from "../../composition";
 import { isUnassigned, type Lead } from "../../domain/lead";
+import { leadsErrorMessage } from "../leads-messages";
 
 interface DistributionDialogProps {
   open: boolean;
@@ -40,6 +42,7 @@ export function DistributionDialog({
   brokers,
   onDistributed,
 }: DistributionDialogProps) {
+  const { profile } = useSession();
   const [submitting, setSubmitting] = useState(false);
   const pendingCount = leads.filter(isUnassigned).length;
   const brokerCount = brokers.filter((b) => b.isPresent).length;
@@ -55,10 +58,10 @@ export function DistributionDialog({
   }
 
   async function handleConfirm() {
-    if (submitting) return;
+    if (!profile || submitting) return;
     setSubmitting(true);
     try {
-      const distributed = await LeadsService.distributeLeads();
+      const distributed = await distributeLeads(profile);
       onDistributed?.(distributed);
       onOpenChange(false);
       // O banco decide quem participa: a presença pode ter expirado ou outro
@@ -75,7 +78,7 @@ export function DistributionDialog({
         description: `${pluralize(distributed.length, "lead distribuído", "leads distribuídos")} entre ${pluralize(receivers, "corretor", "corretores")}.`,
       });
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : String(error));
+      toast.error(leadsErrorMessage(error));
     } finally {
       setSubmitting(false);
     }

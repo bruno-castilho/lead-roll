@@ -87,6 +87,10 @@ function createFakeSupabase() {
     makeUnavailable(error: Error) {
       unavailable = error;
     },
+    /** Esquece as consultas já feitas (ex.: a da restauração da sessão). */
+    forgetQueries() {
+      queries.length = 0;
+    },
     getClient() {
       if (unavailable) throw unavailable;
       return client;

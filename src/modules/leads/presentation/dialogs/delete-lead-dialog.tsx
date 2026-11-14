@@ -3,7 +3,7 @@
 import { Trash2 } from "lucide-react";
 import { type MouseEvent, useState } from "react";
 import { toast } from "sonner";
-import { LeadsService } from "@/services/leads-service";
+import { useSession } from "@/modules/auth";
 import { Spinner } from "@/shared/ui/components/loading-state";
 import { useResetOnHide } from "@/shared/ui/hooks/use-reset-on-hide";
 import {
@@ -17,7 +17,9 @@ import {
   AlertDialogMedia,
   AlertDialogTitle,
 } from "@/shared/ui/primitives/alert-dialog";
+import { deleteLead } from "../../composition";
 import type { Lead } from "../../domain/lead";
+import { leadsErrorMessage } from "../leads-messages";
 
 interface DeleteLeadDialogProps {
   lead: Lead | null;
@@ -31,6 +33,7 @@ export function DeleteLeadDialog({
   onOpenChange,
   onDeleted,
 }: DeleteLeadDialogProps) {
+  const { profile } = useSession();
   const [shown, setShown] = useState<Lead | null>(lead);
   const [deleting, setDeleting] = useState(false);
   if (lead && lead !== shown) setShown(lead);
@@ -46,15 +49,15 @@ export function DeleteLeadDialog({
   async function handleConfirm(event: MouseEvent<HTMLButtonElement>) {
     // O Action do Radix fecha o diálogo no clique; ele só fecha ao terminar.
     event.preventDefault();
-    if (!lead || deleting) return;
+    if (!lead || !profile || deleting) return;
     setDeleting(true);
     try {
-      await LeadsService.deleteLead(lead.id);
+      await deleteLead(profile, lead.id);
       onDeleted?.(lead);
       toast.success("Lead excluído com sucesso", { description: lead.name });
       onOpenChange(false);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : String(error));
+      toast.error(leadsErrorMessage(error));
     } finally {
       setDeleting(false);
     }

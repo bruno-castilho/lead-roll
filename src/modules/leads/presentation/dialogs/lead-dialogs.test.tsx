@@ -1,11 +1,12 @@
 // @vitest-environment jsdom
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Broker } from "@/modules/brokers";
 import { toast } from "@/test/app-mocks";
 import { postgrestError, supabaseFake } from "@/test/fake-supabase";
-import { leadRow } from "@/test/fixtures";
+import { arrangeSession, leadRow, MANAGER } from "@/test/fixtures";
+import { renderSignedIn } from "@/test/signed-in";
 import type { Lead } from "../../domain/lead";
 import { LeadForm } from "../form/lead-form";
 import { DeleteLeadDialog } from "./delete-lead-dialog";
@@ -46,14 +47,17 @@ function broker(id: string, isPresent: boolean): Broker {
   return { id, name: id, email: `${id}@x.com`, isPresent };
 }
 
-beforeEach(() => supabaseFake.reset());
+beforeEach(() => {
+  supabaseFake.reset();
+  arrangeSession(MANAGER);
+});
 
 describe("DeleteLeadDialog", () => {
   it("exclui, avisa e fecha", async () => {
     const onDeleted = vi.fn();
     const onOpenChange = vi.fn();
     supabaseFake.respondWith({ data: [{ id: "a" }] });
-    render(
+    await renderSignedIn(
       <DeleteLeadDialog
         lead={lead("a", { name: "Ana Souza" })}
         onOpenChange={onOpenChange}
@@ -74,7 +78,9 @@ describe("DeleteLeadDialog", () => {
   it("falha: avisa e continua aberto", async () => {
     const onOpenChange = vi.fn();
     supabaseFake.respondWith({ data: [] });
-    render(<DeleteLeadDialog lead={lead("a")} onOpenChange={onOpenChange} />);
+    await renderSignedIn(
+      <DeleteLeadDialog lead={lead("a")} onOpenChange={onOpenChange} />,
+    );
     fireEvent.click(screen.getByRole("button", { name: "Excluir" }));
     await waitFor(() =>
       expect(toast.error).toHaveBeenCalledWith(
@@ -93,12 +99,12 @@ describe("DistributionDialog", () => {
   ];
   const brokers = [broker("b1", true), broker("b2", false)];
 
-  function renderDialog(
+  async function renderDialog(
     props: Partial<Parameters<typeof DistributionDialog>[0]> = {},
   ) {
     const onOpenChange = vi.fn();
     const onDistributed = vi.fn();
-    render(
+    await renderSignedIn(
       <DistributionDialog
         open
         onOpenChange={onOpenChange}
@@ -111,8 +117,8 @@ describe("DistributionDialog", () => {
     return { onOpenChange, onDistributed };
   }
 
-  it("mostra as contagens do cliente", () => {
-    renderDialog();
+  it("mostra as contagens do cliente", async () => {
+    await renderDialog();
     expect(screen.getByText("leads aguardando distribuição")).toBeTruthy();
     expect(screen.getByText("corretor disponível")).toBeTruthy();
     expect(
@@ -122,15 +128,15 @@ describe("DistributionDialog", () => {
     ).toBeTruthy();
   });
 
-  it("sem leads pendentes, só permite fechar", () => {
-    renderDialog({ leads: [leads[2]] });
+  it("sem leads pendentes, só permite fechar", async () => {
+    await renderDialog({ leads: [leads[2]] });
     expect(screen.getByText("Nenhum lead sem responsável")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Fechar" })).toBeTruthy();
     expect(screen.queryByText("Confirmar distribuição")).toBeNull();
   });
 
-  it("sem corretores presentes, aponta para a página de corretores", () => {
-    renderDialog({ brokers: [broker("b2", false)] });
+  it("sem corretores presentes, aponta para a página de corretores", async () => {
+    await renderDialog({ brokers: [broker("b2", false)] });
     expect(screen.getByText("Nenhum corretor disponível")).toBeTruthy();
     expect(
       screen.getByRole("link", { name: /Ver corretores/ }).getAttribute("href"),
@@ -144,7 +150,7 @@ describe("DistributionDialog", () => {
         leadRow({ id: "b", broker_id: "b2" }),
       ],
     });
-    const { onOpenChange, onDistributed } = renderDialog();
+    const { onOpenChange, onDistributed } = await renderDialog();
     fireEvent.click(
       screen.getByRole("button", { name: "Confirmar distribuição" }),
     );
@@ -159,7 +165,7 @@ describe("DistributionDialog", () => {
 
   it("nada distribuído: avisa com toast informativo", async () => {
     supabaseFake.respondWith({ data: [] });
-    const { onOpenChange } = renderDialog();
+    const { onOpenChange } = await renderDialog();
     fireEvent.click(
       screen.getByRole("button", { name: "Confirmar distribuição" }),
     );
@@ -172,7 +178,7 @@ describe("DistributionDialog", () => {
 
   it("falha: avisa e continua aberto", async () => {
     supabaseFake.respondWith({ status: 400, error: postgrestError("42501") });
-    const { onOpenChange } = renderDialog();
+    const { onOpenChange } = await renderDialog();
     fireEvent.click(
       screen.getByRole("button", { name: "Confirmar distribuição" }),
     );
@@ -186,8 +192,8 @@ describe("DistributionDialog", () => {
 });
 
 describe("LeadForm", () => {
-  it("cadastro vazio: mostra os erros e não grava", () => {
-    render(<LeadForm open onOpenChange={vi.fn()} />);
+  it("cadastro vazio: mostra os erros e não grava", async () => {
+    await renderSignedIn(<LeadForm open onOpenChange={vi.fn()} />);
     expect(screen.getByText("Novo lead")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Cadastrar lead" }));
     expect(toast.error).toHaveBeenCalledWith(
@@ -199,8 +205,8 @@ describe("LeadForm", () => {
     expect(supabaseFake.queries).toEqual([]);
   });
 
-  it("aplica a máscara de telefone ao digitar", () => {
-    render(<LeadForm open onOpenChange={vi.fn()} />);
+  it("aplica a máscara de telefone ao digitar", async () => {
+    await renderSignedIn(<LeadForm open onOpenChange={vi.fn()} />);
     const phone = screen.getByLabelText(/Telefone/);
     fireEvent.change(phone, { target: { value: "11987654321" } });
     expect(phone).toHaveProperty("value", "(11) 98765-4321");
@@ -212,7 +218,7 @@ describe("LeadForm", () => {
     supabaseFake.respondWith({
       data: leadRow({ id: "a", name: "Ana Paula", email: null }),
     });
-    render(
+    await renderSignedIn(
       <LeadForm
         open
         onOpenChange={onOpenChange}
@@ -258,7 +264,9 @@ describe("LeadForm", () => {
       status: 406,
       error: postgrestError("PGRST116"),
     });
-    render(<LeadForm open onOpenChange={onOpenChange} lead={lead("a")} />);
+    await renderSignedIn(
+      <LeadForm open onOpenChange={onOpenChange} lead={lead("a")} />,
+    );
     fireEvent.click(screen.getByRole("button", { name: "Salvar alterações" }));
     await waitFor(() =>
       expect(toast.error).toHaveBeenCalledWith(
