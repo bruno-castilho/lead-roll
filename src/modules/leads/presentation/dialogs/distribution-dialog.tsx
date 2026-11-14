@@ -21,7 +21,7 @@ import {
   DialogTitle,
 } from "@/shared/ui/primitives/dialog";
 import { ROUTES } from "@/shared/ui/routes";
-import type { Lead } from "../../domain/lead";
+import { isUnassigned, type Lead } from "../../domain/lead";
 
 interface DistributionDialogProps {
   open: boolean;
@@ -41,7 +41,7 @@ export function DistributionDialog({
   onDistributed,
 }: DistributionDialogProps) {
   const [submitting, setSubmitting] = useState(false);
-  const pendingCount = leads.filter((l) => l.brokerId === null).length;
+  const pendingCount = leads.filter(isUnassigned).length;
   const brokerCount = brokers.filter((b) => b.isPresent).length;
   const absentCount = brokers.length - brokerCount;
   const canDistribute = pendingCount > 0 && brokerCount > 0;

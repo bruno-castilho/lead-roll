@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { useSession } from "@/modules/auth";
 import { PresenceToggle, useBrokers, usePresence } from "@/modules/brokers";
 import {
+  isResponsibleFor,
   LeadDetails,
   LeadKanban,
   useAddObservation,
@@ -34,7 +35,7 @@ export function BrokerLeadsPage() {
   // Permissão: o corretor enxerga exclusivamente os leads atribuídos a ele
   // (última barreira no cliente, além do filtro da consulta e da RLS).
   const myLeads = useMemo(
-    () => leads.filter((l) => profile && l.brokerId === profile.id),
+    () => leads.filter((l) => profile && isResponsibleFor(profile, l)),
     [leads, profile],
   );
 

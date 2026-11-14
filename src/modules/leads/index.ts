@@ -4,6 +4,7 @@ export type {
   Observation,
 } from "./domain/lead";
 export type { LeadInput } from "./domain/lead-input";
+export { isResponsibleFor } from "./domain/lead-policy";
 export { LeadDetails } from "./presentation/details/lead-details";
 export { DeleteLeadDialog } from "./presentation/dialogs/delete-lead-dialog";
 export { DistributionDialog } from "./presentation/dialogs/distribution-dialog";

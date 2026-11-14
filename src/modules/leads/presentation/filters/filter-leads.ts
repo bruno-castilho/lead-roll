@@ -1,9 +1,10 @@
 import { normalize } from "@/shared/ui/format";
-import type {
-  Lead,
-  LeadInterest,
-  LeadSource,
-  LeadStage,
+import {
+  isUnassigned,
+  type Lead,
+  type LeadInterest,
+  type LeadSource,
+  type LeadStage,
 } from "../../domain/lead";
 import { phoneDigits } from "../../domain/phone";
 
@@ -44,8 +45,8 @@ export function filterLeads(leads: Lead[], f: LeadFilterState): Lead[] {
     if (f.source !== "all" && lead.source !== f.source) return false;
     if (f.interest !== "all" && lead.interest !== f.interest) return false;
     if (f.stage !== "all" && lead.stage !== f.stage) return false;
-    if (f.broker === "none" && lead.brokerId !== null) return false;
-    if (f.broker === "assigned" && lead.brokerId === null) return false;
+    if (f.broker === "none" && !isUnassigned(lead)) return false;
+    if (f.broker === "assigned" && isUnassigned(lead)) return false;
     if (
       f.broker !== "all" &&
       f.broker !== "none" &&
