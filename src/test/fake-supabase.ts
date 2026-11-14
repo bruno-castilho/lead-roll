@@ -5,6 +5,11 @@ export interface FakeResponse {
   data?: unknown;
   error?: { code: string; message: string } | null;
   status?: number;
+  /**
+   * Tabela ou RPC que recebe esta resposta. Sem `on`, vale para a próxima
+   * consulta, qualquer que seja; com `on`, independe da ordem das consultas.
+   */
+  on?: string;
 }
 
 /** Uma consulta feita ao cliente falso: a origem e a cadeia de chamadas. */
@@ -30,7 +35,12 @@ function createFakeSupabase() {
       {
         get(_target, property) {
           if (property === "then") {
-            const response = responses.shift() ?? {};
+            const source = query.table ?? query.rpc;
+            const index = responses.findIndex(
+              (r) => r.on === undefined || r.on === source,
+            );
+            const { on: _on, ...response } =
+              index === -1 ? {} : responses.splice(index, 1)[0];
             return (resolve: (value: unknown) => void) =>
               resolve({ data: null, error: null, status: 200, ...response });
           }
