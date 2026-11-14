@@ -4,7 +4,7 @@ Fase 2 do [PRD](PRD.md), a partir do [code review](01-code-review.md). Registro 
 marque cada etapa ao concluir e anote desvios na seção 8.
 
 **Estado:** Parada 1 aprovada em 2026-11-14 (todas as perguntas da seção 6 decididas).
-Parada 2 aprovada em 2026-11-14. Etapa 4 (`auth`) concluída; em execução: Etapa 5 (`leads`).
+Etapas 0 a 7 concluídas em 2026-11-14 (relatório em [03-relatorio-final.md](03-relatorio-final.md)). Em execução: Etapa 8 (`AGENTS.md`).
 
 ## 1. Arquitetura-alvo, adaptada ao LeadRoll
 
@@ -246,9 +246,9 @@ Convenções que valem em todas as etapas:
 - [x] Etapa 3 — piloto `brokers`
 - [x] Parada 2 — aprovação (2026-11-14)
 - [x] Etapa 4 — `auth`
-- [ ] Etapas 5a–5c — `leads`
-- [ ] Etapa 6 — shell, `app/` e limpeza
-- [ ] Etapa 7 — validação final e relatório
+- [x] Etapas 5a–5c — `leads`
+- [x] Etapa 6 — shell, `app/` e limpeza
+- [x] Etapa 7 — validação final e relatório
 - [ ] Etapa 8 — `AGENTS.md`
 
 ## 8. Desvios e decisões
@@ -276,4 +276,8 @@ Convenções que valem em todas as etapas:
 | 2026-11-14 | A prop do `AppShell` passou de `role` para `userRole` | O lint (`useValidAriaRole`) toma `role="manager"` literal como atributo ARIA |
 | 2026-11-14 | A remoção de `user`/`session` do contexto de sessão veio antes da movimentação de `auth` | A apresentação não pode importar o SDK; mover primeiro deixaria o commit vermelho |
 | 2026-11-14 | `signIn` e `restoreSession` mantêm as condições antigas de logout: no login, qualquer falha ao buscar o perfil; na restauração, só perfil ausente ou sessão recusada | Comportamento preservado (testes de caso de uso e de caracterização; mutação removendo o logout é detectada) |
+| 2026-11-14 | `lib/lead-filters` e `lib/validation` entraram no módulo `leads` no mesmo commit da troca para o domínio (`3ec446d`) | Separar movimento e conteúdo deixaria um commit vermelho (tipos antigos × novos) |
+| 2026-11-14 | Hooks e diálogos de leads leem o ator da sessão; os testes passaram a renderizar com `SignedIn` | Os casos de uso exigem o ator (P-06). Nenhuma asserção removida |
+| 2026-11-14 | O teste `role === "broker"` do `Header` foi mantido e comentado | Sem ele, a área do gestor renderizada oculta durante a restauração pediria o `PresenceProvider`, que só existe na área do corretor |
+| 2026-11-14 | Testes de caracterização extras (menu, `PresenceToggle`, `RootRedirect`, `SearchInput`) na validação final | A cobertura de branches tinha ficado abaixo da referência da Fase 3 (73,41% × 75,88%) porque os `switch` das classes de erro antigas viraram mapas; com os testes, 82,92% |
 

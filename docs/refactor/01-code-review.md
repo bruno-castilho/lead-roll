@@ -1,7 +1,7 @@
 # 01 — Linha de base e code review
 
 Fases 0 e 1 do [PRD](PRD.md). Data: 2026-11-14. Commit de referência: `095c00c` (main).
-Nenhum arquivo de código foi alterado nestas fases.
+Nenhum arquivo de código foi alterado nestas fases. O status final de cada achado está em [03-relatorio-final.md](03-relatorio-final.md#5-achados-status).
 
 ## 1. Contexto do projeto (seção 2 do PRD)
 
