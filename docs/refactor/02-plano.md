@@ -4,7 +4,7 @@ Fase 2 do [PRD](PRD.md), a partir do [code review](01-code-review.md). Registro 
 marque cada etapa ao concluir e anote desvios na seção 8.
 
 **Estado:** Parada 1 aprovada em 2026-11-14 (todas as perguntas da seção 6 decididas).
-Fase 3 concluída (250 testes). Em execução: Etapa 2 (fundação `shared`).
+Fase 3, Etapa 2 e piloto `brokers` concluídos. **Aguardando a Parada 2.**
 
 ## 1. Arquitetura-alvo, adaptada ao LeadRoll
 
@@ -242,8 +242,8 @@ Convenções que valem em todas as etapas:
 - [x] Parada 1 — aprovação (2026-11-14)
 - [x] Etapa 0 — branch e documentos
 - [x] Etapas 1.1–1.5 — rede de segurança (Fase 3)
-- [ ] Etapa 2 — fundação `shared`
-- [ ] Etapa 3 — piloto `brokers`
+- [x] Etapa 2 — fundação `shared`
+- [x] Etapa 3 — piloto `brokers`
 - [ ] Parada 2 — aprovação
 - [ ] Etapa 4 — `auth`
 - [ ] Etapas 5a–5c — `leads`
@@ -266,3 +266,9 @@ Convenções que valem em todas as etapas:
 | 2026-11-14 | Overrides de fronteira são disjuntos, e há um override de `presentation` por módulo | No Biome, um override posterior substitui a configuração da regra em vez de somar |
 | 2026-11-14 | Arquivos `*.test.ts(x)` ficam fora das regras de fronteira | Testes precisam de dublês (`@/test/*`, `vi.mock`); a regra vale para o código de produção |
 | 2026-11-14 | `npm run lint` passou de ~0,1 s para ~1 s | Custo do `noImportCycles` (grafo de módulos) |
+| 2026-11-14 | O classificador de falhas do PostgREST entrou com o piloto, não na Etapa 2 | Evita export sem uso; o piloto é o primeiro consumidor |
+| 2026-11-14 | `lib/format.ts` foi movido inteiro para `shared/ui/format.ts` | A máscara de telefone também é formatação genérica; o que for regra do lead sai dali na Etapa 5a |
+| 2026-11-14 | Arquivos de hook reexportados pelo `index.ts` de um módulo levam `"use client"` (ex.: `use-presence.ts`) | O `index` é importado por Server Components (`app/corretor/layout.tsx`); sem a diretiva, o hook entraria no grafo do servidor |
+| 2026-11-14 | `Broker` não tem mais o campo `role` (sempre `"broker"`); o teste de caracterização de `useBrokers` deixou de esperá-lo | Ninguém lia o campo (busca registrada no commit `37031d3`); não é comportamento observável |
+| 2026-11-14 | Imports transitórios aceitos até as próximas etapas: `useSession` de `@/hooks/use-session` em `brokers/presentation` (sai na Etapa 4) e `useLeadStats`/`Lead` de `@/hooks`/`@/lib` em `screens/manager-brokers-screen.tsx` (sai na Etapa 5) | Os módulos `auth` e `leads` ainda não existem; as regras de fronteira não bloqueiam as pastas antigas |
+| 2026-11-14 | Verificação da Parada 2: lint, tipos, 290 testes, build com e sem variáveis; rotas idênticas à linha de base; cobertura 85,40% statements / 76,64% branches / 77,58% funções / 86,22% linhas (acima da referência) | Comandos rodados nesta sessão |
