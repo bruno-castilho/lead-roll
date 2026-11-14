@@ -2,7 +2,7 @@
 
 import { ThemeProvider } from "next-themes";
 import type { ReactNode } from "react";
-import { SessionProvider } from "@/contexts/session";
+import { SessionProvider } from "@/modules/auth";
 import { Toaster } from "@/shared/ui/primitives/sonner";
 import { TooltipProvider } from "@/shared/ui/primitives/tooltip";
 

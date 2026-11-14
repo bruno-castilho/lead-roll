@@ -2,10 +2,10 @@
 import { AuthApiError } from "@supabase/supabase-js";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { SessionProvider } from "@/contexts/session";
 import { router, toast } from "@/test/app-mocks";
 import { supabaseFake } from "@/test/fake-supabase";
 import { arrangeSession, MANAGER } from "@/test/fixtures";
+import { SessionProvider } from "./session-provider";
 import { UserMenu } from "./user-menu";
 
 vi.mock("@/shared/infrastructure/supabase/client", async (importOriginal) => {

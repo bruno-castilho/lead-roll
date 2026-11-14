@@ -9,7 +9,7 @@ import {
   useState,
 } from "react";
 import { toast } from "sonner";
-import { useSession } from "@/hooks/use-session";
+import { useSession } from "@/modules/auth";
 import { formatTime } from "@/shared/ui/format";
 import { confirmPresence, loadOwnPresence } from "../composition";
 import { canConfirmPresence } from "../domain/presence-policy";

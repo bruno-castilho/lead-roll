@@ -8,7 +8,7 @@ import {
 } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { SessionProvider } from "@/contexts/session";
+import { SessionProvider } from "@/modules/auth";
 import { PresenceProvider } from "@/modules/brokers";
 import { ManagerBrokersScreen } from "@/screens/manager-brokers-screen";
 import { TooltipProvider } from "@/shared/ui/primitives/tooltip";

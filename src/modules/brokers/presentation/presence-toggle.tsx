@@ -1,7 +1,7 @@
 "use client";
 
 import { CheckCircle2, RefreshCw } from "lucide-react";
-import { useSession } from "@/hooks/use-session";
+import { useSession } from "@/modules/auth";
 import { cn } from "@/shared/ui/cn";
 import { Spinner } from "@/shared/ui/components/loading-state";
 import { formatTime } from "@/shared/ui/format";

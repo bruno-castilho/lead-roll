@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { useSession } from "@/hooks/use-session";
 import type { Lead, Observation } from "@/lib/types";
+import { useSession } from "@/modules/auth";
 import { LeadsService } from "@/services/leads-service";
 
 /**

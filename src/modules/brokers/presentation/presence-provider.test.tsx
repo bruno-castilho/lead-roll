@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { act, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { SessionProvider } from "@/contexts/session";
+import { SessionProvider } from "@/modules/auth";
 import { toast } from "@/test/app-mocks";
 import { postgrestError, supabaseFake } from "@/test/fake-supabase";
 import { arrangeSession, BROKER, MANAGER } from "@/test/fixtures";

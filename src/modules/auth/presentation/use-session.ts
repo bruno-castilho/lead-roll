@@ -1,5 +1,7 @@
+"use client";
+
 import { useContext } from "react";
-import { SessionContext } from "@/contexts/session";
+import { SessionContext } from "./session-provider";
 
 export function useSession() {
   const ctx = useContext(SessionContext);

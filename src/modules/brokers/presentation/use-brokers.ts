@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { useSession } from "@/hooks/use-session";
+import { useSession } from "@/modules/auth";
 import { listBrokers } from "../composition";
 import type { Broker } from "../domain/broker";
 import { brokersErrorMessage } from "./brokers-messages";

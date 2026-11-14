@@ -1,11 +1,11 @@
 // @vitest-environment jsdom
 import { act, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { useSession } from "@/hooks/use-session";
 import { toast } from "@/test/app-mocks";
 import { postgrestError, supabaseFake } from "@/test/fake-supabase";
 import { arrangeSession, BROKER } from "@/test/fixtures";
-import { SessionProvider } from "./session";
+import { SessionProvider } from "./session-provider";
+import { useSession } from "./use-session";
 
 vi.mock("@/shared/infrastructure/supabase/client", async (importOriginal) => {
   const { supabaseFake } = await import("@/test/fake-supabase");

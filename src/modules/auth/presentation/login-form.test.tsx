@@ -2,11 +2,11 @@
 import { AuthApiError } from "@supabase/supabase-js";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { SessionProvider } from "@/contexts/session";
 import { router } from "@/test/app-mocks";
 import { postgrestError, supabaseFake } from "@/test/fake-supabase";
 import { arrangeSession, BROKER, MANAGER } from "@/test/fixtures";
 import { LoginForm } from "./login-form";
+import { SessionProvider } from "./session-provider";
 
 vi.mock("@/shared/infrastructure/supabase/client", async (importOriginal) => {
   const { supabaseFake } = await import("@/test/fake-supabase");

@@ -1,12 +1,12 @@
 "use client";
 
 import { Menu } from "lucide-react";
+import { UserMenu } from "@/modules/auth";
 import { PresenceToggle } from "@/modules/brokers";
 import type { UserRole } from "@/shared/domain/actor";
 import { Button } from "@/shared/ui/primitives/button";
 import { Brand } from "./sidebar";
 import { ThemeToggle } from "./theme-toggle";
-import { UserMenu } from "./user-menu";
 
 interface HeaderProps {
   role: UserRole;
