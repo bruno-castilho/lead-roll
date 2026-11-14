@@ -29,6 +29,10 @@ export function Header({ role, onOpenMobileMenu }: HeaderProps) {
         <Brand />
       </div>
       <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
+        {/* Só na área do corretor: o PresenceProvider existe apenas nela.
+            Durante a restauração da sessão, a área do gestor é renderizada
+            oculta e o perfil já pode ser de corretor; sem este teste o
+            PresenceToggle pediria um provider que não existe. */}
         {role === "broker" && (
           <>
             <PresenceToggle compact className="sm:hidden" />
