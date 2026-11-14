@@ -8,7 +8,7 @@ import { postgrestError, supabaseFake } from "@/test/fake-supabase";
 import { arrangeSession, BROKER, leadRow, MANAGER } from "@/test/fixtures";
 import { useLeads } from "./use-leads";
 
-vi.mock("@/lib/supabase/client", async (importOriginal) => {
+vi.mock("@/shared/infrastructure/supabase/client", async (importOriginal) => {
   const { supabaseFake } = await import("@/test/fake-supabase");
   return {
     ...(await importOriginal<object>()),

@@ -3,17 +3,23 @@
 import { Save, UserPlus } from "lucide-react";
 import { type FormEvent, type ReactNode, useState } from "react";
 import { toast } from "sonner";
-import { Spinner } from "@/components/shared/loading-state";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { LEAD_INTERESTS, LEAD_SOURCES } from "@/lib/constants";
+import { formatPhone } from "@/lib/format";
+import type { Lead, LeadInput } from "@/lib/types";
+import { fieldErrors, leadSchema } from "@/lib/validation";
+import { LeadsService } from "@/services/leads-service";
+import { Spinner } from "@/shared/ui/components/loading-state";
+import { useResetOnHide } from "@/shared/ui/hooks/use-reset-on-hide";
+import { Button } from "@/shared/ui/primitives/button";
+import { Input } from "@/shared/ui/primitives/input";
+import { Label } from "@/shared/ui/primitives/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/shared/ui/primitives/select";
 import {
   Sheet,
   SheetContent,
@@ -21,13 +27,7 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet";
-import { useResetOnHide } from "@/hooks/use-reset-on-hide";
-import { LEAD_INTERESTS, LEAD_SOURCES } from "@/lib/constants";
-import { formatPhone } from "@/lib/format";
-import type { Lead, LeadInput } from "@/lib/types";
-import { fieldErrors, leadSchema } from "@/lib/validation";
-import { LeadsService } from "@/services/leads-service";
+} from "@/shared/ui/primitives/sheet";
 
 interface LeadFormProps {
   open: boolean;

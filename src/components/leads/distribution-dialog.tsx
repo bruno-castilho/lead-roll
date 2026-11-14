@@ -4,9 +4,14 @@ import { ArrowRight, Inbox, Shuffle, UserX } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
-import { EmptyState } from "@/components/shared/empty-state";
-import { Spinner } from "@/components/shared/loading-state";
-import { Button } from "@/components/ui/button";
+import { ROUTES } from "@/lib/constants";
+import { pluralize } from "@/lib/format";
+import type { Lead, User } from "@/lib/types";
+import { LeadsService } from "@/services/leads-service";
+import { EmptyState } from "@/shared/ui/components/empty-state";
+import { Spinner } from "@/shared/ui/components/loading-state";
+import { useResetOnHide } from "@/shared/ui/hooks/use-reset-on-hide";
+import { Button } from "@/shared/ui/primitives/button";
 import {
   Dialog,
   DialogClose,
@@ -15,12 +20,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { useResetOnHide } from "@/hooks/use-reset-on-hide";
-import { ROUTES } from "@/lib/constants";
-import { pluralize } from "@/lib/format";
-import type { Lead, User } from "@/lib/types";
-import { LeadsService } from "@/services/leads-service";
+} from "@/shared/ui/primitives/dialog";
 
 interface DistributionDialogProps {
   open: boolean;

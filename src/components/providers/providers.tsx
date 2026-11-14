@@ -2,9 +2,9 @@
 
 import { ThemeProvider } from "next-themes";
 import type { ReactNode } from "react";
-import { Toaster } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import { SessionProvider } from "@/contexts/session";
+import { Toaster } from "@/shared/ui/primitives/sonner";
+import { TooltipProvider } from "@/shared/ui/primitives/tooltip";
 
 export function Providers({ children }: { children: ReactNode }) {
   return (

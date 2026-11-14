@@ -1,15 +1,15 @@
 "use client";
 
 import { type ReactNode, useState } from "react";
+import type { UserRole } from "@/lib/types";
+import { cn } from "@/shared/ui/cn";
 import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet";
-import type { UserRole } from "@/lib/types";
-import { cn } from "@/lib/utils";
+} from "@/shared/ui/primitives/sheet";
 import { Header } from "./header";
 import { Brand, Sidebar, SidebarNav } from "./sidebar";
 

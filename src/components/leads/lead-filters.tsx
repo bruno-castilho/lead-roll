@@ -1,8 +1,16 @@
 "use client";
 
 import { ArrowDownWideNarrow, FilterX } from "lucide-react";
-import { SearchInput } from "@/components/shared/search-input";
-import { Button } from "@/components/ui/button";
+import { LEAD_INTERESTS, LEAD_SOURCES, LEAD_STAGES } from "@/lib/constants";
+import {
+  countActiveFilters,
+  DEFAULT_LEAD_FILTERS,
+  type LeadFilterState,
+} from "@/lib/lead-filters";
+import type { User } from "@/lib/types";
+import { cn } from "@/shared/ui/cn";
+import { SearchInput } from "@/shared/ui/components/search-input";
+import { Button } from "@/shared/ui/primitives/button";
 import {
   Select,
   SelectContent,
@@ -12,15 +20,7 @@ import {
   SelectSeparator,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { LEAD_INTERESTS, LEAD_SOURCES, LEAD_STAGES } from "@/lib/constants";
-import {
-  countActiveFilters,
-  DEFAULT_LEAD_FILTERS,
-  type LeadFilterState,
-} from "@/lib/lead-filters";
-import type { User } from "@/lib/types";
-import { cn } from "@/lib/utils";
+} from "@/shared/ui/primitives/select";
 
 interface FilterSelectProps {
   label: string;

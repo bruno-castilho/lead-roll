@@ -3,13 +3,13 @@
 import { Users, UserX } from "lucide-react";
 import { useState } from "react";
 import { BrokerCard } from "@/components/brokers/broker-card";
-import { EmptyState } from "@/components/shared/empty-state";
-import { CardSkeleton } from "@/components/shared/loading-state";
-import { PageHeader } from "@/components/shared/page-header";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useBrokers } from "@/hooks/use-brokers";
 import { useLeadStats } from "@/hooks/use-lead-stats";
 import type { Lead } from "@/lib/types";
+import { EmptyState } from "@/shared/ui/components/empty-state";
+import { CardSkeleton } from "@/shared/ui/components/loading-state";
+import { PageHeader } from "@/shared/ui/components/page-header";
+import { Tabs, TabsList, TabsTrigger } from "@/shared/ui/primitives/tabs";
 
 type PresenceFilter = "all" | "present" | "absent";
 

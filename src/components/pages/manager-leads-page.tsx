@@ -15,22 +15,9 @@ import { LeadDetails } from "@/components/leads/lead-details";
 import { LeadFilters } from "@/components/leads/lead-filters";
 import { LeadForm } from "@/components/leads/lead-form";
 import { LeadTable } from "@/components/leads/lead-table";
-import { EmptyState } from "@/components/shared/empty-state";
-import { Kbd } from "@/components/shared/kbd";
-import { TableSkeleton } from "@/components/shared/loading-state";
-import { PageHeader } from "@/components/shared/page-header";
-import { Pagination } from "@/components/shared/pagination";
-import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { useBrokers } from "@/hooks/use-brokers";
-import { useHotkey } from "@/hooks/use-hotkey";
 import { useLeadStats } from "@/hooks/use-lead-stats";
 import { useLeads } from "@/hooks/use-leads";
-import { useResetOnHide } from "@/hooks/use-reset-on-hide";
 import {
   type BrokerFilter,
   countActiveFilters,
@@ -39,7 +26,20 @@ import {
   type LeadFilterState,
 } from "@/lib/lead-filters";
 import type { Lead } from "@/lib/types";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/ui/cn";
+import { EmptyState } from "@/shared/ui/components/empty-state";
+import { Kbd } from "@/shared/ui/components/kbd";
+import { TableSkeleton } from "@/shared/ui/components/loading-state";
+import { PageHeader } from "@/shared/ui/components/page-header";
+import { Pagination } from "@/shared/ui/components/pagination";
+import { useHotkey } from "@/shared/ui/hooks/use-hotkey";
+import { useResetOnHide } from "@/shared/ui/hooks/use-reset-on-hide";
+import { Button } from "@/shared/ui/primitives/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/shared/ui/primitives/tooltip";
 
 const QUICK_FILTERS: {
   value: BrokerFilter;

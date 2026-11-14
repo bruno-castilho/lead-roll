@@ -2,9 +2,9 @@
 
 import { Search, X } from "lucide-react";
 import { useRef } from "react";
-import { Input } from "@/components/ui/input";
-import { useHotkey } from "@/hooks/use-hotkey";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/ui/cn";
+import { useHotkey } from "@/shared/ui/hooks/use-hotkey";
+import { Input } from "@/shared/ui/primitives/input";
 import { Kbd } from "./kbd";
 
 interface SearchInputProps {

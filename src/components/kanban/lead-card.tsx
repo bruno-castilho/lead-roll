@@ -9,7 +9,11 @@ import {
   Phone,
 } from "lucide-react";
 import { StageDot } from "@/components/shared/stage-badge";
-import { Button } from "@/components/ui/button";
+import { INTEREST_LABEL, LEAD_STAGES, SOURCE_LABEL } from "@/lib/constants";
+import { formatShortDateTime } from "@/lib/format";
+import type { Lead, LeadStage } from "@/lib/types";
+import { cn } from "@/shared/ui/cn";
+import { Button } from "@/shared/ui/primitives/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,11 +23,7 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { INTEREST_LABEL, LEAD_STAGES, SOURCE_LABEL } from "@/lib/constants";
-import { formatShortDateTime } from "@/lib/format";
-import type { Lead, LeadStage } from "@/lib/types";
-import { cn } from "@/lib/utils";
+} from "@/shared/ui/primitives/dropdown-menu";
 
 interface LeadCardProps {
   lead: Lead;

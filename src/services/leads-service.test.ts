@@ -14,7 +14,7 @@ import {
 } from "@/test/fake-supabase";
 import { LeadsService } from "./leads-service";
 
-vi.mock("@/lib/supabase/client", async (importOriginal) => {
+vi.mock("@/shared/infrastructure/supabase/client", async (importOriginal) => {
   const { supabaseFake } = await import("@/test/fake-supabase");
   return {
     ...(await importOriginal<object>()),

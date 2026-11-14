@@ -1,9 +1,9 @@
 import { Mail } from "lucide-react";
 import { PresenceBadge } from "@/components/shared/presence-badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { getInitials } from "@/lib/format";
 import type { User } from "@/lib/types";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/ui/cn";
+import { Avatar, AvatarFallback } from "@/shared/ui/primitives/avatar";
 
 interface BrokerCardProps {
   broker: User;

@@ -5,15 +5,15 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { HOME_BY_ROLE } from "@/components/layout/nav-items";
-import { Spinner } from "@/components/shared/loading-state";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { ProfileError } from "@/errors/profile-error";
 import { SignInError } from "@/errors/sign-in-error";
 import { useSession } from "@/hooks/use-session";
 import { type LoginSchemaType, loginSchema } from "@/lib/validation";
 import { AuthService } from "@/services/auth-service";
+import { Spinner } from "@/shared/ui/components/loading-state";
+import { Button } from "@/shared/ui/primitives/button";
+import { Input } from "@/shared/ui/primitives/input";
+import { Label } from "@/shared/ui/primitives/label";
 
 export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);

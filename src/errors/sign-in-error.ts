@@ -2,7 +2,7 @@ import {
   isAuthApiError,
   isAuthRetryableFetchError,
 } from "@supabase/supabase-js";
-import { SupabaseConfigError } from "@/lib/supabase/client";
+import { SupabaseConfigError } from "@/shared/infrastructure/supabase/client";
 
 export class SignInError extends Error {
   constructor(error: unknown) {

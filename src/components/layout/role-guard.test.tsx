@@ -8,7 +8,7 @@ import { supabaseFake } from "@/test/fake-supabase";
 import { arrangeSession, BROKER, MANAGER } from "@/test/fixtures";
 import { RoleGuard } from "./role-guard";
 
-vi.mock("@/lib/supabase/client", async (importOriginal) => {
+vi.mock("@/shared/infrastructure/supabase/client", async (importOriginal) => {
   const { supabaseFake } = await import("@/test/fake-supabase");
   return {
     ...(await importOriginal<object>()),

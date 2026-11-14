@@ -10,7 +10,7 @@ import { DeleteLeadDialog } from "./delete-lead-dialog";
 import { DistributionDialog } from "./distribution-dialog";
 import { LeadForm } from "./lead-form";
 
-vi.mock("@/lib/supabase/client", async (importOriginal) => {
+vi.mock("@/shared/infrastructure/supabase/client", async (importOriginal) => {
   const { supabaseFake } = await import("@/test/fake-supabase");
   return {
     ...(await importOriginal<object>()),

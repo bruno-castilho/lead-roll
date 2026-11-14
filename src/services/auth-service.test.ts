@@ -8,11 +8,11 @@ import { AuthServiceError } from "@/errors/auth-service-error";
 import { ProfileError } from "@/errors/profile-error";
 import { SignInError } from "@/errors/sign-in-error";
 import { SignOutError } from "@/errors/sign-out-error";
-import { SupabaseConfigError } from "@/lib/supabase/client";
+import { SupabaseConfigError } from "@/shared/infrastructure/supabase/client";
 import { postgrestError, supabaseFake } from "@/test/fake-supabase";
 import { AuthService } from "./auth-service";
 
-vi.mock("@/lib/supabase/client", async (importOriginal) => {
+vi.mock("@/shared/infrastructure/supabase/client", async (importOriginal) => {
   const { supabaseFake } = await import("@/test/fake-supabase");
   return {
     ...(await importOriginal<object>()),

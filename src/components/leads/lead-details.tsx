@@ -17,18 +17,18 @@ import { type ReactNode, useState } from "react";
 import { ObservationForm } from "@/components/observations/observation-form";
 import { ObservationList } from "@/components/observations/observation-list";
 import { StageBadge } from "@/components/shared/stage-badge";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
+import { INTEREST_LABEL, SOURCE_LABEL } from "@/lib/constants";
+import { formatDateTime, phoneDigits } from "@/lib/format";
+import type { Lead, LeadStage, User } from "@/lib/types";
+import { Button } from "@/shared/ui/primitives/button";
+import { Separator } from "@/shared/ui/primitives/separator";
 import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet";
-import { INTEREST_LABEL, SOURCE_LABEL } from "@/lib/constants";
-import { formatDateTime, phoneDigits } from "@/lib/format";
-import type { Lead, LeadStage, User } from "@/lib/types";
+} from "@/shared/ui/primitives/sheet";
 import { StageSelect } from "./stage-select";
 
 interface LeadDetailsProps {

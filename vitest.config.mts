@@ -21,7 +21,7 @@ export default defineConfig({
       exclude: [
         "src/**/*.test.{ts,tsx}",
         "src/test/**",
-        "src/components/ui/**",
+        "src/shared/ui/primitives/**",
       ],
     },
   },

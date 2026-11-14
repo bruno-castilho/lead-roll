@@ -11,10 +11,10 @@ import {
 } from "@dnd-kit/core";
 import { useMemo, useState } from "react";
 import { StageDot } from "@/components/shared/stage-badge";
-import { useMediaQuery } from "@/hooks/use-media-query";
 import { LEAD_STAGES } from "@/lib/constants";
 import type { Lead, LeadStage } from "@/lib/types";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/ui/cn";
+import { useMediaQuery } from "@/shared/ui/hooks/use-media-query";
 import { KanbanColumn } from "./kanban-column";
 import { LeadCardContent } from "./lead-card";
 

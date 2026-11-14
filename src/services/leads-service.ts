@@ -12,9 +12,9 @@ import {
   UpdateLeadError,
   type UpdateLeadFailure,
 } from "@/errors/update-lead-error";
-import { getSupabaseClient } from "@/lib/supabase/client";
-import type { Database } from "@/lib/supabase/database.types";
 import type { Lead, LeadInput, LeadStage, Observation } from "@/lib/types";
+import { getSupabaseClient } from "@/shared/infrastructure/supabase/client";
+import type { Database } from "@/shared/infrastructure/supabase/database.types";
 
 type Tables = Database["public"]["Tables"];
 type ObservationRow = Pick<

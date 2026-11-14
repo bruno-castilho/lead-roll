@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { PAGE_SIZES } from "@/components/shared/pagination";
+import { PAGE_SIZES } from "@/shared/ui/components/pagination";
 import {
   ACTIVE_STAGES,
   INTEREST_LABEL,

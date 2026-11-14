@@ -1,7 +1,7 @@
 import { MessageSquareText } from "lucide-react";
-import { EmptyState } from "@/components/shared/empty-state";
 import { formatDateTime } from "@/lib/format";
 import type { Observation } from "@/lib/types";
+import { EmptyState } from "@/shared/ui/components/empty-state";
 
 /** Histórico de observações, da mais recente para a mais antiga. */
 export function ObservationList({

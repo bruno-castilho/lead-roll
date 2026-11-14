@@ -8,9 +8,9 @@ import {
 } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import { PresenceProvider } from "@/contexts/presence";
 import { SessionProvider } from "@/contexts/session";
+import { TooltipProvider } from "@/shared/ui/primitives/tooltip";
 import { supabaseFake } from "@/test/fake-supabase";
 import {
   arrangeSession,
@@ -23,7 +23,7 @@ import { BrokerLeadsPage } from "./broker-leads-page";
 import { ManagerBrokersPage } from "./manager-brokers-page";
 import { ManagerLeadsPage } from "./manager-leads-page";
 
-vi.mock("@/lib/supabase/client", async (importOriginal) => {
+vi.mock("@/shared/infrastructure/supabase/client", async (importOriginal) => {
   const { supabaseFake } = await import("@/test/fake-supabase");
   return {
     ...(await importOriginal<object>()),

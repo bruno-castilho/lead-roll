@@ -1,6 +1,6 @@
 import { ConfirmPresenceError } from "@/errors/confirm-presence-error";
 import { PresenceError } from "@/errors/presence-error";
-import { getSupabaseClient } from "@/lib/supabase/client";
+import { getSupabaseClient } from "@/shared/infrastructure/supabase/client";
 
 /** Presença do corretor na fila. Presente enquanto `expiresAt` não passou. */
 export interface BrokerPresence {

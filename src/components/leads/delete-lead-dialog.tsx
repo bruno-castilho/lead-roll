@@ -3,7 +3,10 @@
 import { Trash2 } from "lucide-react";
 import { type MouseEvent, useState } from "react";
 import { toast } from "sonner";
-import { Spinner } from "@/components/shared/loading-state";
+import type { Lead } from "@/lib/types";
+import { LeadsService } from "@/services/leads-service";
+import { Spinner } from "@/shared/ui/components/loading-state";
+import { useResetOnHide } from "@/shared/ui/hooks/use-reset-on-hide";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,10 +17,7 @@ import {
   AlertDialogHeader,
   AlertDialogMedia,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { useResetOnHide } from "@/hooks/use-reset-on-hide";
-import type { Lead } from "@/lib/types";
-import { LeadsService } from "@/services/leads-service";
+} from "@/shared/ui/primitives/alert-dialog";
 
 interface DeleteLeadDialogProps {
   lead: Lead | null;

@@ -559,7 +559,7 @@
       }
     },
     {
-      "includes": ["src/components/ui/**"],
+      "includes": ["src/shared/ui/primitives/**"],
       "linter": {
         "enabled": false
       }

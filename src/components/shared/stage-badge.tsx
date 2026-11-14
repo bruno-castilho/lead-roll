@@ -1,6 +1,6 @@
 import { STAGE_DOT, STAGE_LABEL } from "@/lib/constants";
 import type { LeadStage } from "@/lib/types";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/ui/cn";
 
 export function StageDot({
   stage,

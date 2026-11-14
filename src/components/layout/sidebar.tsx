@@ -3,14 +3,14 @@
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import type { UserRole } from "@/lib/types";
+import { cn } from "@/shared/ui/cn";
+import { Button } from "@/shared/ui/primitives/button";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
-import type { UserRole } from "@/lib/types";
-import { cn } from "@/lib/utils";
+} from "@/shared/ui/primitives/tooltip";
 import { NAV_ITEMS } from "./nav-items";
 
 interface SidebarNavProps {

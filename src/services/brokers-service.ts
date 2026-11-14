@@ -1,6 +1,6 @@
 import { BrokersError } from "@/errors/brokers-error";
-import { getSupabaseClient } from "@/lib/supabase/client";
 import type { User } from "@/lib/types";
+import { getSupabaseClient } from "@/shared/infrastructure/supabase/client";
 
 const BROKER_COLUMNS = "id, name, email, broker_presence(expires_at)";
 

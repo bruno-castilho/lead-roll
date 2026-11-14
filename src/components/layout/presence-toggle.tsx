@@ -1,17 +1,17 @@
 "use client";
 
 import { CheckCircle2, RefreshCw } from "lucide-react";
-import { Spinner } from "@/components/shared/loading-state";
-import { Button } from "@/components/ui/button";
+import { usePresence } from "@/hooks/use-presence";
+import { useSession } from "@/hooks/use-session";
+import { formatTime } from "@/lib/format";
+import { cn } from "@/shared/ui/cn";
+import { Spinner } from "@/shared/ui/components/loading-state";
+import { Button } from "@/shared/ui/primitives/button";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { usePresence } from "@/hooks/use-presence";
-import { useSession } from "@/hooks/use-session";
-import { formatTime } from "@/lib/format";
-import { cn } from "@/lib/utils";
+} from "@/shared/ui/primitives/tooltip";
 
 type PresenceToggleProps = {
   className?: string;

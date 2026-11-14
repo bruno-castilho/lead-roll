@@ -1,6 +1,6 @@
 import { Loader2 } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/ui/cn";
+import { Skeleton } from "@/shared/ui/primitives/skeleton";
 
 export function Spinner({ className }: { className?: string }) {
   return (

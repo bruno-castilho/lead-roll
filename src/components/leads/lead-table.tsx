@@ -2,6 +2,9 @@
 
 import { Fragment } from "react";
 import { StageBadge } from "@/components/shared/stage-badge";
+import { INTEREST_LABEL, SOURCE_LABEL } from "@/lib/constants";
+import { formatDate, formatDateTime } from "@/lib/format";
+import type { Lead, User } from "@/lib/types";
 import {
   Table,
   TableBody,
@@ -9,10 +12,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { INTEREST_LABEL, SOURCE_LABEL } from "@/lib/constants";
-import { formatDate, formatDateTime } from "@/lib/format";
-import type { Lead, User } from "@/lib/types";
+} from "@/shared/ui/primitives/table";
 import { BrokerCell } from "./broker-cell";
 import { type LeadActionHandlers, LeadRowActions } from "./lead-row-actions";
 

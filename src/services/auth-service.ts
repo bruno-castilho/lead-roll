@@ -7,8 +7,8 @@ import { AuthServiceError } from "@/errors/auth-service-error";
 import { ProfileError } from "@/errors/profile-error";
 import { SignInError } from "@/errors/sign-in-error";
 import { SignOutError } from "@/errors/sign-out-error";
-import { getSupabaseClient } from "@/lib/supabase/client";
 import type { UserRole } from "@/lib/types";
+import { getSupabaseClient } from "@/shared/infrastructure/supabase/client";
 
 /** Perfil do usuário na tabela `profiles` (a fonte do papel no app). */
 export type AuthProfile = {

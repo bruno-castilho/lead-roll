@@ -3,8 +3,12 @@
 import { LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
+import { useSession } from "@/hooks/use-session";
+import { ROUTES } from "@/lib/constants";
+import { getInitials } from "@/lib/format";
+import { AuthService } from "@/services/auth-service";
+import { Avatar, AvatarFallback } from "@/shared/ui/primitives/avatar";
+import { Button } from "@/shared/ui/primitives/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,11 +16,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useSession } from "@/hooks/use-session";
-import { ROUTES } from "@/lib/constants";
-import { getInitials } from "@/lib/format";
-import { AuthService } from "@/services/auth-service";
+} from "@/shared/ui/primitives/dropdown-menu";
 
 export function UserMenu() {
   const { profile: currentUser, clearSession } = useSession();
