@@ -17,7 +17,8 @@ import { Spinner } from "@/shared/ui/components/loading-state";
 import { PageHeader } from "@/shared/ui/components/page-header";
 import { useResetOnHide } from "@/shared/ui/hooks/use-reset-on-hide";
 
-export function BrokerLeadsPage() {
+/** Kanban do corretor com os próprios leads e o aviso de presença. */
+export function BrokerLeadsScreen() {
   const { profile } = useSession();
   const { isPresent, loading: presenceLoading } = usePresence();
   // A consulta já filtra por `broker_id` e a RLS só devolve os leads do

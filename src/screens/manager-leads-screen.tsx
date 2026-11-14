@@ -1,84 +1,42 @@
 "use client";
 
-import {
-  CheckCheck,
-  Inbox,
-  Layers,
-  Plus,
-  SearchX,
-  Shuffle,
-} from "lucide-react";
 import { useMemo, useState } from "react";
 import { useBrokers } from "@/modules/brokers";
-import type { Lead } from "@/modules/leads";
 import {
-  type BrokerFilter,
   countActiveFilters,
   DEFAULT_LEAD_FILTERS,
   DeleteLeadDialog,
   DistributionDialog,
+  type EmptyLeadListReason,
   filterLeads,
+  type Lead,
   LeadDetails,
   type LeadFilterState,
   LeadFilters,
   LeadForm,
+  LeadListEmpty,
+  LeadsHeaderActions,
   LeadTable,
+  QuickFilters,
   useLeadStats,
   useLeads,
 } from "@/modules/leads";
-import { cn } from "@/shared/ui/cn";
-import { EmptyState } from "@/shared/ui/components/empty-state";
-import { Kbd } from "@/shared/ui/components/kbd";
 import { TableSkeleton } from "@/shared/ui/components/loading-state";
 import { PageHeader } from "@/shared/ui/components/page-header";
 import { Pagination } from "@/shared/ui/components/pagination";
 import { useHotkey } from "@/shared/ui/hooks/use-hotkey";
+import { usePagination } from "@/shared/ui/hooks/use-pagination";
 import { useResetOnHide } from "@/shared/ui/hooks/use-reset-on-hide";
-import { Button } from "@/shared/ui/primitives/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/shared/ui/primitives/tooltip";
 
-const QUICK_FILTERS: {
-  value: BrokerFilter;
-  label: string;
-  short: string;
-  icon: typeof Layers;
-  key: "total" | "unassigned" | "assigned";
-}[] = [
-  {
-    value: "all",
-    label: "Todos os leads",
-    short: "Todos",
-    icon: Layers,
-    key: "total",
-  },
-  {
-    value: "none",
-    label: "Sem responsável",
-    short: "Sem resp.",
-    icon: Inbox,
-    key: "unassigned",
-  },
-  {
-    value: "assigned",
-    label: "Distribuídos",
-    short: "Distribuídos",
-    icon: CheckCheck,
-    key: "assigned",
-  },
-];
-
-export function ManagerLeadsPage() {
+/** Página inicial do gestor: totais, filtros, tabela, CRUD e distribuição. */
+export function ManagerLeadsScreen() {
   const { brokers } = useBrokers();
   const { leads, loading, addLead, replaceLead, removeLead } = useLeads();
   const stats = useLeadStats(leads, brokers);
 
   const [filters, setFilters] = useState<LeadFilterState>(DEFAULT_LEAD_FILTERS);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const filtered = useMemo(() => filterLeads(leads, filters), [leads, filters]);
+  const pagination = usePagination(filtered);
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Lead | null>(null);
@@ -86,17 +44,13 @@ export function ManagerLeadsPage() {
   const [deleting, setDeleting] = useState<Lead | null>(null);
   const [distributing, setDistributing] = useState(false);
 
-  const filtered = useMemo(() => filterLeads(leads, filters), [leads, filters]);
-  const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
-  const currentPage = Math.min(page, pageCount);
-  const pageItems = filtered.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize,
-  );
-
   function updateFilters(next: LeadFilterState) {
     setFilters(next);
-    setPage(1);
+    pagination.resetPage();
+  }
+
+  function clearFilters() {
+    updateFilters({ ...DEFAULT_LEAD_FILTERS, sort: filters.sort });
   }
 
   function openCreate() {
@@ -123,13 +77,15 @@ export function ManagerLeadsPage() {
     setDistributing(false);
   });
 
-  const handlers = {
-    onView: (lead: Lead) => setViewingId(lead.id),
-    onEdit: openEdit,
-    onDelete: openDelete,
-  };
-
   const hasOtherFilters = countActiveFilters({ ...filters, broker: "all" }) > 0;
+  const emptyReason: EmptyLeadListReason | null =
+    leads.length === 0
+      ? "no_leads"
+      : filtered.length > 0
+        ? null
+        : filters.broker === "none" && !hasOtherFilters
+          ? "all_assigned"
+          : "no_results";
 
   return (
     <div className="space-y-6">
@@ -137,90 +93,19 @@ export function ManagerLeadsPage() {
         title="Leads"
         description="Gerencie e distribua os leads imobiliários."
         actions={
-          <>
-            <Button
-              variant="outline"
-              size="lg"
-              className="h-9 flex-1 sm:flex-none"
-              onClick={() => setDistributing(true)}
-            >
-              <Shuffle />
-              Distribuir leads
-              <span
-                className={cn(
-                  "rounded-full px-1.5 font-semibold text-[11px] tabular-nums",
-                  stats.unassigned > 0
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground",
-                )}
-              >
-                {stats.unassigned}
-              </span>
-            </Button>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  size="lg"
-                  className="h-9 flex-1 sm:flex-none"
-                  onClick={openCreate}
-                >
-                  <Plus />
-                  Novo lead
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                Atalho{" "}
-                <Kbd className="ml-1 border-transparent bg-background/20 text-inherit">
-                  N
-                </Kbd>
-              </TooltipContent>
-            </Tooltip>
-          </>
+          <LeadsHeaderActions
+            unassigned={stats.unassigned}
+            onDistribute={() => setDistributing(true)}
+            onCreate={openCreate}
+          />
         }
       />
 
-      <fieldset className="grid grid-cols-3 gap-2 sm:gap-3">
-        <legend className="sr-only">Filtros rápidos</legend>
-        {QUICK_FILTERS.map((q) => {
-          const active = filters.broker === q.value;
-          const highlight = q.value === "none" && stats.unassigned > 0;
-          return (
-            <button
-              key={q.value}
-              type="button"
-              aria-pressed={active}
-              onClick={() => updateFilters({ ...filters, broker: q.value })}
-              className={cn(
-                "group flex flex-col items-start gap-1 rounded-xl border bg-card p-3 text-left transition-colors hover:border-foreground/20 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 sm:p-4",
-                active && "border-primary ring-1 ring-primary",
-                highlight && !active && "border-primary/40",
-              )}
-            >
-              <span className="flex w-full items-center justify-between gap-1 text-muted-foreground text-xs sm:text-[13px]">
-                <span className="truncate">
-                  <span className="sm:hidden">{q.short}</span>
-                  <span className="hidden sm:inline">{q.label}</span>
-                </span>
-                <q.icon
-                  className={cn(
-                    "hidden size-4 shrink-0 sm:block",
-                    (active || highlight) && "text-primary",
-                  )}
-                  aria-hidden
-                />
-              </span>
-              <span
-                className={cn(
-                  "font-semibold text-xl tabular-nums tracking-tight sm:text-2xl",
-                  highlight && "text-primary",
-                )}
-              >
-                {stats[q.key]}
-              </span>
-            </button>
-          );
-        })}
-      </fieldset>
+      <QuickFilters
+        selected={filters.broker}
+        counts={stats}
+        onSelect={(broker) => updateFilters({ ...filters, broker })}
+      />
 
       <LeadFilters
         filters={filters}
@@ -230,66 +115,27 @@ export function ManagerLeadsPage() {
 
       {loading ? (
         <TableSkeleton />
-      ) : leads.length === 0 ? (
-        <div className="rounded-xl border border-dashed">
-          <EmptyState
-            icon={Inbox}
-            title="Nenhum lead cadastrado"
-            description="Cadastre o primeiro lead para começar a distribuir oportunidades entre os corretores."
-            action={
-              <Button size="lg" onClick={openCreate}>
-                <Plus /> Novo lead
-              </Button>
-            }
-          />
-        </div>
-      ) : filtered.length === 0 ? (
-        <div className="rounded-xl border border-dashed">
-          {filters.broker === "none" && !hasOtherFilters ? (
-            <EmptyState
-              icon={CheckCheck}
-              title="Nenhum lead sem responsável"
-              description="Todos os leads já foram distribuídos entre os corretores."
-              action={
-                <Button variant="outline" size="lg" onClick={openCreate}>
-                  <Plus /> Novo lead
-                </Button>
-              }
-            />
-          ) : (
-            <EmptyState
-              icon={SearchX}
-              title="Nenhum lead encontrado"
-              description="Nenhum lead corresponde à pesquisa e aos filtros aplicados."
-              action={
-                <Button
-                  variant="outline"
-                  size="lg"
-                  onClick={() =>
-                    updateFilters({
-                      ...DEFAULT_LEAD_FILTERS,
-                      sort: filters.sort,
-                    })
-                  }
-                >
-                  Limpar filtros
-                </Button>
-              }
-            />
-          )}
-        </div>
+      ) : emptyReason ? (
+        <LeadListEmpty
+          reason={emptyReason}
+          onCreate={openCreate}
+          onClearFilters={clearFilters}
+        />
       ) : (
         <div className="space-y-4">
-          <LeadTable leads={pageItems} brokers={brokers} {...handlers} />
+          <LeadTable
+            leads={pagination.pageItems}
+            brokers={brokers}
+            onView={(lead) => setViewingId(lead.id)}
+            onEdit={openEdit}
+            onDelete={openDelete}
+          />
           <Pagination
-            page={currentPage}
-            pageSize={pageSize}
-            total={filtered.length}
-            onPageChange={setPage}
-            onPageSizeChange={(size) => {
-              setPageSize(size);
-              setPage(1);
-            }}
+            page={pagination.page}
+            pageSize={pagination.pageSize}
+            total={pagination.total}
+            onPageChange={pagination.setPage}
+            onPageSizeChange={pagination.setPageSize}
           />
         </div>
       )}

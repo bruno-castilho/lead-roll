@@ -10,9 +10,9 @@ import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SessionProvider } from "@/modules/auth";
 import { PresenceProvider } from "@/modules/brokers";
-import { BrokerLeadsPage } from "@/screens/broker-leads-screen";
+import { BrokerLeadsScreen } from "@/screens/broker-leads-screen";
 import { ManagerBrokersScreen } from "@/screens/manager-brokers-screen";
-import { ManagerLeadsPage } from "@/screens/manager-leads-screen";
+import { ManagerLeadsScreen } from "@/screens/manager-leads-screen";
 import { TooltipProvider } from "@/shared/ui/primitives/tooltip";
 import { supabaseFake } from "@/test/fake-supabase";
 import {
@@ -71,14 +71,14 @@ const brokers = [brokerRow("b1", "Bia", IN_1H), brokerRow("b2", "Caio")];
 
 beforeEach(() => supabaseFake.reset());
 
-describe("ManagerLeadsPage", () => {
+describe("ManagerLeadsScreen", () => {
   async function renderPage(leads = managerLeads()) {
     arrangeSession(MANAGER);
     supabaseFake.respondWith(
       { on: "profiles", data: brokers },
       { on: "leads", data: leads },
     );
-    render(<ManagerLeadsPage />, { wrapper: Providers });
+    render(<ManagerLeadsScreen />, { wrapper: Providers });
     await waitFor(() =>
       expect(
         screen.queryAllByText(/^Lead 12$|^Nenhum lead cadastrado$/),
@@ -168,7 +168,7 @@ describe("ManagerLeadsPage", () => {
   });
 });
 
-describe("BrokerLeadsPage", () => {
+describe("BrokerLeadsScreen", () => {
   async function renderPage(
     leads: ReturnType<typeof leadRow>[],
     presence: object | null,
@@ -179,7 +179,7 @@ describe("BrokerLeadsPage", () => {
       { on: "leads", data: leads },
       { on: "profiles", data: [brokerRow("broker-1", "Carlos Lima")] },
     );
-    render(<BrokerLeadsPage />, { wrapper: Providers });
+    render(<BrokerLeadsScreen />, { wrapper: Providers });
     await waitFor(() =>
       expect(supabaseFake.queries.map((q) => q.table)).toContain("leads"),
     );
