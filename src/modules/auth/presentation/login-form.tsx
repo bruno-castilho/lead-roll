@@ -4,15 +4,15 @@ import { AlertCircle, Eye, EyeOff, LogIn } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { ProfileError } from "@/errors/profile-error";
-import { SignInError } from "@/errors/sign-in-error";
-import { type LoginSchemaType, loginSchema } from "@/lib/validation";
-import { AuthService } from "@/services/auth-service";
 import { Spinner } from "@/shared/ui/components/loading-state";
 import { Button } from "@/shared/ui/primitives/button";
 import { Input } from "@/shared/ui/primitives/input";
 import { Label } from "@/shared/ui/primitives/label";
 import { HOME_BY_ROLE } from "@/shared/ui/routes";
+import { AuthError } from "../application/auth-error";
+import { signIn } from "../composition";
+import { authErrorMessage } from "./auth-messages";
+import { type LoginValues, loginSchema } from "./login-schema";
 import { useSession } from "./use-session";
 
 export function LoginForm() {
@@ -28,7 +28,7 @@ export function LoginForm() {
     reset,
     setFocus,
     formState: { isSubmitting, errors },
-  } = useForm<LoginSchemaType>({
+  } = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: "", password: "" },
   });
@@ -39,21 +39,17 @@ export function LoginForm() {
     if (profile) router.replace(HOME_BY_ROLE[profile.role]);
   }, [profile, router]);
 
-  async function onSubmit({ email, password }: LoginSchemaType) {
+  async function onSubmit(credentials: LoginValues) {
     try {
       setAuthError(null);
-      const { user } = await AuthService.signIn({ email, password });
-      const profile = await AuthService.getProfile(user.id);
+      // Sem perfil válido, o caso de uso encerra a sessão recém-aberta.
+      const signedIn = await signIn(credentials);
       reset();
-      startSession(profile);
+      startSession(signedIn);
     } catch (error) {
-      // Sem perfil válido não há acesso: não deixa a sessão aberta.
-      if (error instanceof ProfileError) {
-        await AuthService.signOut().catch(() => {});
-      }
       setAuthError(
-        error instanceof SignInError || error instanceof ProfileError
-          ? error.message
+        error instanceof AuthError
+          ? authErrorMessage(error)
           : "Ocorreu um erro ao tentar fazer login. Por favor, tente novamente.",
       );
       setFocus("password");

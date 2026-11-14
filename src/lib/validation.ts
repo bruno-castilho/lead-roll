@@ -38,29 +38,8 @@ export const leadSchema = z.object({
   interest: z.enum(interestValues, { error: "Selecione o interesse." }),
 });
 
-export const loginSchema = z.object({
-  email: z
-    .string()
-    .trim()
-    .min(1, "Informe o e-mail.")
-    .pipe(z.email("Informe um e-mail válido.")),
-  password: z.string().min(1, "Informe a senha."),
-});
-
-export type LoginSchemaType = z.infer<typeof loginSchema>;
-
 export const observationSchema = z
   .string()
   .trim()
   .min(1, "Escreva a observação antes de adicionar.")
   .max(1000, "A observação deve ter no máximo 1000 caracteres.");
-
-/** Converte os issues do Zod em um mapa campo → primeira mensagem. */
-export function fieldErrors(error: z.ZodError): Record<string, string> {
-  const result: Record<string, string> = {};
-  for (const issue of error.issues) {
-    const key = String(issue.path[0] ?? "form");
-    if (!result[key]) result[key] = issue.message;
-  }
-  return result;
-}

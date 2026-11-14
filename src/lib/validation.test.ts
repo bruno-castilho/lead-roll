@@ -1,10 +1,6 @@
 import { describe, expect, it } from "vitest";
-import {
-  fieldErrors,
-  leadSchema,
-  loginSchema,
-  observationSchema,
-} from "./validation";
+import { fieldErrors } from "@/shared/ui/form-errors";
+import { leadSchema, observationSchema } from "./validation";
 
 const validLead = {
   name: "Ana Souza",
@@ -78,34 +74,6 @@ describe("leadSchema", () => {
   });
 });
 
-describe("loginSchema", () => {
-  it("exige e-mail e senha", () => {
-    const result = loginSchema.safeParse({ email: "", password: "" });
-    expect(result.success ? {} : fieldErrors(result.error)).toEqual({
-      email: "Informe o e-mail.",
-      password: "Informe a senha.",
-    });
-  });
-
-  it("valida o formato do e-mail", () => {
-    const result = loginSchema.safeParse({ email: "ana", password: "x" });
-    expect(result.success ? {} : fieldErrors(result.error)).toEqual({
-      email: "Informe um e-mail válido.",
-    });
-  });
-
-  it("apara o e-mail e não mexe na senha", () => {
-    const result = loginSchema.safeParse({
-      email: " ana@exemplo.com ",
-      password: " 123 ",
-    });
-    expect(result.success && result.data).toEqual({
-      email: "ana@exemplo.com",
-      password: " 123 ",
-    });
-  });
-});
-
 describe("observationSchema", () => {
   it("apara o texto", () => {
     expect(observationSchema.parse("  ligou  ")).toBe("ligou");
@@ -120,14 +88,5 @@ describe("observationSchema", () => {
     expect(result.success ? null : result.error.issues[0]?.message).toBe(
       message,
     );
-  });
-});
-
-describe("fieldErrors", () => {
-  it("guarda só a primeira mensagem de cada campo", () => {
-    const result = leadSchema.safeParse({ ...validLead, name: "" });
-    expect(result.success ? {} : fieldErrors(result.error)).toEqual({
-      name: "Informe o nome do lead.",
-    });
   });
 });

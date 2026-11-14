@@ -3,7 +3,6 @@
 import { LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { AuthService } from "@/services/auth-service";
 import { getInitials } from "@/shared/ui/format";
 import { Avatar, AvatarFallback } from "@/shared/ui/primitives/avatar";
 import { Button } from "@/shared/ui/primitives/button";
@@ -16,6 +15,8 @@ import {
   DropdownMenuTrigger,
 } from "@/shared/ui/primitives/dropdown-menu";
 import { ROUTES } from "@/shared/ui/routes";
+import { signOut } from "../composition";
+import { authErrorMessage } from "./auth-messages";
 import { useSession } from "./use-session";
 
 export function UserMenu() {
@@ -28,11 +29,13 @@ export function UserMenu() {
       // Limpa o estado local na hora; o servidor é avisado em seguida.
       clearSession();
       router.replace(ROUTES.login);
-      await AuthService.signOut();
+      await signOut();
       toast.success("Você saiu da conta.");
     } catch (error) {
       toast.warning(
-        error instanceof Error ? error.message : "Não foi possível sair.",
+        error instanceof Error
+          ? authErrorMessage(error)
+          : "Não foi possível sair.",
       );
     }
   }
