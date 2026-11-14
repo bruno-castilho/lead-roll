@@ -3,15 +3,15 @@
  * `supabase/migrations/*.sql`. Atualize junto com a migration
  * (ou gere com `npx supabase gen types typescript`).
  */
-export type UserRoleEnum = "manager" | "broker";
-export type LeadStageEnum =
+type UserRoleEnum = "manager" | "broker";
+type LeadStageEnum =
   | "new"
   | "contacted"
   | "visit_scheduled"
   | "proposal"
   | "won"
   | "lost";
-export type LeadSourceEnum =
+type LeadSourceEnum =
   | "site"
   | "whatsapp"
   | "instagram"
@@ -19,7 +19,7 @@ export type LeadSourceEnum =
   | "portal"
   | "campaign"
   | "other";
-export type LeadInterestEnum =
+type LeadInterestEnum =
   | "buy"
   | "rent"
   | "apartment"

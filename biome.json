@@ -545,7 +545,6 @@
                       "@supabase/**",
                       "@/shared/infrastructure",
                       "@/shared/infrastructure/**",
-                      "@/lib/supabase/**",
                       "@/modules/*/**"
                     ],
                     "message": "app/ só compõe: sem SDK, sem infraestrutura e só o index dos módulos."

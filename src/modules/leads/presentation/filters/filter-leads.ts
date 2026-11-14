@@ -10,7 +10,7 @@ import { phoneDigits } from "../../domain/phone";
 /** "all" | "none" (sem responsável) | "assigned" (qualquer corretor) | id do corretor */
 export type BrokerFilter = "all" | "none" | "assigned" | (string & {});
 export const SORT_ORDERS = ["newest", "oldest"] as const;
-export type SortOrder = (typeof SORT_ORDERS)[number];
+type SortOrder = (typeof SORT_ORDERS)[number];
 
 export interface LeadFilterState {
   query: string;

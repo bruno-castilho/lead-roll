@@ -2,7 +2,7 @@ import { Inbox, KanbanSquare, type LucideIcon, Users } from "lucide-react";
 import type { UserRole } from "@/shared/domain/actor";
 import { ROUTES } from "@/shared/ui/routes";
 
-export interface NavItem {
+interface NavItem {
   href: string;
   label: string;
   icon: LucideIcon;

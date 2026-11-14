@@ -1,5 +1,5 @@
 /** Telefones válidos têm DDD: 10 (fixo) ou 11 (celular) dígitos. */
-export const PHONE_DIGIT_COUNTS: readonly number[] = [10, 11];
+const PHONE_DIGIT_COUNTS: readonly number[] = [10, 11];
 
 export function phoneDigits(value: string): string {
   return value.replace(/\D/g, "");
