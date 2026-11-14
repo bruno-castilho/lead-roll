@@ -19,7 +19,7 @@ export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
 
-  const { profile, onSession } = useSession();
+  const { profile, startSession } = useSession();
   const router = useRouter();
 
   const {
@@ -42,10 +42,10 @@ export function LoginForm() {
   async function onSubmit({ email, password }: LoginSchemaType) {
     try {
       setAuthError(null);
-      const { user, session } = await AuthService.signIn({ email, password });
+      const { user } = await AuthService.signIn({ email, password });
       const profile = await AuthService.getProfile(user.id);
       reset();
-      onSession(user, session, profile);
+      startSession(profile);
     } catch (error) {
       // Sem perfil válido não há acesso: não deixa a sessão aberta.
       if (error instanceof ProfileError) {

@@ -1,6 +1,5 @@
 "use client";
 
-import type { Session, User } from "@supabase/supabase-js";
 import {
   createContext,
   type ReactNode,
@@ -14,12 +13,11 @@ import { ProfileError } from "@/errors/profile-error";
 import { type AuthProfile, AuthService } from "@/services/auth-service";
 
 type SessionContextType = {
+  /** A restauração da sessão terminou (com ou sem usuário conectado). */
   ready: boolean;
-  user: User | null;
-  session: Session | null;
-
   profile: AuthProfile | null;
-  onSession: (user: User, session: Session, profile: AuthProfile) => void;
+  /** Registra o perfil de quem acabou de entrar. */
+  startSession: (profile: AuthProfile) => void;
   clearSession: () => void;
 };
 
@@ -27,11 +25,7 @@ export const SessionContext = createContext<SessionContextType | null>(null);
 
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
-  const [auth, setAuth] = useState<{
-    user: User;
-    session: Session;
-    profile: AuthProfile;
-  } | null>(null);
+  const [profile, setProfile] = useState<AuthProfile | null>(null);
 
   // Restaura a sessão do Supabase (cookies). O cliente só é criado em efeitos.
   useEffect(() => {
@@ -40,8 +34,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       const restored = await AuthService.restoreSession();
       if (!restored) return null;
       try {
-        const profile = await AuthService.getProfile(restored.user.id);
-        return { ...restored, profile };
+        return await AuthService.getProfile(restored.user.id);
       } catch (error) {
         // Sem perfil válido (ou sessão inválida) não há acesso: sai.
         if (
@@ -58,7 +51,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     restore()
       .then((restored) => {
         // Um login feito enquanto a restauração rodava tem prioridade.
-        if (!cancelled) setAuth((current) => current ?? restored);
+        if (!cancelled) setProfile((current) => current ?? restored);
       })
       .catch((error: unknown) => {
         if (cancelled) return;
@@ -72,26 +65,20 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const onSession = useCallback(
-    (user: User, session: Session, profile: AuthProfile) =>
-      setAuth({ user, session, profile }),
-    [],
-  );
-  const clearSession = useCallback(() => setAuth(null), []);
+  const startSession = useCallback((next: AuthProfile) => setProfile(next), []);
+  const clearSession = useCallback(() => setProfile(null), []);
 
   // Sessão encerrada fora deste fluxo (outra aba, token revogado ou expirado).
-  useEffect(() => AuthService.onSignedOut(() => setAuth(null)), []);
+  useEffect(() => AuthService.onSignedOut(() => setProfile(null)), []);
 
   const value = useMemo<SessionContextType>(
     () => ({
       ready,
-      user: auth?.user ?? null,
-      session: auth?.session ?? null,
-      profile: auth?.profile ?? null,
-      onSession,
+      profile,
+      startSession,
       clearSession,
     }),
-    [ready, auth, onSession, clearSession],
+    [ready, profile, startSession, clearSession],
   );
 
   return (
