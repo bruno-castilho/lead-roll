@@ -2,7 +2,6 @@ import { normalize } from "@/shared/ui/format";
 import {
   isUnassigned,
   type Lead,
-  type LeadInterest,
   type LeadSource,
   type LeadStage,
 } from "../../domain/lead";
@@ -10,12 +9,12 @@ import { phoneDigits } from "../../domain/phone";
 
 /** "all" | "none" (sem responsável) | "assigned" (qualquer corretor) | id do corretor */
 export type BrokerFilter = "all" | "none" | "assigned" | (string & {});
-export type SortOrder = "newest" | "oldest";
+export const SORT_ORDERS = ["newest", "oldest"] as const;
+export type SortOrder = (typeof SORT_ORDERS)[number];
 
 export interface LeadFilterState {
   query: string;
   source: LeadSource | "all";
-  interest: LeadInterest | "all";
   stage: LeadStage | "all";
   broker: BrokerFilter;
   sort: SortOrder;
@@ -24,7 +23,6 @@ export interface LeadFilterState {
 export const DEFAULT_LEAD_FILTERS: LeadFilterState = {
   query: "",
   source: "all",
-  interest: "all",
   stage: "all",
   broker: "all",
   sort: "newest",
@@ -43,7 +41,6 @@ export function filterLeads(leads: Lead[], f: LeadFilterState): Lead[] {
   const result = leads.filter((lead) => {
     if (!matchesQuery(lead, f.query)) return false;
     if (f.source !== "all" && lead.source !== f.source) return false;
-    if (f.interest !== "all" && lead.interest !== f.interest) return false;
     if (f.stage !== "all" && lead.stage !== f.stage) return false;
     if (f.broker === "none" && !isUnassigned(lead)) return false;
     if (f.broker === "assigned" && isUnassigned(lead)) return false;
@@ -69,7 +66,6 @@ export function countActiveFilters(f: LeadFilterState): number {
   return (
     (f.query.trim() ? 1 : 0) +
     (f.source !== "all" ? 1 : 0) +
-    (f.interest !== "all" ? 1 : 0) +
     (f.stage !== "all" ? 1 : 0) +
     (f.broker !== "all" ? 1 : 0)
   );

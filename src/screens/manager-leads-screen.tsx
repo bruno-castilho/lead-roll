@@ -223,7 +223,6 @@ export function ManagerLeadsPage() {
       </fieldset>
 
       <LeadFilters
-        variant="manager"
         filters={filters}
         onChange={updateFilters}
         brokers={brokers}

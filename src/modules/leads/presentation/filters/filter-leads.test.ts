@@ -85,9 +85,8 @@ describe("filterLeads", () => {
     expect(withFilters({ sort: "oldest" })).toEqual(["c", "a", "b"]);
   });
 
-  it("filtra por origem, interesse e etapa", () => {
+  it("filtra por origem e etapa", () => {
     expect(withFilters({ source: "whatsapp" })).toEqual(["b"]);
-    expect(withFilters({ interest: "buy" })).toEqual(["a", "c"]);
     expect(withFilters({ stage: "won" })).toEqual(["c"]);
   });
 
@@ -125,11 +124,10 @@ describe("countActiveFilters", () => {
       countActiveFilters({
         query: "ana",
         source: "site",
-        interest: "buy",
         stage: "new",
         broker: "none",
         sort: "newest",
       }),
-    ).toBe(5);
+    ).toBe(4);
   });
 });

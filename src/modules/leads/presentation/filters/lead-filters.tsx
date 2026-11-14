@@ -2,6 +2,7 @@
 
 import { ArrowDownWideNarrow, FilterX } from "lucide-react";
 import type { Broker } from "@/modules/brokers";
+import { isOneOf } from "@/shared/domain/one-of";
 import { cn } from "@/shared/ui/cn";
 import { SearchInput } from "@/shared/ui/components/search-input";
 import { Button } from "@/shared/ui/primitives/button";
@@ -15,16 +16,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/ui/primitives/select";
-import {
-  INTEREST_OPTIONS,
-  SOURCE_OPTIONS,
-  STAGE_OPTIONS,
-} from "../lead-labels";
+import { LEAD_SOURCES, LEAD_STAGES } from "../../domain/lead";
+import { SOURCE_OPTIONS, STAGE_OPTIONS } from "../lead-labels";
 import {
   countActiveFilters,
   DEFAULT_LEAD_FILTERS,
   type LeadFilterState,
+  SORT_ORDERS,
 } from "./filter-leads";
+
+const ACTIVE_FILTER_CLASS = "border-primary/40 bg-primary/5 dark:bg-primary/10";
 
 interface FilterSelectProps {
   label: string;
@@ -32,7 +33,6 @@ interface FilterSelectProps {
   onChange: (value: string) => void;
   options: { value: string; label: string }[];
   allLabel: string;
-  className?: string;
 }
 
 function FilterSelect({
@@ -41,17 +41,14 @@ function FilterSelect({
   onChange,
   options,
   allLabel,
-  className,
 }: FilterSelectProps) {
-  const active = value !== "all";
   return (
     <Select value={value} onValueChange={onChange}>
       <SelectTrigger
         aria-label={label}
         className={cn(
           "h-9 w-full min-w-0 sm:w-auto sm:min-w-36",
-          active && "border-primary/40 bg-primary/5 dark:bg-primary/10",
-          className,
+          value !== "all" && ACTIVE_FILTER_CLASS,
         )}
       >
         <SelectValue placeholder={label} />
@@ -72,18 +69,12 @@ function FilterSelect({
 interface LeadFiltersProps {
   filters: LeadFilterState;
   onChange: (filters: LeadFilterState) => void;
-  /** Gestor: origem, etapa, responsável e ordenação. Corretor: origem e interesse. */
-  variant: "manager" | "broker";
-  brokers?: Broker[];
+  brokers: Broker[];
 }
 
-export function LeadFilters({
-  filters,
-  onChange,
-  variant,
-  brokers = [],
-}: LeadFiltersProps) {
-  const set = <K extends keyof LeadFilterState>(
+/** Pesquisa, origem, etapa, responsável e ordenação da lista do gestor. */
+export function LeadFilters({ filters, onChange, brokers }: LeadFiltersProps) {
+  const setFilter = <K extends keyof LeadFilterState>(
     key: K,
     value: LeadFilterState[K],
   ) => onChange({ ...filters, [key]: value });
@@ -93,7 +84,7 @@ export function LeadFilters({
     <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
       <SearchInput
         value={filters.query}
-        onChange={(v) => set("query", v)}
+        onChange={(v) => setFilter("query", v)}
         placeholder="Pesquisar por nome ou telefone"
         className="w-full lg:max-w-xs"
       />
@@ -102,74 +93,66 @@ export function LeadFilters({
           label="Origem"
           allLabel="Todas as origens"
           value={filters.source}
-          onChange={(v) => set("source", v as LeadFilterState["source"])}
+          onChange={(v) => {
+            if (v === "all" || isOneOf(v, LEAD_SOURCES)) setFilter("source", v);
+          }}
           options={SOURCE_OPTIONS}
         />
-        {variant === "broker" && (
-          <FilterSelect
-            label="Interesse"
-            allLabel="Todos os interesses"
-            value={filters.interest}
-            onChange={(v) => set("interest", v as LeadFilterState["interest"])}
-            options={INTEREST_OPTIONS}
-          />
-        )}
-        {variant === "manager" && (
-          <>
-            <FilterSelect
-              label="Etapa"
-              allLabel="Todas as etapas"
-              value={filters.stage}
-              onChange={(v) => set("stage", v as LeadFilterState["stage"])}
-              options={STAGE_OPTIONS}
-            />
-            <Select
-              value={filters.broker}
-              onValueChange={(v) => set("broker", v)}
-            >
-              <SelectTrigger
-                aria-label="Responsável"
-                className={cn(
-                  "h-9 w-full min-w-0 sm:w-auto sm:min-w-40",
-                  filters.broker !== "all" &&
-                    "border-primary/40 bg-primary/5 dark:bg-primary/10",
-                )}
-              >
-                <SelectValue placeholder="Responsável" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os responsáveis</SelectItem>
-                <SelectItem value="none">Sem responsável</SelectItem>
-                <SelectItem value="assigned">Com responsável</SelectItem>
-                <SelectSeparator />
-                <SelectGroup>
-                  <SelectLabel>Corretores</SelectLabel>
-                  {brokers.map((b) => (
-                    <SelectItem key={b.id} value={b.id}>
-                      {b.name}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-            <Select
-              value={filters.sort}
-              onValueChange={(v) => set("sort", v as LeadFilterState["sort"])}
-            >
-              <SelectTrigger
-                aria-label="Ordenar"
-                className="h-9 w-full min-w-0 sm:w-auto"
-              >
-                <ArrowDownWideNarrow className="text-muted-foreground" />
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="newest">Mais recentes</SelectItem>
-                <SelectItem value="oldest">Mais antigos</SelectItem>
-              </SelectContent>
-            </Select>
-          </>
-        )}
+        <FilterSelect
+          label="Etapa"
+          allLabel="Todas as etapas"
+          value={filters.stage}
+          onChange={(v) => {
+            if (v === "all" || isOneOf(v, LEAD_STAGES)) setFilter("stage", v);
+          }}
+          options={STAGE_OPTIONS}
+        />
+        <Select
+          value={filters.broker}
+          onValueChange={(v) => setFilter("broker", v)}
+        >
+          <SelectTrigger
+            aria-label="Responsável"
+            className={cn(
+              "h-9 w-full min-w-0 sm:w-auto sm:min-w-40",
+              filters.broker !== "all" && ACTIVE_FILTER_CLASS,
+            )}
+          >
+            <SelectValue placeholder="Responsável" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os responsáveis</SelectItem>
+            <SelectItem value="none">Sem responsável</SelectItem>
+            <SelectItem value="assigned">Com responsável</SelectItem>
+            <SelectSeparator />
+            <SelectGroup>
+              <SelectLabel>Corretores</SelectLabel>
+              {brokers.map((b) => (
+                <SelectItem key={b.id} value={b.id}>
+                  {b.name}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+        <Select
+          value={filters.sort}
+          onValueChange={(v) => {
+            if (isOneOf(v, SORT_ORDERS)) setFilter("sort", v);
+          }}
+        >
+          <SelectTrigger
+            aria-label="Ordenar"
+            className="h-9 w-full min-w-0 sm:w-auto"
+          >
+            <ArrowDownWideNarrow className="text-muted-foreground" />
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="newest">Mais recentes</SelectItem>
+            <SelectItem value="oldest">Mais antigos</SelectItem>
+          </SelectContent>
+        </Select>
         {activeCount > 0 && (
           <Button
             variant="ghost"
