@@ -14,11 +14,12 @@ import { Header } from "./header";
 import { Brand, Sidebar, SidebarNav } from "./sidebar";
 
 interface AppShellProps {
-  role: UserRole;
+  /** Perfil da área (gestor ou corretor): define o menu e o cabeçalho. */
+  userRole: UserRole;
   children: ReactNode;
 }
 
-export function AppShell({ role, children }: AppShellProps) {
+export function AppShell({ userRole: role, children }: AppShellProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 

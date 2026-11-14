@@ -6,7 +6,6 @@ import { useSession } from "@/hooks/use-session";
 import type { UserRole } from "@/shared/domain/actor";
 import { LoadingState } from "@/shared/ui/components/loading-state";
 import { HOME_BY_ROLE, ROUTES } from "@/shared/ui/routes";
-import { AppShell } from "./app-shell";
 
 /**
  * Protege as áreas do gestor e do corretor (a segurança real fica no RLS).
@@ -42,9 +41,7 @@ export function RoleGuard({
           <LoadingState />
         </div>
       )}
-      <div hidden={!allowed}>
-        {renderContent && <AppShell role={role}>{children}</AppShell>}
-      </div>
+      <div hidden={!allowed}>{renderContent && children}</div>
     </>
   );
 }

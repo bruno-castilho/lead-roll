@@ -1,6 +1,5 @@
 // @vitest-environment jsdom
 import { render, screen, waitFor } from "@testing-library/react";
-import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SessionProvider } from "@/contexts/session";
 import { router } from "@/test/app-mocks";
@@ -20,14 +19,6 @@ vi.mock(
   "next/navigation",
   async () => (await import("@/test/app-mocks")).navigationMock,
 );
-// A moldura (menu, cabeçalho) não interessa aqui: só o que o guard mostra.
-vi.mock("./app-shell", () => ({
-  AppShell: ({ role, children }: { role: string; children: ReactNode }) => (
-    <div data-testid="shell" data-role={role}>
-      {children}
-    </div>
-  ),
-}));
 
 function renderGuard() {
   return render(
@@ -49,7 +40,6 @@ describe("RoleGuard", () => {
     const { container } = renderGuard();
     const hidden = container.querySelector("div[hidden]");
     expect(hidden?.textContent).toContain("conteúdo protegido");
-    expect(screen.getByTestId("shell").dataset.role).toBe("broker");
     expect(loading()).not.toBeNull();
   });
 
