@@ -1,14 +1,3 @@
-import type { UserRole } from "@/shared/domain/actor";
-
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: UserRole;
-  /** Presença do corretor (`broker_presence` ainda não expirada). */
-  isPresent: boolean;
-}
-
 export type LeadStage =
   | "new"
   | "contacted"

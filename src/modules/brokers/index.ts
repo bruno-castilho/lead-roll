@@ -1,3 +1,4 @@
+export type { Broker } from "./domain/broker";
 export { BrokerCard } from "./presentation/broker-card";
 export { PresenceBadge } from "./presentation/presence-badge";
 export { PresenceProvider } from "./presentation/presence-provider";

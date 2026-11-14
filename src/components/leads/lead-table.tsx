@@ -4,7 +4,8 @@ import { Fragment } from "react";
 import { StageBadge } from "@/components/shared/stage-badge";
 import { INTEREST_LABEL, SOURCE_LABEL } from "@/lib/constants";
 import { formatDate, formatDateTime } from "@/lib/format";
-import type { Lead, User } from "@/lib/types";
+import type { Lead } from "@/lib/types";
+import type { Broker } from "@/modules/brokers";
 import {
   Table,
   TableBody,
@@ -18,7 +19,7 @@ import { type LeadActionHandlers, LeadRowActions } from "./lead-row-actions";
 
 interface LeadTableProps extends LeadActionHandlers {
   leads: Lead[];
-  brokers: User[];
+  brokers: Broker[];
 }
 
 /** Tabela de leads do gestor (desktop) + listagem compacta em cards (mobile). */

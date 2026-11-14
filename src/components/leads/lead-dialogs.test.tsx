@@ -2,7 +2,8 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { Lead, User } from "@/lib/types";
+import type { Lead } from "@/lib/types";
+import type { Broker } from "@/modules/brokers";
 import { toast } from "@/test/app-mocks";
 import { postgrestError, supabaseFake } from "@/test/fake-supabase";
 import { leadRow } from "@/test/fixtures";
@@ -41,8 +42,8 @@ function lead(id: string, overrides: Partial<Lead> = {}): Lead {
   };
 }
 
-function broker(id: string, isPresent: boolean): User {
-  return { id, name: id, email: `${id}@x.com`, role: "broker", isPresent };
+function broker(id: string, isPresent: boolean): Broker {
+  return { id, name: id, email: `${id}@x.com`, isPresent };
 }
 
 beforeEach(() => supabaseFake.reset());

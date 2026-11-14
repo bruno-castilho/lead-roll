@@ -11,6 +11,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/shared/ui/primitives/tooltip";
+import { canConfirmPresence } from "../domain/presence-policy";
 import { usePresence } from "./use-presence";
 
 type PresenceToggleProps = {
@@ -22,7 +23,7 @@ type PresenceToggleProps = {
 /** Confirmação de presença do corretor (entra na fila ou renova por 5h). */
 export function PresenceToggle(props: PresenceToggleProps) {
   const { profile } = useSession();
-  if (profile?.role !== "broker") return null;
+  if (!profile || !canConfirmPresence(profile)) return null;
   return <BrokerPresenceToggle {...props} />;
 }
 

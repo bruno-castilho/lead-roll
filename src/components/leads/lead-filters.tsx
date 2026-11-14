@@ -7,7 +7,7 @@ import {
   DEFAULT_LEAD_FILTERS,
   type LeadFilterState,
 } from "@/lib/lead-filters";
-import type { User } from "@/lib/types";
+import type { Broker } from "@/modules/brokers";
 import { cn } from "@/shared/ui/cn";
 import { SearchInput } from "@/shared/ui/components/search-input";
 import { Button } from "@/shared/ui/primitives/button";
@@ -70,7 +70,7 @@ interface LeadFiltersProps {
   onChange: (filters: LeadFilterState) => void;
   /** Gestor: origem, etapa, responsável e ordenação. Corretor: origem e interesse. */
   variant: "manager" | "broker";
-  brokers?: User[];
+  brokers?: Broker[];
 }
 
 export function LeadFilters({

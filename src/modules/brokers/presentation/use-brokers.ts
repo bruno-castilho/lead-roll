@@ -3,18 +3,19 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useSession } from "@/hooks/use-session";
-import type { User } from "@/lib/types";
-import { BrokersService } from "@/services/brokers-service";
+import { listBrokers } from "../composition";
+import type { Broker } from "../domain/broker";
+import { brokersErrorMessage } from "./brokers-messages";
 
 /**
- * Busca os corretores no Supabase assim que há um perfil conectado. A página
+ * Busca os corretores assim que há um perfil conectado. A página
  * é renderizada (oculta) antes da sessão ser restaurada, então a busca espera
  * o `profile` e é refeita quando o usuário muda.
  */
 export function useBrokers() {
   const { profile } = useSession();
   const profileId = profile?.id ?? null;
-  const [brokers, setBrokers] = useState<User[]>([]);
+  const [brokers, setBrokers] = useState<Broker[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -25,14 +26,14 @@ export function useBrokers() {
     }
     let cancelled = false;
     setLoading(true);
-    BrokersService.listBrokers()
+    listBrokers()
       .then((list) => {
         if (!cancelled) setBrokers(list);
       })
       .catch((error: unknown) => {
         if (cancelled) return;
         setBrokers([]);
-        toast.error(error instanceof Error ? error.message : String(error));
+        toast.error(brokersErrorMessage(error));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);

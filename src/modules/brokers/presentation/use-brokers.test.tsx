@@ -39,7 +39,6 @@ describe("useBrokers", () => {
         id: "b1",
         name: "Bia",
         email: "b1@leadroll.demo",
-        role: "broker",
         isPresent: false,
       },
     ]);

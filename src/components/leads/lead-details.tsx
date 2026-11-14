@@ -19,7 +19,8 @@ import { ObservationList } from "@/components/observations/observation-list";
 import { StageBadge } from "@/components/shared/stage-badge";
 import { INTEREST_LABEL, SOURCE_LABEL } from "@/lib/constants";
 import { formatDateTime, phoneDigits } from "@/lib/format";
-import type { Lead, LeadStage, User } from "@/lib/types";
+import type { Lead, LeadStage } from "@/lib/types";
+import type { Broker } from "@/modules/brokers";
 import { Button } from "@/shared/ui/primitives/button";
 import { Separator } from "@/shared/ui/primitives/separator";
 import {
@@ -33,7 +34,7 @@ import { StageSelect } from "./stage-select";
 
 interface LeadDetailsProps {
   leads: Lead[];
-  brokers: User[];
+  brokers: Broker[];
   leadId: string | null;
   onOpenChange: (open: boolean) => void;
   /** Gestor consulta e administra; corretor altera etapa e registra observações. */

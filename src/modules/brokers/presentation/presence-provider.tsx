@@ -11,10 +11,9 @@ import {
 import { toast } from "sonner";
 import { useSession } from "@/hooks/use-session";
 import { formatTime } from "@/lib/format";
-import {
-  type BrokerPresence,
-  PresenceService,
-} from "@/services/presence-service";
+import { confirmPresence, loadOwnPresence } from "../composition";
+import { canConfirmPresence } from "../domain/presence-policy";
+import { brokersErrorMessage } from "./brokers-messages";
 
 type PresenceContextType = {
   /** Fim da presença atual; `null` quando o corretor está ausente. */
@@ -28,14 +27,6 @@ type PresenceContextType = {
 
 export const PresenceContext = createContext<PresenceContextType | null>(null);
 
-/** Prazo ainda válido, ou `null`. Só chamar em efeitos e handlers. */
-function activeExpiry(presence: BrokerPresence | null): string | null {
-  if (!presence) return null;
-  return Date.parse(presence.expiresAt) > Date.now()
-    ? presence.expiresAt
-    : null;
-}
-
 /**
  * Presença do corretor conectado, compartilhada entre o cabeçalho e a página
  * do corretor. Busca quando há um perfil de corretor e passa a "ausente"
@@ -43,7 +34,7 @@ function activeExpiry(presence: BrokerPresence | null): string | null {
  */
 export function PresenceProvider({ children }: { children: ReactNode }) {
   const { profile } = useSession();
-  const brokerId = profile?.role === "broker" ? profile.id : null;
+  const brokerId = profile && canConfirmPresence(profile) ? profile.id : null;
   const [expiresAt, setExpiresAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [confirming, setConfirming] = useState(false);
@@ -57,13 +48,13 @@ export function PresenceProvider({ children }: { children: ReactNode }) {
     }
     let cancelled = false;
     setLoading(true);
-    PresenceService.getOwnPresence(brokerId)
+    loadOwnPresence({ id: brokerId, role: "broker" })
       .then((presence) => {
-        if (!cancelled) setExpiresAt(activeExpiry(presence));
+        if (!cancelled) setExpiresAt(presence.activeUntil);
       })
       .catch((error: unknown) => {
         if (cancelled) return;
-        toast.error(error instanceof Error ? error.message : String(error));
+        toast.error(brokersErrorMessage(error));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -84,11 +75,13 @@ export function PresenceProvider({ children }: { children: ReactNode }) {
   }, [expiresAt]);
 
   const confirm = useCallback(async () => {
+    // Só o corretor vê o botão (PresenceToggle); sem perfil não há o que confirmar.
+    if (!profile) return;
     const renewing = expiresAt !== null;
     setConfirming(true);
     try {
-      const presence = await PresenceService.confirmPresence();
-      setExpiresAt(activeExpiry(presence));
+      const presence = await confirmPresence(profile);
+      setExpiresAt(presence.activeUntil);
       const until = formatTime(presence.expiresAt);
       if (renewing) {
         toast.success("Presença renovada", {
@@ -100,11 +93,11 @@ export function PresenceProvider({ children }: { children: ReactNode }) {
         });
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : String(error));
+      toast.error(brokersErrorMessage(error));
     } finally {
       setConfirming(false);
     }
-  }, [expiresAt]);
+  }, [profile, expiresAt]);
 
   const value = useMemo<PresenceContextType>(
     () => ({

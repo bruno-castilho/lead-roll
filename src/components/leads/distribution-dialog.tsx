@@ -6,7 +6,8 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { ROUTES } from "@/lib/constants";
 import { pluralize } from "@/lib/format";
-import type { Lead, User } from "@/lib/types";
+import type { Lead } from "@/lib/types";
+import type { Broker } from "@/modules/brokers";
 import { LeadsService } from "@/services/leads-service";
 import { EmptyState } from "@/shared/ui/components/empty-state";
 import { Spinner } from "@/shared/ui/components/loading-state";
@@ -26,7 +27,7 @@ interface DistributionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   leads: Lead[];
-  brokers: User[];
+  brokers: Broker[];
   /** Chamado com os leads que o banco acabou de distribuir. */
   onDistributed?: (leads: Lead[]) => void;
 }

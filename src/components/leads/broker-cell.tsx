@@ -1,10 +1,10 @@
 "use client";
 
 import { getInitials } from "@/lib/format";
-import type { User } from "@/lib/types";
+import type { Broker } from "@/modules/brokers";
 import { Avatar, AvatarFallback } from "@/shared/ui/primitives/avatar";
 
-export function BrokerCell({ broker }: { broker?: User }) {
+export function BrokerCell({ broker }: { broker?: Broker }) {
   if (!broker) {
     return (
       <span className="inline-flex items-center gap-1.5 rounded-full border border-warning/40 bg-warning/10 px-2 py-0.5 font-medium text-warning text-xs">
