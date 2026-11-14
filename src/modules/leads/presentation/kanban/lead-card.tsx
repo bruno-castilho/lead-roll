@@ -21,7 +21,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/shared/ui/primitives/dropdown-menu";
-import type { Lead, LeadStage } from "../../domain/lead";
+import { isLeadStage, type Lead, type LeadStage } from "../../domain/lead";
 import { INTEREST_LABEL, SOURCE_LABEL, STAGE_OPTIONS } from "../lead-labels";
 import { StageDot } from "../stage-badge";
 
@@ -81,7 +81,9 @@ export function LeadCardContent({
               </DropdownMenuLabel>
               <DropdownMenuRadioGroup
                 value={lead.stage}
-                onValueChange={(v) => onStageChange(lead, v as LeadStage)}
+                onValueChange={(v) => {
+                  if (isLeadStage(v)) onStageChange(lead, v);
+                }}
               >
                 {STAGE_OPTIONS.map((s) => (
                   <DropdownMenuRadioItem key={s.value} value={s.value}>

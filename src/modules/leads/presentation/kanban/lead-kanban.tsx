@@ -6,14 +6,15 @@ import {
   DragOverlay,
   type DragStartEvent,
   PointerSensor,
+  type UniqueIdentifier,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
 import { useMemo, useState } from "react";
 import { cn } from "@/shared/ui/cn";
 import { useMediaQuery } from "@/shared/ui/hooks/use-media-query";
-import type { Lead, LeadStage } from "../../domain/lead";
-import { STAGE_OPTIONS } from "../lead-labels";
+import { isLeadStage, type Lead, type LeadStage } from "../../domain/lead";
+import { STAGE_LABEL, STAGE_OPTIONS } from "../lead-labels";
 import { StageDot } from "../stage-badge";
 import { KanbanColumn } from "./kanban-column";
 import { LeadCardContent } from "./lead-card";
@@ -24,10 +25,21 @@ interface LeadKanbanProps {
   onStageChange: (lead: Lead, stage: LeadStage) => void;
 }
 
-function groupByStage(leads: Lead[]) {
-  const groups = Object.fromEntries(
-    STAGE_OPTIONS.map((s) => [s.value, [] as Lead[]]),
-  ) as Record<LeadStage, Lead[]>;
+/** Colunas lado a lado a partir do breakpoint `md` do Tailwind. */
+const DESKTOP_QUERY = "(min-width: 768px)";
+/** O arraste só começa depois desse deslocamento, para o clique abrir o card. */
+const DRAG_ACTIVATION_DISTANCE_PX = 6;
+
+function groupByStage(leads: Lead[]): Record<LeadStage, Lead[]> {
+  const groups: Record<LeadStage, Lead[]> = {
+    new: [],
+    contacted: [],
+    visit_scheduled: [],
+    proposal: [],
+    won: [],
+    lost: [],
+  };
+  // Mais recentes primeiro: pela atribuição ou, sem ela, pelo cadastro.
   const sorted = [...leads].sort((a, b) =>
     (b.assignedAt ?? b.createdAt).localeCompare(a.assignedAt ?? a.createdAt),
   );
@@ -40,30 +52,35 @@ function groupByStage(leads: Lead[]) {
  * e navegação por etapas com lista vertical (mobile).
  */
 export function LeadKanban({ leads, onOpen, onStageChange }: LeadKanbanProps) {
-  const isDesktop = useMediaQuery("(min-width: 768px)", true);
+  const isDesktop = useMediaQuery(DESKTOP_QUERY, true);
   const groups = useMemo(() => groupByStage(leads), [leads]);
   const [activeLead, setActiveLead] = useState<Lead | null>(null);
   const [mobileStage, setMobileStage] = useState<LeadStage>("new");
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: DRAG_ACTIVATION_DISTANCE_PX },
+    }),
   );
 
+  const findLead = (id: UniqueIdentifier) => leads.find((l) => l.id === id);
+
   function handleDragStart(event: DragStartEvent) {
-    setActiveLead((event.active.data.current?.lead as Lead) ?? null);
+    setActiveLead(findLead(event.active.id) ?? null);
   }
 
   function handleDragEnd(event: DragEndEvent) {
     setActiveLead(null);
-    const lead = event.active.data.current?.lead as Lead | undefined;
-    const target = event.over?.id as LeadStage | undefined;
-    if (lead && target && lead.stage !== target) onStageChange(lead, target);
+    const lead = findLead(event.active.id);
+    const target = event.over?.id;
+    if (lead && isLeadStage(target) && lead.stage !== target) {
+      onStageChange(lead, target);
+    }
   }
 
   if (!isDesktop) {
     const stageLeads = groups[mobileStage];
-    const label =
-      STAGE_OPTIONS.find((s) => s.value === mobileStage)?.label ?? "";
+    const label = STAGE_LABEL[mobileStage];
     return (
       <div className="space-y-3">
         <div

@@ -5,12 +5,14 @@ import { useState } from "react";
 import { BrokerCard, useBrokers } from "@/modules/brokers";
 import type { Lead } from "@/modules/leads";
 import { useLeadStats } from "@/modules/leads";
+import { isOneOf } from "@/shared/domain/one-of";
 import { EmptyState } from "@/shared/ui/components/empty-state";
 import { CardSkeleton } from "@/shared/ui/components/loading-state";
 import { PageHeader } from "@/shared/ui/components/page-header";
 import { Tabs, TabsList, TabsTrigger } from "@/shared/ui/primitives/tabs";
 
-type PresenceFilter = "all" | "present" | "absent";
+const PRESENCE_FILTERS = ["all", "present", "absent"] as const;
+type PresenceFilter = (typeof PRESENCE_FILTERS)[number];
 
 // Leads ainda sem fonte de dados.
 const leads: Lead[] = [];
@@ -39,7 +41,9 @@ export function ManagerBrokersScreen() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <Tabs
           value={filter}
-          onValueChange={(v) => setFilter(v as PresenceFilter)}
+          onValueChange={(v) => {
+            if (isOneOf(v, PRESENCE_FILTERS)) setFilter(v);
+          }}
         >
           <TabsList>
             <TabsTrigger value="all">Todos ({byBroker.length})</TabsTrigger>

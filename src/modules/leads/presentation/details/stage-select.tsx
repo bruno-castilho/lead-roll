@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/ui/primitives/select";
-import type { LeadStage } from "../../domain/lead";
+import { isLeadStage, type LeadStage } from "../../domain/lead";
 import { STAGE_OPTIONS } from "../lead-labels";
 import { StageDot } from "../stage-badge";
 
@@ -26,7 +26,12 @@ export function StageSelect({
   id,
 }: StageSelectProps) {
   return (
-    <Select value={value} onValueChange={(v) => onChange(v as LeadStage)}>
+    <Select
+      value={value}
+      onValueChange={(v) => {
+        if (isLeadStage(v)) onChange(v);
+      }}
+    >
       <SelectTrigger
         id={id}
         aria-label="Etapa do lead"
