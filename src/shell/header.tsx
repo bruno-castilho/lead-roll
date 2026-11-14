@@ -5,7 +5,7 @@ import { UserMenu } from "@/modules/auth";
 import { PresenceToggle } from "@/modules/brokers";
 import type { UserRole } from "@/shared/domain/actor";
 import { Button } from "@/shared/ui/primitives/button";
-import { Brand } from "./sidebar";
+import { Brand } from "./brand";
 import { ThemeToggle } from "./theme-toggle";
 
 interface HeaderProps {

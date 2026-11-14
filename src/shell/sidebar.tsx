@@ -11,6 +11,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/shared/ui/primitives/tooltip";
+import { Brand } from "./brand";
 import { NAV_ITEMS } from "./nav-items";
 
 interface SidebarNavProps {
@@ -62,22 +63,6 @@ export function SidebarNav({
         );
       })}
     </nav>
-  );
-}
-
-export function Brand({ collapsed = false }: { collapsed?: boolean }) {
-  return (
-    <span className="font-semibold text-[17px] tracking-tight">
-      {collapsed ? (
-        <>
-          L<span className="text-primary">R</span>
-        </>
-      ) : (
-        <>
-          Lead<span className="text-primary">Roll</span>
-        </>
-      )}
-    </span>
   );
 }
 

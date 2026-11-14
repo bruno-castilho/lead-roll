@@ -10,8 +10,9 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/shared/ui/primitives/sheet";
+import { Brand } from "./brand";
 import { Header } from "./header";
-import { Brand, Sidebar, SidebarNav } from "./sidebar";
+import { Sidebar, SidebarNav } from "./sidebar";
 
 interface AppShellProps {
   /** Perfil da área (gestor ou corretor): define o menu e o cabeçalho. */
