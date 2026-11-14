@@ -1,6 +1,5 @@
 "use client";
 
-import { StageDot } from "@/components/shared/stage-badge";
 import { LEAD_STAGES } from "@/lib/constants";
 import type { LeadStage } from "@/lib/types";
 import { cn } from "@/shared/ui/cn";
@@ -11,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/ui/primitives/select";
+import { StageDot } from "../stage-badge";
 
 interface StageSelectProps {
   value: LeadStage;

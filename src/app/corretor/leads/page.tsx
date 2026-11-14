@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { BrokerLeadsPage } from "@/components/pages/broker-leads-page";
+import { BrokerLeadsPage } from "@/screens/broker-leads-screen";
 
 export const metadata: Metadata = { title: "Meus leads" };
 

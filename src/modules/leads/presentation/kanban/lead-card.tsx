@@ -8,7 +8,6 @@ import {
   MoreHorizontal,
   Phone,
 } from "lucide-react";
-import { StageDot } from "@/components/shared/stage-badge";
 import { INTEREST_LABEL, LEAD_STAGES, SOURCE_LABEL } from "@/lib/constants";
 import type { Lead, LeadStage } from "@/lib/types";
 import { cn } from "@/shared/ui/cn";
@@ -24,6 +23,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/shared/ui/primitives/dropdown-menu";
+import { StageDot } from "../stage-badge";
 
 interface LeadCardProps {
   lead: Lead;

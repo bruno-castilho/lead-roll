@@ -14,9 +14,6 @@ import {
   UserRound,
 } from "lucide-react";
 import { type ReactNode, useState } from "react";
-import { ObservationForm } from "@/components/observations/observation-form";
-import { ObservationList } from "@/components/observations/observation-list";
-import { StageBadge } from "@/components/shared/stage-badge";
 import { INTEREST_LABEL, SOURCE_LABEL } from "@/lib/constants";
 import type { Lead, LeadStage } from "@/lib/types";
 import type { Broker } from "@/modules/brokers";
@@ -30,6 +27,9 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/shared/ui/primitives/sheet";
+import { ObservationForm } from "../observations/observation-form";
+import { ObservationList } from "../observations/observation-list";
+import { StageBadge } from "../stage-badge";
 import { StageSelect } from "./stage-select";
 
 interface LeadDetailsProps {

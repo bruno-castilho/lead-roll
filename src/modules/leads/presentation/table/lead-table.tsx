@@ -1,7 +1,6 @@
 "use client";
 
 import { Fragment } from "react";
-import { StageBadge } from "@/components/shared/stage-badge";
 import { INTEREST_LABEL, SOURCE_LABEL } from "@/lib/constants";
 import type { Lead } from "@/lib/types";
 import type { Broker } from "@/modules/brokers";
@@ -14,6 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/shared/ui/primitives/table";
+import { StageBadge } from "../stage-badge";
 import { BrokerCell } from "./broker-cell";
 import { type LeadActionHandlers, LeadRowActions } from "./lead-row-actions";
 

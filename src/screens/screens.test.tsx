@@ -10,7 +10,9 @@ import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SessionProvider } from "@/modules/auth";
 import { PresenceProvider } from "@/modules/brokers";
+import { BrokerLeadsPage } from "@/screens/broker-leads-screen";
 import { ManagerBrokersScreen } from "@/screens/manager-brokers-screen";
+import { ManagerLeadsPage } from "@/screens/manager-leads-screen";
 import { TooltipProvider } from "@/shared/ui/primitives/tooltip";
 import { supabaseFake } from "@/test/fake-supabase";
 import {
@@ -20,8 +22,6 @@ import {
   leadRow,
   MANAGER,
 } from "@/test/fixtures";
-import { BrokerLeadsPage } from "./broker-leads-page";
-import { ManagerLeadsPage } from "./manager-leads-page";
 
 vi.mock("@/shared/infrastructure/supabase/client", async (importOriginal) => {
   const { supabaseFake } = await import("@/test/fake-supabase");

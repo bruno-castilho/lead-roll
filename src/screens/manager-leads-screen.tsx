@@ -9,14 +9,6 @@ import {
   Shuffle,
 } from "lucide-react";
 import { useMemo, useState } from "react";
-import { DeleteLeadDialog } from "@/components/leads/delete-lead-dialog";
-import { DistributionDialog } from "@/components/leads/distribution-dialog";
-import { LeadDetails } from "@/components/leads/lead-details";
-import { LeadFilters } from "@/components/leads/lead-filters";
-import { LeadForm } from "@/components/leads/lead-form";
-import { LeadTable } from "@/components/leads/lead-table";
-import { useLeadStats } from "@/hooks/use-lead-stats";
-import { useLeads } from "@/hooks/use-leads";
 import {
   type BrokerFilter,
   countActiveFilters,
@@ -26,6 +18,16 @@ import {
 } from "@/lib/lead-filters";
 import type { Lead } from "@/lib/types";
 import { useBrokers } from "@/modules/brokers";
+import {
+  DeleteLeadDialog,
+  DistributionDialog,
+  LeadDetails,
+  LeadFilters,
+  LeadForm,
+  LeadTable,
+  useLeadStats,
+  useLeads,
+} from "@/modules/leads";
 import { cn } from "@/shared/ui/cn";
 import { EmptyState } from "@/shared/ui/components/empty-state";
 import { Kbd } from "@/shared/ui/components/kbd";

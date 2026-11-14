@@ -7,9 +7,9 @@ import type { Broker } from "@/modules/brokers";
 import { toast } from "@/test/app-mocks";
 import { postgrestError, supabaseFake } from "@/test/fake-supabase";
 import { leadRow } from "@/test/fixtures";
+import { LeadForm } from "../form/lead-form";
 import { DeleteLeadDialog } from "./delete-lead-dialog";
 import { DistributionDialog } from "./distribution-dialog";
-import { LeadForm } from "./lead-form";
 
 vi.mock("@/shared/infrastructure/supabase/client", async (importOriginal) => {
   const { supabaseFake } = await import("@/test/fake-supabase");

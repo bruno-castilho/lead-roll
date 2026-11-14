@@ -2,13 +2,15 @@
 
 import { Inbox } from "lucide-react";
 import { useMemo, useState } from "react";
-import { LeadKanban } from "@/components/kanban/lead-kanban";
-import { LeadDetails } from "@/components/leads/lead-details";
-import { useAddObservation } from "@/hooks/use-add-observation";
-import { useChangeStage } from "@/hooks/use-change-stage";
-import { useLeads } from "@/hooks/use-leads";
 import { useSession } from "@/modules/auth";
 import { PresenceToggle, useBrokers, usePresence } from "@/modules/brokers";
+import {
+  LeadDetails,
+  LeadKanban,
+  useAddObservation,
+  useChangeStage,
+  useLeads,
+} from "@/modules/leads";
 import { EmptyState } from "@/shared/ui/components/empty-state";
 import { Spinner } from "@/shared/ui/components/loading-state";
 import { PageHeader } from "@/shared/ui/components/page-header";
