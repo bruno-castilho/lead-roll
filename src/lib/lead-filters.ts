@@ -1,4 +1,4 @@
-import { normalize, phoneDigits } from "./format";
+import { normalize, phoneDigits } from "@/shared/ui/format";
 import type { Lead, LeadInterest, LeadSource, LeadStage } from "./types";
 
 /** "all" | "none" (sem responsável) | "assigned" (qualquer corretor) | id do corretor */

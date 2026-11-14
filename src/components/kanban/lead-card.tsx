@@ -10,9 +10,9 @@ import {
 } from "lucide-react";
 import { StageDot } from "@/components/shared/stage-badge";
 import { INTEREST_LABEL, LEAD_STAGES, SOURCE_LABEL } from "@/lib/constants";
-import { formatShortDateTime } from "@/lib/format";
 import type { Lead, LeadStage } from "@/lib/types";
 import { cn } from "@/shared/ui/cn";
+import { formatShortDateTime } from "@/shared/ui/format";
 import { Button } from "@/shared/ui/primitives/button";
 import {
   DropdownMenu,

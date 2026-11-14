@@ -1,6 +1,6 @@
 import { z } from "zod";
+import { phoneDigits } from "@/shared/ui/format";
 import { LEAD_INTERESTS, LEAD_SOURCES } from "./constants";
-import { phoneDigits } from "./format";
 import type { LeadInterest, LeadSource } from "./types";
 
 const sourceValues = LEAD_SOURCES.map((s) => s.value) as [

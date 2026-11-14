@@ -3,9 +3,9 @@
 import { Fragment } from "react";
 import { StageBadge } from "@/components/shared/stage-badge";
 import { INTEREST_LABEL, SOURCE_LABEL } from "@/lib/constants";
-import { formatDate, formatDateTime } from "@/lib/format";
 import type { Lead } from "@/lib/types";
 import type { Broker } from "@/modules/brokers";
+import { formatDate, formatDateTime } from "@/shared/ui/format";
 import {
   Table,
   TableBody,

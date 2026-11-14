@@ -1,6 +1,6 @@
 import { Mail } from "lucide-react";
-import { getInitials } from "@/lib/format";
 import { cn } from "@/shared/ui/cn";
+import { getInitials } from "@/shared/ui/format";
 import { Avatar, AvatarFallback } from "@/shared/ui/primitives/avatar";
 import type { Broker } from "../domain/broker";
 import { PresenceBadge } from "./presence-badge";

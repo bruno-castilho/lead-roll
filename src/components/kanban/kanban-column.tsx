@@ -3,10 +3,10 @@
 import { useDroppable } from "@dnd-kit/core";
 import { Inbox } from "lucide-react";
 import { StageDot } from "@/components/shared/stage-badge";
-import { pluralize } from "@/lib/format";
 import type { Lead, LeadStage } from "@/lib/types";
 import { cn } from "@/shared/ui/cn";
 import { EmptyState } from "@/shared/ui/components/empty-state";
+import { pluralize } from "@/shared/ui/format";
 import { LeadCard } from "./lead-card";
 
 interface KanbanColumnProps {

@@ -18,9 +18,9 @@ import { ObservationForm } from "@/components/observations/observation-form";
 import { ObservationList } from "@/components/observations/observation-list";
 import { StageBadge } from "@/components/shared/stage-badge";
 import { INTEREST_LABEL, SOURCE_LABEL } from "@/lib/constants";
-import { formatDateTime, phoneDigits } from "@/lib/format";
 import type { Lead, LeadStage } from "@/lib/types";
 import type { Broker } from "@/modules/brokers";
+import { formatDateTime, phoneDigits } from "@/shared/ui/format";
 import { Button } from "@/shared/ui/primitives/button";
 import { Separator } from "@/shared/ui/primitives/separator";
 import {

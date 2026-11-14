@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useSession } from "@/hooks/use-session";
 import { ROUTES } from "@/lib/constants";
-import { getInitials } from "@/lib/format";
 import { AuthService } from "@/services/auth-service";
+import { getInitials } from "@/shared/ui/format";
 import { Avatar, AvatarFallback } from "@/shared/ui/primitives/avatar";
 import { Button } from "@/shared/ui/primitives/button";
 import {

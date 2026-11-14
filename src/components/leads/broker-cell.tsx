@@ -1,7 +1,7 @@
 "use client";
 
-import { getInitials } from "@/lib/format";
 import type { Broker } from "@/modules/brokers";
+import { getInitials } from "@/shared/ui/format";
 import { Avatar, AvatarFallback } from "@/shared/ui/primitives/avatar";
 
 export function BrokerCell({ broker }: { broker?: Broker }) {

@@ -10,7 +10,7 @@ import {
 } from "react";
 import { toast } from "sonner";
 import { useSession } from "@/hooks/use-session";
-import { formatTime } from "@/lib/format";
+import { formatTime } from "@/shared/ui/format";
 import { confirmPresence, loadOwnPresence } from "../composition";
 import { canConfirmPresence } from "../domain/presence-policy";
 import { brokersErrorMessage } from "./brokers-messages";
