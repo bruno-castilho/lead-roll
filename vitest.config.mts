@@ -12,7 +12,9 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["src/**/*.test.{ts,tsx}"],
+    clearMocks: true,
     restoreMocks: true,
+    setupFiles: ["src/test/setup-dom.ts"],
     coverage: {
       provider: "v8",
       include: ["src/**/*.{ts,tsx}"],
