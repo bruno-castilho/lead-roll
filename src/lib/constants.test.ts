@@ -6,7 +6,6 @@ import {
   LEAD_INTERESTS,
   LEAD_SOURCES,
   LEAD_STAGES,
-  ROUTES,
   SOURCE_LABEL,
   STAGE_DOT,
   STAGE_LABEL,
@@ -92,14 +91,8 @@ describe("origens e interesses", () => {
   });
 });
 
-describe("navegação", () => {
-  it("rotas e tamanhos de página", () => {
-    expect(ROUTES).toEqual({
-      login: "/login",
-      managerLeads: "/gestor/leads",
-      managerBrokers: "/gestor/corretores",
-      brokerLeads: "/corretor/leads",
-    });
+describe("paginação", () => {
+  it("tamanhos de página", () => {
     expect(PAGE_SIZES).toEqual([10, 20, 50]);
   });
 });

@@ -4,7 +4,6 @@ import { AlertCircle, Eye, EyeOff, LogIn } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { HOME_BY_ROLE } from "@/components/layout/nav-items";
 import { ProfileError } from "@/errors/profile-error";
 import { SignInError } from "@/errors/sign-in-error";
 import { useSession } from "@/hooks/use-session";
@@ -14,6 +13,7 @@ import { Spinner } from "@/shared/ui/components/loading-state";
 import { Button } from "@/shared/ui/primitives/button";
 import { Input } from "@/shared/ui/primitives/input";
 import { Label } from "@/shared/ui/primitives/label";
+import { HOME_BY_ROLE } from "@/shared/ui/routes";
 
 export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);

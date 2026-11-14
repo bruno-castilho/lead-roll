@@ -1,6 +1,6 @@
 import { Inbox, KanbanSquare, type LucideIcon, Users } from "lucide-react";
-import { ROUTES } from "@/lib/constants";
 import type { UserRole } from "@/shared/domain/actor";
+import { ROUTES } from "@/shared/ui/routes";
 
 export interface NavItem {
   href: string;
@@ -16,9 +16,4 @@ export const NAV_ITEMS: Record<UserRole, NavItem[]> = {
   broker: [
     { href: ROUTES.brokerLeads, label: "Meus leads", icon: KanbanSquare },
   ],
-};
-
-export const HOME_BY_ROLE: Record<UserRole, string> = {
-  manager: ROUTES.managerLeads,
-  broker: ROUTES.brokerLeads,
 };

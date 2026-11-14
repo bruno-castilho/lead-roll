@@ -3,11 +3,10 @@
 import { useRouter } from "next/navigation";
 import { type ReactNode, useEffect } from "react";
 import { useSession } from "@/hooks/use-session";
-import { ROUTES } from "@/lib/constants";
 import type { UserRole } from "@/shared/domain/actor";
 import { LoadingState } from "@/shared/ui/components/loading-state";
+import { HOME_BY_ROLE, ROUTES } from "@/shared/ui/routes";
 import { AppShell } from "./app-shell";
-import { HOME_BY_ROLE } from "./nav-items";
 
 /**
  * Protege as áreas do gestor e do corretor (a segurança real fica no RLS).

@@ -4,7 +4,6 @@ import { LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useSession } from "@/hooks/use-session";
-import { ROUTES } from "@/lib/constants";
 import { AuthService } from "@/services/auth-service";
 import { getInitials } from "@/shared/ui/format";
 import { Avatar, AvatarFallback } from "@/shared/ui/primitives/avatar";
@@ -17,6 +16,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/shared/ui/primitives/dropdown-menu";
+import { ROUTES } from "@/shared/ui/routes";
 
 export function UserMenu() {
   const { profile: currentUser, clearSession } = useSession();

@@ -57,10 +57,3 @@ export const LEAD_INTERESTS: { value: LeadInterest; label: string }[] = [
 export const INTEREST_LABEL: Record<LeadInterest, string> = Object.fromEntries(
   LEAD_INTERESTS.map((s) => [s.value, s.label]),
 ) as Record<LeadInterest, string>;
-
-export const ROUTES = {
-  login: "/login",
-  managerLeads: "/gestor/leads",
-  managerBrokers: "/gestor/corretores",
-  brokerLeads: "/corretor/leads",
-} as const;
