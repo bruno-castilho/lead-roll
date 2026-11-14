@@ -4,7 +4,7 @@ Fase 2 do [PRD](PRD.md), a partir do [code review](01-code-review.md). Registro 
 marque cada etapa ao concluir e anote desvios na seção 8.
 
 **Estado:** Parada 1 aprovada em 2026-11-14 (todas as perguntas da seção 6 decididas).
-Etapas 0 a 7 concluídas em 2026-11-14 (relatório em [03-relatorio-final.md](03-relatorio-final.md)). Em execução: Etapa 8 (`AGENTS.md`).
+**Concluído em 2026-11-14.** Relatório em [03-relatorio-final.md](03-relatorio-final.md).
 
 ## 1. Arquitetura-alvo, adaptada ao LeadRoll
 
@@ -249,7 +249,7 @@ Convenções que valem em todas as etapas:
 - [x] Etapas 5a–5c — `leads`
 - [x] Etapa 6 — shell, `app/` e limpeza
 - [x] Etapa 7 — validação final e relatório
-- [ ] Etapa 8 — `AGENTS.md`
+- [x] Etapa 8 — `AGENTS.md`
 
 ## 8. Desvios e decisões
 
@@ -280,4 +280,5 @@ Convenções que valem em todas as etapas:
 | 2026-11-14 | Hooks e diálogos de leads leem o ator da sessão; os testes passaram a renderizar com `SignedIn` | Os casos de uso exigem o ator (P-06). Nenhuma asserção removida |
 | 2026-11-14 | O teste `role === "broker"` do `Header` foi mantido e comentado | Sem ele, a área do gestor renderizada oculta durante a restauração pediria o `PresenceProvider`, que só existe na área do corretor |
 | 2026-11-14 | Testes de caracterização extras (menu, `PresenceToggle`, `RootRedirect`, `SearchInput`) na validação final | A cobertura de branches tinha ficado abaixo da referência da Fase 3 (73,41% × 75,88%) porque os `switch` das classes de erro antigas viraram mapas; com os testes, 82,92% |
+| 2026-11-14 | `AGENTS.md` reescrito (353 → 159 linhas); detalhes em `docs/arquitetura.md` e `docs/produto.md`; README sem o script de seed e a `service_role` inexistentes (M-18) | Seção 9 do PRD. Bloco `nextjs-agent-rules` intacto. Não há `CLAUDE.md`; o `AGENTS.md` é carregado pelo Claude Code nesta configuração |
 

@@ -76,7 +76,7 @@ dos quais 250 foram escritos antes de qualquer mudança.
 | 7 | Nenhum `any`, `@ts-ignore` ou `eslint-disable` novo | Atendido | Contagens da seção 3 (inclusive nos testes: 0) |
 | 8 | Domínio e casos de uso com testes; cobertura não inferior | Atendido | Testes de domínio e de caso de uso nos três módulos, sem React nem rede; cobertura acima da linha de base (0%) e da referência da Fase 3 |
 | 9 | Sem código morto | Atendido | Varredura de exports sem uso fora do próprio arquivo (só sobram tipos públicos de funções exportadas e valores usados em testes); variante `broker` dos filtros, filtro de interesse, `LoadingState variant="table"`, props sem uso, `user`/`session`/`weakPassword` removidos; todas as dependências do `package.json` têm uso |
-| 10 | `AGENTS.md` revisado e validado | Atendido na Fase 7 | Diff do `AGENTS.md` e comandos executados (commit da Fase 7) |
+| 10 | `AGENTS.md` revisado e validado | Atendido | 353 → 159 linhas, bloco do Next idêntico (`diff` das linhas 1–9 vazio), detalhes em `docs/arquitetura.md` e `docs/produto.md`. Todos os caminhos e símbolos citados conferidos por script. Comandos executados nesta sessão: `npm install`, `npm run lint`, `npx biome check --write src`, `npx tsc --noEmit`, `npm test`, `npx vitest run <arquivo>`, `npm run test:coverage`, `npm run build`, `npx next start -p 3100` (serviu `/login` e `/gestor/leads` com 200) e `npx shadcn@latest add checkbox --dry-run -y` (gera em `src/shared/ui/primitives/`). `npm run dev` não foi executado de novo para não disputar a pasta com o `next dev` do usuário já ativo na porta 3000 |
 
 ## 5. Achados: status
 
@@ -111,7 +111,7 @@ Legenda: **R** resolvido · **P** parcial (justificado) · **D** dívida registr
 | M-15 | R | `RoleGuard` só protege; HTML pré-renderizado comparado: idêntico |
 | M-16 | R | Limites de campo no domínio; schemas e mensagens derivados deles |
 | M-17 | D | A atualização otimista continua no hook (é comportamento de interface); a corrida está registrada como BUG-04 |
-| M-18 | R | README corrigido na Fase 7 |
+| M-18 | R | README sem `npm run seed:auth`, `scripts/seed-demo-users.mjs` e `SUPABASE_SERVICE_ROLE_KEY`, que não existem; comandos de teste incluídos |
 | B-01 a B-07, B-09 | R | Regex legível, `cn.ts`, `<>`, `setField`/`setFilter`, constantes nomeadas, `STAGE_LABEL`, `UnassignedBadge`, `devcontainer.json` formatado |
 | B-08 | D | Comentário do template em `next.config.ts`: arquivo de configuração protegido, não tocado |
 
