@@ -4,7 +4,7 @@ Fase 2 do [PRD](PRD.md), a partir do [code review](01-code-review.md). Registro 
 marque cada etapa ao concluir e anote desvios na seção 8.
 
 **Estado:** Parada 1 aprovada em 2026-11-14 (todas as perguntas da seção 6 decididas).
-Fase 3, Etapa 2 e piloto `brokers` concluídos. **Aguardando a Parada 2.**
+Parada 2 aprovada em 2026-11-14. Etapa 4 (`auth`) concluída; em execução: Etapa 5 (`leads`).
 
 ## 1. Arquitetura-alvo, adaptada ao LeadRoll
 
@@ -244,8 +244,8 @@ Convenções que valem em todas as etapas:
 - [x] Etapas 1.1–1.5 — rede de segurança (Fase 3)
 - [x] Etapa 2 — fundação `shared`
 - [x] Etapa 3 — piloto `brokers`
-- [ ] Parada 2 — aprovação
-- [ ] Etapa 4 — `auth`
+- [x] Parada 2 — aprovação (2026-11-14)
+- [x] Etapa 4 — `auth`
 - [ ] Etapas 5a–5c — `leads`
 - [ ] Etapa 6 — shell, `app/` e limpeza
 - [ ] Etapa 7 — validação final e relatório
@@ -272,3 +272,8 @@ Convenções que valem em todas as etapas:
 | 2026-11-14 | `Broker` não tem mais o campo `role` (sempre `"broker"`); o teste de caracterização de `useBrokers` deixou de esperá-lo | Ninguém lia o campo (busca registrada no commit `37031d3`); não é comportamento observável |
 | 2026-11-14 | Imports transitórios aceitos até as próximas etapas: `useSession` de `@/hooks/use-session` em `brokers/presentation` (sai na Etapa 4) e `useLeadStats`/`Lead` de `@/hooks`/`@/lib` em `screens/manager-brokers-screen.tsx` (sai na Etapa 5) | Os módulos `auth` e `leads` ainda não existem; as regras de fronteira não bloqueiam as pastas antigas |
 | 2026-11-14 | Verificação da Parada 2: lint, tipos, 290 testes, build com e sem variáveis; rotas idênticas à linha de base; cobertura 85,40% statements / 76,64% branches / 77,58% funções / 86,22% linhas (acima da referência) | Comandos rodados nesta sessão |
+| 2026-11-14 | `RoleGuard` deixou de montar o `AppShell`; os layouts de `app/` compõem os dois | Quebra o ciclo `auth → shell → brokers → auth` (M-15). HTML pré-renderizado de `/gestor/leads` e `/corretor/leads` comparado antes e depois: idêntico |
+| 2026-11-14 | A prop do `AppShell` passou de `role` para `userRole` | O lint (`useValidAriaRole`) toma `role="manager"` literal como atributo ARIA |
+| 2026-11-14 | A remoção de `user`/`session` do contexto de sessão veio antes da movimentação de `auth` | A apresentação não pode importar o SDK; mover primeiro deixaria o commit vermelho |
+| 2026-11-14 | `signIn` e `restoreSession` mantêm as condições antigas de logout: no login, qualquer falha ao buscar o perfil; na restauração, só perfil ausente ou sessão recusada | Comportamento preservado (testes de caso de uso e de caracterização; mutação removendo o logout é detectada) |
+
