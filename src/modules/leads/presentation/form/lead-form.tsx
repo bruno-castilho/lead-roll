@@ -1,22 +1,13 @@
 "use client";
 
 import { Save, UserPlus } from "lucide-react";
-import { type FormEvent, type ReactNode, useState } from "react";
+import { type FormEvent, useState } from "react";
 import { toast } from "sonner";
 import { useSession } from "@/modules/auth";
 import { Spinner } from "@/shared/ui/components/loading-state";
 import { fieldErrors } from "@/shared/ui/form-errors";
 import { useResetOnHide } from "@/shared/ui/hooks/use-reset-on-hide";
 import { Button } from "@/shared/ui/primitives/button";
-import { Input } from "@/shared/ui/primitives/input";
-import { Label } from "@/shared/ui/primitives/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/shared/ui/primitives/select";
 import {
   Sheet,
   SheetContent,
@@ -27,9 +18,12 @@ import {
 } from "@/shared/ui/primitives/sheet";
 import { createLead, updateLead } from "../../composition";
 import type { Lead } from "../../domain/lead";
-import { formatPhone } from "../../domain/phone";
-import { INTEREST_OPTIONS, SOURCE_OPTIONS } from "../lead-labels";
 import { leadsErrorMessage } from "../leads-messages";
+import {
+  LeadFormFields,
+  type LeadFormValues,
+  toFormValues,
+} from "./lead-form-fields";
 import { leadSchema } from "./lead-form-schema";
 
 interface LeadFormProps {
@@ -43,65 +37,6 @@ interface LeadFormProps {
   onUpdated?: (lead: Lead) => void;
 }
 
-type FormState = {
-  name: string;
-  phone: string;
-  email: string;
-  source: string;
-  interest: string;
-};
-
-function toFormState(lead?: Lead | null): FormState {
-  return {
-    name: lead?.name ?? "",
-    phone: lead?.phone ?? "",
-    email: lead?.email ?? "",
-    source: lead?.source ?? "",
-    interest: lead?.interest ?? "",
-  };
-}
-
-function Field({
-  id,
-  label,
-  required,
-  error,
-  hint,
-  children,
-}: {
-  id: string;
-  label: string;
-  required?: boolean;
-  error?: string;
-  hint?: string;
-  children: ReactNode;
-}) {
-  return (
-    <div className="space-y-1.5">
-      <Label htmlFor={id}>
-        {label}
-        {required ? (
-          <span className="text-destructive" aria-hidden>
-            *
-          </span>
-        ) : (
-          <span className="font-normal text-muted-foreground text-xs">
-            (opcional)
-          </span>
-        )}
-      </Label>
-      {children}
-      {error ? (
-        <p id={`${id}-error`} className="text-destructive text-xs">
-          {error}
-        </p>
-      ) : hint ? (
-        <p className="text-muted-foreground text-xs">{hint}</p>
-      ) : null}
-    </div>
-  );
-}
-
 export function LeadForm({
   open,
   onOpenChange,
@@ -111,7 +46,9 @@ export function LeadForm({
 }: LeadFormProps) {
   const { profile } = useSession();
   const isEdit = !!lead;
-  const [values, setValues] = useState<FormState>(() => toFormState(lead));
+  const [values, setValues] = useState<LeadFormValues>(() =>
+    toFormValues(lead),
+  );
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [prevOpen, setPrevOpen] = useState(open);
@@ -122,13 +59,16 @@ export function LeadForm({
   if (open !== prevOpen) {
     setPrevOpen(open);
     if (open) {
-      setValues(toFormState(lead));
+      setValues(toFormValues(lead));
       setErrors({});
       setSubmitting(false);
     }
   }
 
-  function set<K extends keyof FormState>(key: K, value: FormState[K]) {
+  function setField<K extends keyof LeadFormValues>(
+    key: K,
+    value: LeadFormValues[K],
+  ) {
     setValues((v) => ({ ...v, [key]: value }));
     if (errors[key]) setErrors((e) => ({ ...e, [key]: "" }));
   }
@@ -174,11 +114,6 @@ export function LeadForm({
     }
   }
 
-  const invalid = (key: keyof FormState) => ({
-    "aria-invalid": !!errors[key],
-    "aria-describedby": errors[key] ? `lead-${key}-error` : undefined,
-  });
-
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="gap-0 p-0 data-[side=right]:w-full data-[side=right]:sm:max-w-md">
@@ -199,102 +134,7 @@ export function LeadForm({
           noValidate
           className="flex-1 space-y-5 overflow-y-auto p-5"
         >
-          <Field id="lead-name" label="Nome" required error={errors.name}>
-            <Input
-              id="lead-name"
-              value={values.name}
-              onChange={(e) => set("name", e.target.value)}
-              placeholder="Nome completo"
-              autoComplete="off"
-              className="h-10"
-              autoFocus
-              {...invalid("name")}
-            />
-          </Field>
-
-          <Field id="lead-phone" label="Telefone" required error={errors.phone}>
-            <Input
-              id="lead-phone"
-              type="tel"
-              inputMode="tel"
-              value={values.phone}
-              onChange={(e) => set("phone", formatPhone(e.target.value))}
-              placeholder="(11) 98765-4321"
-              autoComplete="off"
-              className="h-10"
-              {...invalid("phone")}
-            />
-          </Field>
-
-          <Field id="lead-email" label="E-mail" error={errors.email}>
-            <Input
-              id="lead-email"
-              type="email"
-              inputMode="email"
-              value={values.email}
-              onChange={(e) => set("email", e.target.value)}
-              placeholder="email@exemplo.com"
-              autoComplete="off"
-              className="h-10"
-              {...invalid("email")}
-            />
-          </Field>
-
-          <div className="grid gap-5 sm:grid-cols-2">
-            <Field
-              id="lead-source"
-              label="Origem"
-              required
-              error={errors.source}
-            >
-              <Select
-                value={values.source}
-                onValueChange={(v) => set("source", v)}
-              >
-                <SelectTrigger
-                  id="lead-source"
-                  className="h-10 w-full"
-                  {...invalid("source")}
-                >
-                  <SelectValue placeholder="Selecione" />
-                </SelectTrigger>
-                <SelectContent>
-                  {SOURCE_OPTIONS.map((o) => (
-                    <SelectItem key={o.value} value={o.value}>
-                      {o.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field>
-
-            <Field
-              id="lead-interest"
-              label="Interesse"
-              required
-              error={errors.interest}
-            >
-              <Select
-                value={values.interest}
-                onValueChange={(v) => set("interest", v)}
-              >
-                <SelectTrigger
-                  id="lead-interest"
-                  className="h-10 w-full"
-                  {...invalid("interest")}
-                >
-                  <SelectValue placeholder="Selecione" />
-                </SelectTrigger>
-                <SelectContent>
-                  {INTEREST_OPTIONS.map((o) => (
-                    <SelectItem key={o.value} value={o.value}>
-                      {o.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field>
-          </div>
+          <LeadFormFields values={values} errors={errors} onChange={setField} />
 
           {/* Permite enviar com Enter a partir de qualquer campo de texto. */}
           <button type="submit" hidden aria-hidden tabIndex={-1} />
