@@ -1,6 +1,5 @@
 "use client";
 
-import { Fragment } from "react";
 import type { Broker } from "@/modules/brokers";
 import { formatDate, formatDateTime } from "@/shared/ui/format";
 import {
@@ -27,7 +26,7 @@ export function LeadTable({ leads, brokers, ...handlers }: LeadTableProps) {
   const getBroker = (id: string | null) => brokers.find((b) => b.id === id);
 
   return (
-    <Fragment>
+    <>
       {/* Desktop / tablet */}
       <div className="hidden overflow-hidden rounded-xl border bg-card md:block">
         <Table>
@@ -132,6 +131,6 @@ export function LeadTable({ leads, brokers, ...handlers }: LeadTableProps) {
           </li>
         ))}
       </ul>
-    </Fragment>
+    </>
   );
 }

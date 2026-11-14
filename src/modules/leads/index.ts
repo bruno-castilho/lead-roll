@@ -1,9 +1,4 @@
-export type {
-  Lead,
-  LeadStage,
-  Observation,
-} from "./domain/lead";
-export type { LeadInput } from "./domain/lead-input";
+export type { Lead } from "./domain/lead";
 export { isResponsibleFor } from "./domain/lead-policy";
 export { LeadDetails } from "./presentation/details/lead-details";
 export { DeleteLeadDialog } from "./presentation/dialogs/delete-lead-dialog";

@@ -57,5 +57,9 @@ export function pluralize(count: number, singular: string, plural: string) {
 
 /** Normaliza texto para busca sem acentos e sem diferenciar maiúsculas. */
 export function normalize(value: string): string {
-  return value.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  // Separa letra e acento (NFD) e remove os acentos (U+0300 a U+036F).
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
 }
