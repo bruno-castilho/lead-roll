@@ -8,7 +8,7 @@ import { AuthServiceError } from "@/errors/auth-service-error";
 import { ProfileError } from "@/errors/profile-error";
 import { SignInError } from "@/errors/sign-in-error";
 import { SignOutError } from "@/errors/sign-out-error";
-import { SupabaseConfigError } from "@/shared/infrastructure/supabase/client";
+import { SupabaseConfigError } from "@/shared/infrastructure/env";
 import { postgrestError, supabaseFake } from "@/test/fake-supabase";
 import { AuthService } from "./auth-service";
 

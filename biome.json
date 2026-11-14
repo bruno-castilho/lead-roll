@@ -507,7 +507,6 @@
                       "@dnd-kit/**",
                       "@hookform/**",
                       "react-hook-form",
-                      "client-only",
                       "server-only",
                       "@/components/**",
                       "@/contexts/**",
