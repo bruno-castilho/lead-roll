@@ -1,4 +1,4 @@
-export type UserRole = "manager" | "broker";
+import type { UserRole } from "@/shared/domain/actor";
 
 export interface User {
   id: string;

@@ -1,7 +1,7 @@
 "use client";
 
 import { type ReactNode, useState } from "react";
-import type { UserRole } from "@/lib/types";
+import type { UserRole } from "@/shared/domain/actor";
 import { cn } from "@/shared/ui/cn";
 import {
   Sheet,

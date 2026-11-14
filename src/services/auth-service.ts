@@ -7,7 +7,7 @@ import { AuthServiceError } from "@/errors/auth-service-error";
 import { ProfileError } from "@/errors/profile-error";
 import { SignInError } from "@/errors/sign-in-error";
 import { SignOutError } from "@/errors/sign-out-error";
-import type { UserRole } from "@/lib/types";
+import { isUserRole, type UserRole } from "@/shared/domain/actor";
 import { getSupabaseClient } from "@/shared/infrastructure/supabase/client";
 
 /** Perfil do usuário na tabela `profiles` (a fonte do papel no app). */
@@ -19,14 +19,12 @@ export type AuthProfile = {
 };
 
 const PROFILE_COLUMNS = "id, name, email, role";
-const ROLES: readonly UserRole[] = ["manager", "broker"];
 
 type ProfileRow = { id: string; name: string; email: string; role: string };
 
 function toProfile(row: ProfileRow): AuthProfile | null {
-  const role = ROLES.find((r) => r === row.role);
-  if (!role || !row.name.trim()) return null;
-  return { id: row.id, name: row.name, email: row.email, role };
+  if (!isUserRole(row.role) || !row.name.trim()) return null;
+  return { id: row.id, name: row.name, email: row.email, role: row.role };
 }
 
 export const AuthService = {

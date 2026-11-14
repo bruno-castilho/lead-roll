@@ -3,7 +3,7 @@
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { UserRole } from "@/lib/types";
+import type { UserRole } from "@/shared/domain/actor";
 import { cn } from "@/shared/ui/cn";
 import { Button } from "@/shared/ui/primitives/button";
 import {

@@ -1,7 +1,7 @@
 "use client";
 
 import { Menu } from "lucide-react";
-import type { UserRole } from "@/lib/types";
+import type { UserRole } from "@/shared/domain/actor";
 import { Button } from "@/shared/ui/primitives/button";
 import { PresenceToggle } from "./presence-toggle";
 import { Brand } from "./sidebar";

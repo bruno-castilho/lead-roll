@@ -1,6 +1,6 @@
 import { Inbox, KanbanSquare, type LucideIcon, Users } from "lucide-react";
 import { ROUTES } from "@/lib/constants";
-import type { UserRole } from "@/lib/types";
+import type { UserRole } from "@/shared/domain/actor";
 
 export interface NavItem {
   href: string;
