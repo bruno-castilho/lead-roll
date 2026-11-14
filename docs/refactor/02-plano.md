@@ -4,7 +4,7 @@ Fase 2 do [PRD](PRD.md), a partir do [code review](01-code-review.md). Registro 
 marque cada etapa ao concluir e anote desvios na seção 8.
 
 **Estado:** Parada 1 aprovada em 2026-11-14 (todas as perguntas da seção 6 decididas).
-Em execução: Fase 3 (rede de segurança).
+Fase 3 concluída (250 testes). Em execução: Etapa 2 (fundação `shared`).
 
 ## 1. Arquitetura-alvo, adaptada ao LeadRoll
 
@@ -241,7 +241,7 @@ Convenções que valem em todas as etapas:
 - [x] Fase 2 — Plano (este arquivo)
 - [x] Parada 1 — aprovação (2026-11-14)
 - [x] Etapa 0 — branch e documentos
-- [ ] Etapas 1.1–1.5 — rede de segurança (Fase 3)
+- [x] Etapas 1.1–1.5 — rede de segurança (Fase 3)
 - [ ] Etapa 2 — fundação `shared`
 - [ ] Etapa 3 — piloto `brokers`
 - [ ] Parada 2 — aprovação
@@ -260,3 +260,9 @@ Convenções que valem em todas as etapas:
 | 2026-11-14 | Branch `refactor/clean-architecture` criada a partir de `main` (`095c00c`); documentos commitados nela | Decisão P-01 do usuário |
 | 2026-11-14 | Nenhuma execução contra o Supabase real (sem Playwright, sem login na app) | Decisão P-03 do usuário |
 | 2026-11-14 | P-02 (Vitest + jsdom + Testing Library) e P-04 a P-10 aprovados conforme as recomendações | Resposta do usuário na Parada 1 |
+| 2026-11-14 | `vitest@4.1.12` em vez do 5.x | O 5.x exige `@types/node` >= 22; atualizar `@types/node` seria upgrade fora do escopo. `npm audit` igual ao da `main` (6 alertas baixos/moderados preexistentes) |
+| 2026-11-14 | Testes de caracterização passam pela pilha real até um cliente Supabase falso (`src/test/fake-supabase.ts`), não por mocks dos serviços | Sobrevivem à refatoração: só o caminho do `vi.mock` do cliente muda quando ele for movido |
+| 2026-11-14 | Cobertura de referência após a Fase 3: statements 84,88%, branches 75,88%, funções 76,78%, linhas 85,79% (linha de base sem testes: 0%) | Critério 8: a cobertura final não pode ficar abaixo disso |
+| 2026-11-14 | Overrides de fronteira são disjuntos, e há um override de `presentation` por módulo | No Biome, um override posterior substitui a configuração da regra em vez de somar |
+| 2026-11-14 | Arquivos `*.test.ts(x)` ficam fora das regras de fronteira | Testes precisam de dublês (`@/test/*`, `vi.mock`); a regra vale para o código de produção |
+| 2026-11-14 | `npm run lint` passou de ~0,1 s para ~1 s | Custo do `noImportCycles` (grafo de módulos) |
