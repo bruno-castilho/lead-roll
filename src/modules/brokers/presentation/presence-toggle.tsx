@@ -1,7 +1,6 @@
 "use client";
 
 import { CheckCircle2, RefreshCw } from "lucide-react";
-import { usePresence } from "@/hooks/use-presence";
 import { useSession } from "@/hooks/use-session";
 import { formatTime } from "@/lib/format";
 import { cn } from "@/shared/ui/cn";
@@ -12,6 +11,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/shared/ui/primitives/tooltip";
+import { usePresence } from "./use-presence";
 
 type PresenceToggleProps = {
   className?: string;

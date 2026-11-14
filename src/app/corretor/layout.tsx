@@ -1,5 +1,5 @@
 import { RoleGuard } from "@/components/layout/role-guard";
-import { PresenceProvider } from "@/contexts/presence";
+import { PresenceProvider } from "@/modules/brokers";
 
 export default function BrokerLayout({ children }: LayoutProps<"/corretor">) {
   return (

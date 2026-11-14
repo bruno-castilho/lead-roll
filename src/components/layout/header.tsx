@@ -1,9 +1,9 @@
 "use client";
 
 import { Menu } from "lucide-react";
+import { PresenceToggle } from "@/modules/brokers";
 import type { UserRole } from "@/shared/domain/actor";
 import { Button } from "@/shared/ui/primitives/button";
-import { PresenceToggle } from "./presence-toggle";
 import { Brand } from "./sidebar";
 import { ThemeToggle } from "./theme-toggle";
 import { UserMenu } from "./user-menu";

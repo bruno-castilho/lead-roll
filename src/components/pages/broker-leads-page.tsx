@@ -3,14 +3,12 @@
 import { Inbox } from "lucide-react";
 import { useMemo, useState } from "react";
 import { LeadKanban } from "@/components/kanban/lead-kanban";
-import { PresenceToggle } from "@/components/layout/presence-toggle";
 import { LeadDetails } from "@/components/leads/lead-details";
 import { useAddObservation } from "@/hooks/use-add-observation";
-import { useBrokers } from "@/hooks/use-brokers";
 import { useChangeStage } from "@/hooks/use-change-stage";
 import { useLeads } from "@/hooks/use-leads";
-import { usePresence } from "@/hooks/use-presence";
 import { useSession } from "@/hooks/use-session";
+import { PresenceToggle, useBrokers, usePresence } from "@/modules/brokers";
 import { EmptyState } from "@/shared/ui/components/empty-state";
 import { Spinner } from "@/shared/ui/components/loading-state";
 import { PageHeader } from "@/shared/ui/components/page-header";

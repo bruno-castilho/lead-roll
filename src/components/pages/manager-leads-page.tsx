@@ -15,7 +15,6 @@ import { LeadDetails } from "@/components/leads/lead-details";
 import { LeadFilters } from "@/components/leads/lead-filters";
 import { LeadForm } from "@/components/leads/lead-form";
 import { LeadTable } from "@/components/leads/lead-table";
-import { useBrokers } from "@/hooks/use-brokers";
 import { useLeadStats } from "@/hooks/use-lead-stats";
 import { useLeads } from "@/hooks/use-leads";
 import {
@@ -26,6 +25,7 @@ import {
   type LeadFilterState,
 } from "@/lib/lead-filters";
 import type { Lead } from "@/lib/types";
+import { useBrokers } from "@/modules/brokers";
 import { cn } from "@/shared/ui/cn";
 import { EmptyState } from "@/shared/ui/components/empty-state";
 import { Kbd } from "@/shared/ui/components/kbd";

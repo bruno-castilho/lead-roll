@@ -8,8 +8,9 @@ import {
 } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { PresenceProvider } from "@/contexts/presence";
 import { SessionProvider } from "@/contexts/session";
+import { PresenceProvider } from "@/modules/brokers";
+import { ManagerBrokersPage } from "@/screens/manager-brokers-screen";
 import { TooltipProvider } from "@/shared/ui/primitives/tooltip";
 import { supabaseFake } from "@/test/fake-supabase";
 import {
@@ -20,7 +21,6 @@ import {
   MANAGER,
 } from "@/test/fixtures";
 import { BrokerLeadsPage } from "./broker-leads-page";
-import { ManagerBrokersPage } from "./manager-brokers-page";
 import { ManagerLeadsPage } from "./manager-leads-page";
 
 vi.mock("@/shared/infrastructure/supabase/client", async (importOriginal) => {

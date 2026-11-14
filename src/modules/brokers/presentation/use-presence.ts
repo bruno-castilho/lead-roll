@@ -1,5 +1,7 @@
+"use client";
+
 import { useContext } from "react";
-import { PresenceContext } from "@/contexts/presence";
+import { PresenceContext } from "./presence-provider";
 
 export function usePresence() {
   const ctx = useContext(PresenceContext);
