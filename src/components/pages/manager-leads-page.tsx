@@ -321,6 +321,7 @@ export function ManagerLeadsPage() {
         onOpenChange={setDistributing}
         leads={leads}
         brokers={brokers}
+        onDistributed={(list) => list.forEach(replaceLead)}
       />
     </div>
   );

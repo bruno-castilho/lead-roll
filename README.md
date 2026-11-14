@@ -5,8 +5,9 @@ corretores. O login usa **Supabase Auth**, e o perfil de cada usuário (gestor
 ou corretor) fica na tabela `profiles`, protegida por RLS. O gestor já cadastra,
 edita, exclui e lista os leads (tabela `leads`). O corretor vê os próprios
 leads, muda a etapa e registra observações neles (tabela
-`lead_observations`). A distribuição e a presença ainda não estão
-implementadas.
+`lead_observations`). O corretor confirma presença e entra numa fila por 5h
+(tabela `broker_presence`), e o gestor distribui os leads sem responsável
+seguindo essa fila (função `distribute_leads`).
 
 Stack: Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS v4,
 shadcn/ui e Supabase (`@supabase/ssr`).
@@ -39,7 +40,10 @@ Aplique, nesta ordem:
    observações);
 7. `supabase/migrations/20261114000000_broker_presence.sql`, que cria a
    tabela `broker_presence` e a função `confirm_presence` (fila de presença
-   dos corretores, 5h por confirmação).
+   dos corretores, 5h por confirmação);
+8. `supabase/migrations/20261114010000_distribute_leads.sql`, que cria a
+   função `distribute_leads` (o gestor distribui os leads sem responsável
+   entre os corretores presentes, seguindo a fila).
 
 Há duas formas:
 

@@ -175,6 +175,16 @@ export interface Database {
         Args: Record<never, never>;
         Returns: Database["public"]["Tables"]["broker_presence"]["Row"];
       };
+      distribute_leads: {
+        Args: Record<never, never>;
+        Returns: Database["public"]["Tables"]["leads"]["Row"][];
+        SetofOptions: {
+          from: "*";
+          to: "leads";
+          isOneToOne: false;
+          isSetofReturn: true;
+        };
+      };
     };
     Enums: {
       user_role: UserRoleEnum;

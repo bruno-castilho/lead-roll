@@ -6,6 +6,7 @@ import {
   type CreateLeadFailure,
 } from "@/errors/create-lead-error";
 import { DeleteLeadError } from "@/errors/delete-lead-error";
+import { DistributeLeadsError } from "@/errors/distribute-leads-error";
 import { LeadsError } from "@/errors/leads-error";
 import {
   UpdateLeadError,
@@ -175,6 +176,30 @@ export const LeadsService = {
       throw new AddObservationError(writeFailure(error, status), error);
     }
     return toObservation(data);
+  },
+
+  /**
+   * Distribui os leads sem responsável, dos mais antigos para os mais novos,
+   * entre os corretores presentes (presença confirmada nas últimas 5h). Cada
+   * lead vai para o primeiro da fila, que volta para o final dela; o lead
+   * recebe a etapa "new" e `assignedAt`. Tudo roda no banco
+   * (`distribute_leads`), que só aceita o gestor. Devolve os leads
+   * distribuídos (vazio se não havia lead ou corretor). Lança
+   * `DistributeLeadsError` se não conseguir distribuir.
+   */
+  async distributeLeads(): Promise<Lead[]> {
+    const { data, error, status } = await getSupabaseClient()
+      .rpc("distribute_leads")
+      .select(LEAD_COLUMNS);
+    if (error) {
+      const reason = writeFailure(error, status);
+      // A distribuição não recebe dados: "invalid" aqui seria inesperado.
+      throw new DistributeLeadsError(
+        reason === "invalid" ? "unknown" : reason,
+        error,
+      );
+    }
+    return data.map(toLead);
   },
 
   /**

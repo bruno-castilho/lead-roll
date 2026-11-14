@@ -2,8 +2,10 @@
 
 import { ArrowRight, Inbox, Shuffle, UserX } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
 import { toast } from "sonner";
 import { EmptyState } from "@/components/shared/empty-state";
+import { Spinner } from "@/components/shared/loading-state";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -14,15 +16,19 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useResetOnHide } from "@/hooks/use-reset-on-hide";
 import { ROUTES } from "@/lib/constants";
 import { pluralize } from "@/lib/format";
 import type { Lead, User } from "@/lib/types";
+import { LeadsService } from "@/services/leads-service";
 
 interface DistributionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   leads: Lead[];
   brokers: User[];
+  /** Chamado com os leads que o banco acabou de distribuir. */
+  onDistributed?: (leads: Lead[]) => void;
 }
 
 /** Confirmação da distribuição em rodízio dos leads sem responsável. */
@@ -31,22 +37,51 @@ export function DistributionDialog({
   onOpenChange,
   leads,
   brokers,
+  onDistributed,
 }: DistributionDialogProps) {
+  const [submitting, setSubmitting] = useState(false);
   const pendingCount = leads.filter((l) => l.brokerId === null).length;
   const brokerCount = brokers.filter((b) => b.isPresent).length;
   const absentCount = brokers.length - brokerCount;
   const canDistribute = pendingCount > 0 && brokerCount > 0;
 
-  function handleConfirm() {
-    // Sem implementação.
-    onOpenChange(false);
-    toast.success("Distribuição realizada com sucesso", {
-      description: `${pluralize(pendingCount, "lead distribuído", "leads distribuídos")} entre ${pluralize(brokerCount, "corretor", "corretores")}.`,
-    });
+  useResetOnHide(() => setSubmitting(false));
+
+  function handleOpenChange(next: boolean) {
+    // Não fecha enquanto a distribuição está em andamento.
+    if (!next && submitting) return;
+    onOpenChange(next);
+  }
+
+  async function handleConfirm() {
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      const distributed = await LeadsService.distributeLeads();
+      onDistributed?.(distributed);
+      onOpenChange(false);
+      // O banco decide quem participa: a presença pode ter expirado ou outro
+      // gestor pode ter distribuído antes.
+      if (distributed.length === 0) {
+        toast.info("Nenhum lead foi distribuído", {
+          description:
+            "Não há leads sem responsável ou corretores presentes no momento.",
+        });
+        return;
+      }
+      const receivers = new Set(distributed.map((l) => l.brokerId)).size;
+      toast.success("Distribuição realizada com sucesso", {
+        description: `${pluralize(distributed.length, "lead distribuído", "leads distribuídos")} entre ${pluralize(receivers, "corretor", "corretores")}.`,
+      });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : String(error));
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-lg">
@@ -54,8 +89,9 @@ export function DistributionDialog({
             Distribuição de leads
           </DialogTitle>
           <DialogDescription>
-            Os leads sem responsável serão divididos em rodízio entre os
-            corretores que confirmaram presença.
+            Os leads sem responsável, dos mais antigos para os mais novos,
+            seguem a fila dos corretores que confirmaram presença nas últimas
+            5h. Quem recebe um lead volta para o final da fila.
           </DialogDescription>
         </DialogHeader>
 
@@ -124,13 +160,18 @@ export function DistributionDialog({
 
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline" size="lg">
+            <Button variant="outline" size="lg" disabled={submitting}>
               {canDistribute ? "Cancelar" : "Fechar"}
             </Button>
           </DialogClose>
           {canDistribute && (
-            <Button size="lg" onClick={handleConfirm} autoFocus>
-              <Shuffle />
+            <Button
+              size="lg"
+              onClick={handleConfirm}
+              disabled={submitting}
+              autoFocus
+            >
+              {submitting ? <Spinner /> : <Shuffle />}
               Confirmar distribuição
             </Button>
           )}

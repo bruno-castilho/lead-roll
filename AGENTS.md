@@ -22,8 +22,9 @@ página `/corretor/leads` lista só os leads atribuídos ao corretor
 deles (`LeadsService.changeStage`) e registra observações neles
 (`LeadsService.addObservation`, tabela `lead_observations`). O corretor
 confirma presença e entra numa fila por 5h (`PresenceService.confirmPresence`,
-tabela `broker_presence`). A distribuição ainda **não tem fonte de dados**: a
-ação não faz nada. A interface e os textos são em português (pt-BR).
+tabela `broker_presence`). O gestor distribui os leads sem responsável
+seguindo essa fila (`LeadsService.distributeLeads`, função
+`distribute_leads`). A interface e os textos são em português (pt-BR).
 
 ## Regras desta etapa
 
@@ -34,7 +35,7 @@ ação não faz nada. A interface e os textos são em português (pt-BR).
 - Continua proibido criar API routes, Route Handlers, Server Actions,
   `proxy.ts`, leitura de `cookies()` em Server Components e outras integrações
   externas. Nada além das tabelas `profiles`, `leads`, `lead_observations` e
-  `broker_presence` (e da função `confirm_presence`) vai para o banco nesta
+  `broker_presence` (e das funções `confirm_presence` e `distribute_leads`) vai para o banco nesta
   etapa.
 - Não há mocks, store nem implementação local. `manager-leads-page` busca
   `leads` com `useLeads()` e `broker-leads-page` com `useLeads({ own: true })`
@@ -49,9 +50,9 @@ ação não faz nada. A interface e os textos são em português (pt-BR).
   corretor chama `LeadsService.changeStage` (`useChangeStage`), e a
   observação chama `LeadsService.addObservation` (`useAddObservation`). A
   confirmação de presença chama `PresenceService.confirmPresence`
-  (`usePresence`). O ponto que executaria a distribuição está marcado com
-  `// Sem implementação.`, à espera do serviço real. Não recriar dados
-  fictícios nem lógica local para ele.
+  (`usePresence`), e a distribuição chama `LeadsService.distributeLeads`
+  (`DistributionDialog`). Não recriar dados fictícios nem lógica local para
+  a distribuição: a regra fica toda no banco.
 - Variáveis de ambiente (modelo em `.env.example`; `.env.local` não é
   versionado): `NEXT_PUBLIC_SUPABASE_URL` e
   `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`. A chave `service_role` nunca entra no
@@ -127,9 +128,9 @@ src/
   contexts/presence.tsx PresenceProvider: presença do corretor (expiresAt, isPresent, confirm)
   services/            auth-service.ts (AuthService: signIn, signOut, getProfile, restoreSession, onSignedOut)
                        brokers-service.ts (BrokersService: listBrokers)
-                       leads-service.ts (LeadsService: listLeads, createLead, updateLead, changeStage, addObservation, deleteLead)
+                       leads-service.ts (LeadsService: listLeads, createLead, updateLead, changeStage, addObservation, distributeLeads, deleteLead)
                        presence-service.ts (PresenceService: getOwnPresence, confirmPresence)
-  errors/              SignInError, SignOutError, ProfileError, BrokersError, LeadsError, CreateLeadError, UpdateLeadError, ChangeStageError, AddObservationError, DeleteLeadError, PresenceError, ConfirmPresenceError e AuthServiceError
+  errors/              SignInError, SignOutError, ProfileError, BrokersError, LeadsError, CreateLeadError, UpdateLeadError, ChangeStageError, AddObservationError, DistributeLeadsError, DeleteLeadError, PresenceError, ConfirmPresenceError e AuthServiceError
   lib/                 tipos, constantes, filtros, formatação, validação (Zod)
     supabase/          client.ts (getSupabaseClient) e database.types.ts
   hooks/               useSession, useBrokers, useLeads, useLeadStats, useChangeStage, useAddObservation, usePresence, useHotkey, useMediaQuery, useResetOnHide
@@ -225,16 +226,21 @@ supabase/migrations/   SQL das tabelas profiles, leads, lead_observations e brok
 
 ### Distribuição (round-robin)
 
-- A confirmação da distribuição ainda está vazia; a regra fica para o serviço real. O
-  diálogo só mostra quantos leads estão sem responsável e quantos corretores
-  estão com `isPresent`.
-- Regra esperada: entram somente leads sem responsável (os mais antigos
-  primeiro) e corretores presentes, em rodízio que continua do último corretor
-  atendido. Cada lead distribuído recebe `stage: "new"` e `assignedAt`.
-- Com a fila: percorrer os presentes por `queued_at` e, a cada lead entregue,
-  fazer `queued_at = now()` para o corretor (ele vai para o fim). Isso precisa
-  rodar no banco (função `security definer`), já que ninguém escreve direto em
-  `broker_presence`.
+- `LeadsService.distributeLeads()` chama a RPC `distribute_leads()`
+  (`security definer`, só o gestor; lança `DistributeLeadsError` com mensagem
+  pronta em pt-BR) e devolve os leads distribuídos, que substituem os antigos
+  na lista pelo `onDistributed` do `DistributionDialog` (`replaceLead`).
+  Durante o envio, o diálogo não fecha e mostra `Spinner`. Se o banco não
+  distribuiu nada (presença expirou, outro gestor distribuiu antes), mostra
+  um toast informativo.
+- Regra (no banco): entram somente leads sem responsável (os mais antigos
+  primeiro) e corretores presentes (`expires_at > now()`, ou seja, presença
+  confirmada nas últimas 5h). Cada lead vai para o primeiro da fila (menor
+  `queued_at`), que volta para o fim dela (`queued_at` depois do último da
+  fila). O lead recebe `stage: "new"` e `assignedAt`.
+- A função usa um advisory lock, então duas distribuições simultâneas não
+  disputam a mesma fila. O diálogo mostra as contagens do cliente
+  (`isPresent`), mas quem decide é o banco.
 
 ## Permissões
 
@@ -250,9 +256,10 @@ supabase/migrations/   SQL das tabelas profiles, leads, lead_observations e brok
   apenas `lead_id` e `content`; ninguém altera nem exclui. RLS em
   `broker_presence`: o gestor lê todas e o corretor só a própria; ninguém
   escreve direto, só pela RPC `confirm_presence`, que recusa quem não é
-  corretor). A distribuição,
-  quando vier, precisa ajustar esse trigger, que hoje recusa mudança de etapa
-  pelo gestor. Novos usuários entram como `broker` pelo trigger; gestores
+  corretor). O trigger `leads_enforce_update_columns` recusa mudança de etapa
+  pelo gestor, exceto na distribuição (lead sem responsável que recebe um
+  corretor e volta para `new`); só `distribute_leads`, que roda como dono da
+  tabela, grava `broker_id`. Novos usuários entram como `broker` pelo trigger; gestores
   são promovidos por SQL. O guard no cliente é UX.
 - `RoleGuard` (`components/layout/role-guard.tsx`) é usado em
   `app/gestor/layout.tsx` e `app/corretor/layout.tsx`. Não remover o
