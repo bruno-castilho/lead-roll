@@ -36,7 +36,10 @@ Aplique, nesta ordem:
    corretor responsável mudar a etapa dos próprios leads;
 6. `supabase/migrations/20261113050000_lead_observations.sql`, que cria a
    tabela `lead_observations` (só o corretor responsável registra
-   observações).
+   observações);
+7. `supabase/migrations/20261114000000_broker_presence.sql`, que cria a
+   tabela `broker_presence` e a função `confirm_presence` (fila de presença
+   dos corretores, 5h por confirmação).
 
 Há duas formas:
 

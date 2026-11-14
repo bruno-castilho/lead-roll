@@ -5,7 +5,7 @@ export interface User {
   name: string;
   email: string;
   role: UserRole;
-  /** Presença do corretor (ainda sem fonte de dados). */
+  /** Presença do corretor (`broker_presence` ainda não expirada). */
   isPresent: boolean;
 }
 

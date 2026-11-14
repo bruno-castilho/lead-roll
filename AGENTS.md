@@ -20,10 +20,10 @@ página `/gestor/leads` lista os leads do banco (`LeadsService.listLeads`). A
 página `/corretor/leads` lista só os leads atribuídos ao corretor
 (`LeadsService.listLeads({ brokerId })`), e o corretor responsável muda a etapa
 deles (`LeadsService.changeStage`) e registra observações neles
-(`LeadsService.addObservation`, tabela `lead_observations`). A
-distribuição e a presença ainda **não têm fonte de dados**: os dados chegam vazios e essas ações
-não fazem nada. A interface e os textos são em
-português (pt-BR).
+(`LeadsService.addObservation`, tabela `lead_observations`). O corretor
+confirma presença e entra numa fila por 5h (`PresenceService.confirmPresence`,
+tabela `broker_presence`). A distribuição ainda **não tem fonte de dados**: a
+ação não faz nada. A interface e os textos são em português (pt-BR).
 
 ## Regras desta etapa
 
@@ -33,22 +33,25 @@ português (pt-BR).
   Supabase e, no React, no `SessionProvider` (`src/contexts/session.tsx`).
 - Continua proibido criar API routes, Route Handlers, Server Actions,
   `proxy.ts`, leitura de `cookies()` em Server Components e outras integrações
-  externas. Nada além das tabelas `profiles`, `leads` e `lead_observations` vai
-  para o banco nesta etapa.
+  externas. Nada além das tabelas `profiles`, `leads`, `lead_observations` e
+  `broker_presence` (e da função `confirm_presence`) vai para o banco nesta
+  etapa.
 - Não há mocks, store nem implementação local. `manager-leads-page` busca
   `leads` com `useLeads()` e `broker-leads-page` com `useLeads({ own: true })`
   (`LeadsService.listLeads`); `manager-brokers-page` ainda declara `leads`
-  como `[]` e repassa por props; `isPresent` é `false`. As páginas buscam
-  `brokers` com `useBrokers()` (`BrokersService.listBrokers`; para o
-  corretor, a RLS devolve só o próprio perfil).
+  como `[]` e repassa por props. As páginas buscam
+  `brokers` com `useBrokers()` (`BrokersService.listBrokers`, que já traz
+  `isPresent` de `broker_presence`; para o corretor, a RLS devolve só o
+  próprio perfil).
   O cadastro e a edição de lead já chamam `LeadsService.createLead` e
   `LeadsService.updateLead` (`LeadForm`), e a exclusão chama
   `LeadsService.deleteLead` (`DeleteLeadDialog`). A mudança de etapa pelo
   corretor chama `LeadsService.changeStage` (`useChangeStage`), e a
-  observação chama `LeadsService.addObservation` (`useAddObservation`). Os
-  pontos que executariam as demais ações (distribuir, alternar presença) estão marcados com
-  `// Sem implementação.`, à espera dos serviços reais. Não recriar dados
-  fictícios nem lógica local para eles.
+  observação chama `LeadsService.addObservation` (`useAddObservation`). A
+  confirmação de presença chama `PresenceService.confirmPresence`
+  (`usePresence`). O ponto que executaria a distribuição está marcado com
+  `// Sem implementação.`, à espera do serviço real. Não recriar dados
+  fictícios nem lógica local para ele.
 - Variáveis de ambiente (modelo em `.env.example`; `.env.local` não é
   versionado): `NEXT_PUBLIC_SUPABASE_URL` e
   `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`. A chave `service_role` nunca entra no
@@ -121,14 +124,16 @@ src/
     providers/         ThemeProvider, SessionProvider, TooltipProvider, Toaster
     ui/                shadcn/ui (gerado; o lint fica desligado aqui)
   contexts/session.tsx SessionProvider: user, session, profile e ready da sessão do Supabase
+  contexts/presence.tsx PresenceProvider: presença do corretor (expiresAt, isPresent, confirm)
   services/            auth-service.ts (AuthService: signIn, signOut, getProfile, restoreSession, onSignedOut)
                        brokers-service.ts (BrokersService: listBrokers)
                        leads-service.ts (LeadsService: listLeads, createLead, updateLead, changeStage, addObservation, deleteLead)
-  errors/              SignInError, SignOutError, ProfileError, BrokersError, LeadsError, CreateLeadError, UpdateLeadError, ChangeStageError, AddObservationError, DeleteLeadError e AuthServiceError
+                       presence-service.ts (PresenceService: getOwnPresence, confirmPresence)
+  errors/              SignInError, SignOutError, ProfileError, BrokersError, LeadsError, CreateLeadError, UpdateLeadError, ChangeStageError, AddObservationError, DeleteLeadError, PresenceError, ConfirmPresenceError e AuthServiceError
   lib/                 tipos, constantes, filtros, formatação, validação (Zod)
     supabase/          client.ts (getSupabaseClient) e database.types.ts
-  hooks/               useSession, useBrokers, useLeads, useLeadStats, useChangeStage, useAddObservation, useHotkey, useMediaQuery, useResetOnHide
-supabase/migrations/   SQL das tabelas profiles, leads e lead_observations, triggers e RLS
+  hooks/               useSession, useBrokers, useLeads, useLeadStats, useChangeStage, useAddObservation, usePresence, useHotkey, useMediaQuery, useResetOnHide
+supabase/migrations/   SQL das tabelas profiles, leads, lead_observations e broker_presence, funções, triggers e RLS
 ```
 
 ## Estado e dados
@@ -203,6 +208,21 @@ supabase/migrations/   SQL das tabelas profiles, leads e lead_observations, trig
   `won`, `lost`. Os rótulos e as cores de cada etapa estão em `constants.ts`.
   `ACTIVE_STAGES` define o que conta como "em atendimento".
 
+### Presença (fila)
+
+- `broker_presence` tem uma linha por corretor (`queued_at`, `expires_at`). Ele
+  está presente enquanto `expires_at > now()`; a expiração é calculada na
+  leitura, sem job. A fila é a ordem de `queued_at` entre os presentes.
+- "Confirmar presença" chama a RPC `confirm_presence()` (único jeito de
+  escrever na tabela). Ausente (sem linha ou expirado): entra no final da fila
+  (`queued_at = now()`) por 5h. Já presente: `expires_at = now() + 5h` e a
+  posição na fila é mantida. As datas vêm do relógio do banco.
+- Não há "desativar presença": ela só termina ao expirar.
+- `PresenceProvider` (em `app/corretor/layout.tsx`, envolvendo o `RoleGuard`)
+  busca a presença do corretor, expõe `confirm()` e vira ausente sozinho no
+  fim do prazo (`setTimeout`). O `PresenceToggle` (cabeçalho e aviso de
+  "Você está ausente") usa `usePresence()`; para o gestor ele não renderiza.
+
 ### Distribuição (round-robin)
 
 - A confirmação da distribuição ainda está vazia; a regra fica para o serviço real. O
@@ -211,6 +231,10 @@ supabase/migrations/   SQL das tabelas profiles, leads e lead_observations, trig
 - Regra esperada: entram somente leads sem responsável (os mais antigos
   primeiro) e corretores presentes, em rodízio que continua do último corretor
   atendido. Cada lead distribuído recebe `stage: "new"` e `assignedAt`.
+- Com a fila: percorrer os presentes por `queued_at` e, a cada lead entregue,
+  fazer `queued_at = now()` para o corretor (ele vai para o fim). Isso precisa
+  rodar no banco (função `security definer`), já que ninguém escreve direto em
+  `broker_presence`.
 
 ## Permissões
 
@@ -223,7 +247,10 @@ supabase/migrations/   SQL das tabelas profiles, leads e lead_observations, trig
   `leads_enforce_update_columns`; só o gestor faz `delete`. RLS em
   `lead_observations`: o gestor lê todas e o corretor só as dos leads
   atribuídos a ele; só o corretor responsável insere, em nome próprio, e
-  apenas `lead_id` e `content`; ninguém altera nem exclui). A distribuição,
+  apenas `lead_id` e `content`; ninguém altera nem exclui. RLS em
+  `broker_presence`: o gestor lê todas e o corretor só a própria; ninguém
+  escreve direto, só pela RPC `confirm_presence`, que recusa quem não é
+  corretor). A distribuição,
   quando vier, precisa ajustar esse trigger, que hoje recusa mudança de etapa
   pelo gestor. Novos usuários entram como `broker` pelo trigger; gestores
   são promovidos por SQL. O guard no cliente é UX.

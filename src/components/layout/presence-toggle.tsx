@@ -1,80 +1,83 @@
 "use client";
 
-import { CheckCircle2, CirclePower } from "lucide-react";
-import { toast } from "sonner";
+import { CheckCircle2, RefreshCw } from "lucide-react";
+import { Spinner } from "@/components/shared/loading-state";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { usePresence } from "@/hooks/use-presence";
 import { useSession } from "@/hooks/use-session";
+import { formatTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-/** Controle de presença do corretor (Disponível / Ausente). */
-export function PresenceToggle({
-  className,
-  compact = false,
-}: {
+type PresenceToggleProps = {
   className?: string;
   /** Versão reduzida para o cabeçalho em telas pequenas. */
   compact?: boolean;
-}) {
+};
+
+/** Confirmação de presença do corretor (entra na fila ou renova por 5h). */
+export function PresenceToggle(props: PresenceToggleProps) {
   const { profile } = useSession();
   if (profile?.role !== "broker") return null;
+  return <BrokerPresenceToggle {...props} />;
+}
 
-  // Presença ainda sem fonte de dados.
-  const isPresent = false;
-
-  function toggle() {
-    // Sem implementação.
-    if (isPresent) {
-      toast("Disponibilidade desativada", {
-        description: "Você não receberá novos leads até confirmar presença.",
-      });
-    } else {
-      toast.success("Presença confirmada", {
-        description:
-          "Você já pode receber novos leads na próxima distribuição.",
-      });
-    }
-  }
+function BrokerPresenceToggle({
+  className,
+  compact = false,
+}: PresenceToggleProps) {
+  const { expiresAt, loading, confirming, confirm } = usePresence();
+  const busy = loading || confirming;
+  const until = expiresAt ? formatTime(expiresAt) : null;
 
   if (compact) {
     return (
       <Button
         variant="outline"
         size="lg"
-        onClick={toggle}
-        aria-pressed={isPresent}
+        onClick={confirm}
+        disabled={busy}
         aria-label={
-          isPresent
-            ? "Disponível. Desativar disponibilidade"
+          until
+            ? `Disponível até ${until}. Renovar presença`
             : "Ausente. Confirmar presença"
         }
         className={cn(
           "h-9 gap-1.5 px-2.5 text-xs",
-          isPresent &&
+          until &&
             "border-success/30 bg-success/10 text-success hover:bg-success/15",
           className,
         )}
       >
-        <span
-          className={cn(
-            "size-2 rounded-full",
-            isPresent ? "bg-success" : "bg-muted-foreground/50",
-          )}
-          aria-hidden
-        />
-        {isPresent ? "Disponível" : "Confirmar presença"}
+        {confirming ? (
+          <Spinner className="size-3.5" />
+        ) : (
+          <span
+            className={cn(
+              "size-2 rounded-full",
+              until ? "bg-success" : "bg-muted-foreground/50",
+            )}
+            aria-hidden
+          />
+        )}
+        {until ? `Até ${until}` : "Confirmar presença"}
       </Button>
     );
   }
 
-  if (!isPresent) {
+  if (!until) {
     return (
-      <Button onClick={toggle} size="lg" className={cn("h-9", className)}>
-        <CheckCircle2 />
+      <Button
+        onClick={confirm}
+        disabled={busy}
+        size="lg"
+        className={cn("h-9", className)}
+      >
+        {confirming ? <Spinner /> : <CheckCircle2 />}
         Confirmar presença
       </Button>
     );
@@ -92,22 +95,24 @@ export function PresenceToggle({
         <span className="relative inline-flex size-2 rounded-full bg-success" />
       </span>
       <span className="mr-1 font-medium text-[13px] text-success">
-        Disponível
+        Disponível até {until}
       </span>
       <Tooltip>
         <TooltipTrigger asChild>
           <Button
             variant="ghost"
             size="sm"
-            onClick={toggle}
+            onClick={confirm}
+            disabled={busy}
             className="h-7 text-muted-foreground hover:text-foreground"
           >
-            <CirclePower />
-            <span className="hidden sm:inline">Desativar disponibilidade</span>
-            <span className="sm:hidden">Desativar</span>
+            {confirming ? <Spinner /> : <RefreshCw />}
+            Renovar
           </Button>
         </TooltipTrigger>
-        <TooltipContent>Parar de receber novos leads</TooltipContent>
+        <TooltipContent>
+          Mais 5h a partir de agora, sem perder a posição na fila
+        </TooltipContent>
       </Tooltip>
     </div>
   );

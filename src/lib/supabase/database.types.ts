@@ -141,10 +141,40 @@ export interface Database {
           },
         ];
       };
+      broker_presence: {
+        Row: {
+          broker_id: string;
+          queued_at: string;
+          expires_at: string;
+        };
+        Insert: {
+          broker_id: string;
+          queued_at?: string;
+          expires_at: string;
+        };
+        Update: {
+          broker_id?: string;
+          queued_at?: string;
+          expires_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "broker_presence_broker_id_fkey";
+            columns: ["broker_id"];
+            isOneToOne: true;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: Record<never, never>;
     Functions: {
       is_manager: { Args: Record<never, never>; Returns: boolean };
+      confirm_presence: {
+        Args: Record<never, never>;
+        Returns: Database["public"]["Tables"]["broker_presence"]["Row"];
+      };
     };
     Enums: {
       user_role: UserRoleEnum;

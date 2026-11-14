@@ -12,14 +12,13 @@ import { useAddObservation } from "@/hooks/use-add-observation";
 import { useBrokers } from "@/hooks/use-brokers";
 import { useChangeStage } from "@/hooks/use-change-stage";
 import { useLeads } from "@/hooks/use-leads";
+import { usePresence } from "@/hooks/use-presence";
 import { useResetOnHide } from "@/hooks/use-reset-on-hide";
 import { useSession } from "@/hooks/use-session";
 
-// Presença ainda sem fonte de dados.
-const isPresent = false;
-
 export function BrokerLeadsPage() {
   const { profile } = useSession();
+  const { isPresent, loading: presenceLoading } = usePresence();
   // A consulta já filtra por `broker_id` e a RLS só devolve os leads do
   // corretor. A RLS de `profiles` devolve só o perfil dele em `brokers`.
   const { leads, loading, replaceLead, addObservation } = useLeads({
@@ -43,7 +42,7 @@ export function BrokerLeadsPage() {
     <div className="space-y-5">
       <PageHeader title="Meus leads" />
 
-      {!isPresent && (
+      {!presenceLoading && !isPresent && (
         <div className="flex flex-col gap-3 rounded-xl border border-dashed p-4 sm:flex-row sm:items-center">
           <div className="flex-1">
             <p className="font-medium text-sm">Você está ausente</p>

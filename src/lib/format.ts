@@ -37,6 +37,11 @@ const shortDateTimeFormatter = new Intl.DateTimeFormat("pt-BR", {
   minute: "2-digit",
 });
 
+const timeFormatter = new Intl.DateTimeFormat("pt-BR", {
+  hour: "2-digit",
+  minute: "2-digit",
+});
+
 export function formatDate(iso: string | null | undefined): string {
   if (!iso) return "—";
   return dateFormatter.format(new Date(iso));
@@ -50,6 +55,11 @@ export function formatDateTime(iso: string | null | undefined): string {
 export function formatShortDateTime(iso: string | null | undefined): string {
   if (!iso) return "—";
   return shortDateTimeFormatter.format(new Date(iso)).replace(".", "");
+}
+
+/** Hora no formato 18:30. */
+export function formatTime(iso: string): string {
+  return timeFormatter.format(new Date(iso));
 }
 
 export function getInitials(name: string): string {
