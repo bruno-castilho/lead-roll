@@ -1,137 +1,225 @@
 # LeadRoll
 
 CRM para cadastrar, distribuir e acompanhar leads imobiliários entre
-corretores. O login usa **Supabase Auth**, e o perfil de cada usuário (gestor
-ou corretor) fica na tabela `profiles`, protegida por RLS. O gestor já cadastra,
-edita, exclui e lista os leads (tabela `leads`). O corretor vê os próprios
-leads, muda a etapa e registra observações neles (tabela
-`lead_observations`). O corretor confirma presença lendo com o celular o QR
-code exibido num totem da empresa (renovado a cada 5 minutos) e entra numa
-fila por 5h (tabelas `presence_tokens` e `broker_presence`), e o gestor
-distribui os leads sem responsável seguindo essa fila (função
-`distribute_leads`).
+corretores.
+
+- O **gestor** cadastra, edita, exclui e distribui os leads.
+- O **corretor** confirma presença lendo com o celular o QR code do totem da
+  empresa (renovado a cada 5 minutos) e entra numa fila por 5h. Acompanha os
+  próprios leads num Kanban, muda a etapa e registra observações.
+- O **totem** é uma conta própria, aberta numa tela da empresa, que exibe o QR
+  code de presença.
+- A distribuição segue a fila de presença e é feita no banco (função
+  `distribute_leads`).
 
 Stack: Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS v4,
-shadcn/ui e Supabase (`@supabase/ssr`). O código é organizado por módulos de
-negócio (`auth`, `brokers`, `leads`) em camadas; veja
-[`docs/arquitetura.md`](docs/arquitetura.md).
+shadcn/ui e Supabase (Auth + Postgres com RLS). O código é organizado por
+módulos de negócio (`auth`, `brokers`, `leads`) em camadas; veja
+[`docs/arquitetura.md`](docs/arquitetura.md) e [`docs/produto.md`](docs/produto.md).
 
-## Configuração
+## Quick start
 
-### 1. Criar o projeto no Supabase
+O caminho recomendado é desenvolver no **devcontainer** com um **Supabase
+local**, no Docker. Assim nada toca o banco de produção.
 
-Crie um projeto em [supabase.com](https://supabase.com). Em
-**Project Settings → API**, anote a URL do projeto e a chave pública
-(publishable/anon). A chave `service_role` não é usada pelo projeto.
+### 1. Pré-requisitos
 
-### 2. Aplicar as migrations
+- [Docker](https://docs.docker.com/get-docker/) rodando na máquina.
+- [VS Code](https://code.visualstudio.com/) com a extensão
+  [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers).
 
-Aplique, nesta ordem:
+### 2. Abrir no devcontainer
 
-1. `supabase/migrations/20261113000000_profiles.sql`, que cria a tabela
-   `profiles`, o trigger que gera o perfil de cada usuário novo e as policies
-   de RLS;
-2. `supabase/migrations/20261113010000_leads.sql`, que cria a tabela `leads` e
-   as policies de RLS (só o gestor cadastra);
-3. `supabase/migrations/20261113020000_leads_update.sql`, que permite ao
-   gestor editar os dados de contato e interesse dos leads;
-4. `supabase/migrations/20261113030000_leads_delete.sql`, que permite ao
-   gestor excluir leads;
-5. `supabase/migrations/20261113040000_leads_stage.sql`, que permite ao
-   corretor responsável mudar a etapa dos próprios leads;
-6. `supabase/migrations/20261113050000_lead_observations.sql`, que cria a
-   tabela `lead_observations` (só o corretor responsável registra
-   observações);
-7. `supabase/migrations/20261114000000_broker_presence.sql`, que cria a
-   tabela `broker_presence` e a função `confirm_presence` (fila de presença
-   dos corretores, 5h por confirmação);
-8. `supabase/migrations/20261114010000_distribute_leads.sql`, que cria a
-   função `distribute_leads` (o gestor distribui os leads sem responsável
-   entre os corretores presentes, seguindo a fila);
-9. `supabase/migrations/20261115000000_kiosk_role.sql`, que cria o perfil
-   `kiosk` (totem);
-10. `supabase/migrations/20261115010000_presence_qr.sql`, que cria a tabela
-    `presence_tokens` e a função `issue_presence_token` (QR code de 5 min,
-    só o totem) e troca `confirm_presence()` por `confirm_presence(p_token)`
-    (a presença só vale com o token de um QR code válido).
+1. Clone o repositório e abra a pasta no VS Code.
+2. Rode **Dev Containers: Reopen in Container** (paleta de comandos).
 
-As migrations 9 e 10 precisam ser aplicadas em transações separadas (o
-Postgres só deixa usar o valor novo do enum depois do commit). O
-`supabase db push` já faz isso; no SQL Editor, rode um arquivo de cada vez.
+O VS Code constrói a imagem (`.devcontainer/Dockerfile`: Node, Docker CLI,
+`psql` e Claude Code) e já instala as extensões do Biome e do Docker. O
+repositório fica montado em `/workspace`.
 
-Há duas formas:
+O container usa o **Docker do host** (pelo socket `/var/run/docker.sock`) e a
+**rede do host** (`network_mode: host`). Por isso o Supabase local, que sobe em
+containers irmãos, fica acessível em `127.0.0.1` tanto de dentro do container
+quanto do navegador da sua máquina.
 
-- com a CLI: `supabase link --project-ref <ref>` e depois `supabase db push`;
-- ou colando o conteúdo do arquivo no **SQL Editor** do painel.
+> **Permissão no socket do Docker.** O `docker-compose.yml` adiciona o usuário
+> ao grupo `984`, que é o GID do socket na máquina em que o projeto foi
+> configurado. Se `docker ps` falhar dentro do container com *permission
+> denied*, descubra o GID na sua máquina com
+> `stat -c %g /var/run/docker.sock`, troque o valor em `group_add` e
+> reconstrua o container (**Dev Containers: Rebuild Container**).
 
-### 3. Configurar a autenticação no painel
-
-Em **Authentication**:
-
-- **Sign In / Providers → Email:** habilitado.
-- **Allow new users to sign up:** **desabilitado** (não há cadastro público).
-- **Senha mínima:** 6 caracteres ou mais (em produção, use senhas fortes).
-- **URL Configuration → Site URL:** `http://localhost:3000`.
-
-### 4. Variáveis de ambiente
-
-```bash
-cp .env.example .env.local
-```
-
-| Variável | Uso |
-| --- | --- |
-| `NEXT_PUBLIC_SUPABASE_URL` | URL do projeto |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | chave pública (publishable/anon) |
-
-As variáveis `NEXT_PUBLIC_*` são embutidas no build: depois de alterá-las,
-reinicie o `npm run dev` ou gere o build de novo.
-
-### 5. Criar as contas
-
-Crie os usuários no painel (**Authentication → Users**). Todo usuário novo
-entra como corretor (o trigger cria o perfil). Para promover alguém a gestor,
-rode no SQL Editor:
-
-```sql
-update public.profiles set role = 'manager' where email = 'pessoa@empresa.com';
-```
-
-O totem é uma conta própria (por exemplo, `totem@empresa.com`), aberta no
-navegador da tela da empresa. Depois de criá-la, rode:
-
-```sql
-update public.profiles set role = 'kiosk' where email = 'totem@empresa.com';
-```
-
-Ao entrar, o totem vai para `/totem` e exibe o QR code de presença. O
-corretor lê o código com o celular; se não estiver conectado, entra e volta
-para o link automaticamente.
-
-### 6. Rodar
+### 3. Instalar as dependências
 
 ```bash
 npm install
+```
+
+### 4. Subir o Supabase local
+
+```bash
+npx supabase start
+```
+
+Na primeira vez, a CLI baixa as imagens (demora alguns minutos). Ela lê
+[`supabase/config.toml`](supabase/config.toml) e aplica todas as migrations de
+[`supabase/migrations/`](supabase/migrations/) num banco novo. Ao terminar,
+mostra as URLs e chaves do ambiente local:
+
+| Serviço | Endereço |
+| --- | --- |
+| API (URL do Supabase) | http://127.0.0.1:54321 |
+| Studio (painel) | http://127.0.0.1:54323 |
+| Mailpit (e-mails enviados) | http://127.0.0.1:54324 |
+| Postgres | `postgresql://postgres:postgres@127.0.0.1:54322/postgres` |
+
+Para ver as chaves de novo a qualquer momento: `npx supabase status`.
+
+### 5. Apontar o app para o Supabase local
+
+Crie o arquivo `.env.development.local` na raiz (não é versionado) com a URL e
+a chave **publishable** mostradas pelo `supabase status`:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
+```
+
+Use só a chave publishable. A `secret`/`service_role` nunca entra no projeto.
+
+### 6. Criar as contas
+
+O cadastro público está desligado (`enable_signup = false`), então os usuários
+são criados pelo Studio:
+
+1. Abra http://127.0.0.1:54323 → **Authentication → Users → Add user →
+   Create new user**.
+2. Informe e-mail e senha (mínimo de 6 caracteres) e marque **Auto Confirm
+   User**.
+
+Todo usuário novo entra como corretor (um trigger cria o perfil em
+`profiles`). Crie pelo menos um gestor, um corretor e um totem, e ajuste os
+papéis no **SQL Editor** do Studio ou com o `psql` do container:
+
+```bash
+psql postgresql://postgres:postgres@127.0.0.1:54322/postgres <<'SQL'
+update public.profiles set role = 'manager' where email = 'gestor@exemplo.com';
+update public.profiles set role = 'kiosk'   where email = 'totem@exemplo.com';
+SQL
+```
+
+### 7. Rodar o app
+
+```bash
 npm run dev    # http://localhost:3000
 ```
+
+Entre com cada conta para ver as três áreas: o gestor cai na lista de leads, o
+corretor no Kanban e o totem em `/totem`, com o QR code de presença. O
+corretor lê o código com o celular; se não estiver conectado, entra e volta
+para o link automaticamente.
+
+> Para ler o QR code com um celular de verdade, ele precisa alcançar a
+> máquina: abra o app pelo IP da máquina na rede local em vez de `localhost`.
+
+## Configuração
+
+### Variáveis de ambiente
+
+O modelo está em [`.env.example`](.env.example).
+
+| Variável | Uso |
+| --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` | URL do projeto Supabase (local ou nuvem) |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | chave pública (publishable/anon) |
+
+O Next carrega os arquivos `.env*` nesta ordem de prioridade, o que permite
+manter os dois ambientes lado a lado:
+
+| Arquivo | Vale para | Uso sugerido |
+| --- | --- | --- |
+| `.env.development.local` | `npm run dev` | Supabase local |
+| `.env.local` | `dev`, `build` e `start` | Supabase em nuvem |
+
+Com os dois arquivos, o `npm run dev` usa o local e o `npm run build` /
+`npx next start` usam a nuvem. Apague ou renomeie o `.env.development.local`
+para desenvolver contra a nuvem.
+
+As variáveis `NEXT_PUBLIC_*` são embutidas no bundle: depois de alterá-las,
+reinicie o `npm run dev` ou gere o build de novo. O `npm run build` funciona
+mesmo sem nenhum `.env`.
+
+### Supabase local: comandos do dia a dia
+
+```bash
+npx supabase start           # sobe os containers (mantém os dados)
+npx supabase stop            # para os containers (mantém os dados)
+npx supabase status          # URLs e chaves
+npx supabase db reset        # recria o banco e reaplica todas as migrations (apaga os dados, inclusive usuários)
+npx supabase migration new <nome>   # cria um arquivo em supabase/migrations/
+npx supabase db push         # aplica migrations pendentes no banco local
+```
+
+Sem `--remote`, os comandos `db` atuam no banco **local**.
+
+### Supabase em nuvem
+
+Para produção (ou para desenvolver contra um projeto remoto):
+
+1. **Projeto.** Crie um projeto em [supabase.com](https://supabase.com) e
+   anote, em **Project Settings → API**, a URL e a chave publishable.
+2. **Migrations.** `npx supabase link --project-ref <ref>` e depois
+   `npx supabase db push --remote`. Pelo **SQL Editor** do painel também
+   funciona: cole cada arquivo de `supabase/migrations/`, em ordem e um por
+   vez (as migrations `kiosk_role` e `presence_qr` precisam de transações
+   separadas, porque o Postgres só deixa usar um valor novo de enum depois do
+   commit).
+3. **Autenticação** (em **Authentication**):
+   - **Sign In / Providers → Email:** habilitado.
+   - **Allow new users to sign up:** desabilitado.
+   - **Senha mínima:** 6 caracteres ou mais (em produção, use senhas fortes).
+   - **URL Configuration → Site URL:** a URL pública do app.
+4. **Variáveis.** `cp .env.example .env.local` e preencha.
+5. **Contas.** Crie os usuários em **Authentication → Users** e ajuste os
+   papéis com o mesmo `update public.profiles ...` do quick start.
+
+### Migrations
+
+| Arquivo | O que faz |
+| --- | --- |
+| `20261113000000_profiles` | tabela `profiles`, trigger do perfil de usuário novo e RLS |
+| `20261113010000_leads` | tabela `leads` (só o gestor cadastra) |
+| `20261113020000_leads_update` | gestor edita contato e interesse |
+| `20261113030000_leads_delete` | gestor exclui leads |
+| `20261113040000_leads_stage` | corretor responsável muda a etapa |
+| `20261113050000_lead_observations` | tabela `lead_observations` |
+| `20261114000000_broker_presence` | tabela `broker_presence` (fila de 5h) |
+| `20261114010000_distribute_leads` | função `distribute_leads` |
+| `20261115000000_kiosk_role` | perfil `kiosk` (totem) |
+| `20261115010000_presence_qr` | tabela `presence_tokens`, `issue_presence_token` e `confirm_presence(p_token)` |
 
 ## Comandos
 
 ```bash
-npm run dev            # servidor de desenvolvimento
-npm run build          # build de produção (funciona mesmo sem .env.local)
-npm run lint           # Biome (formatação, lint e fronteiras entre camadas)
-npx tsc --noEmit       # checagem de tipos
-npm test               # testes (Vitest)
-npm run test:coverage  # testes com cobertura
+npm run dev                  # servidor de desenvolvimento (http://localhost:3000)
+npm run build                # build de produção
+npx next start -p <porta>    # serve o build
+npm run lint                 # Biome: formatação, lint e fronteiras entre camadas
+npx biome check --write src  # aplica formatação e correções seguras
+npm run typecheck            # next typegen + tsc --noEmit
+npm test                     # testes (Vitest)
+npx vitest run <arquivo>     # um arquivo de teste
+npm run test:coverage        # testes com cobertura
 ```
+
+Os testes não dependem do Supabase (usam portas e clientes falsos).
 
 ## CI e deploy
 
 O workflow [`.github/workflows/ci.yml`](.github/workflows/ci.yml) roda em todo
 pull request e em todo push na `main`:
 
-1. **checks**: `npm ci`, lint, `tsc --noEmit`, testes e `npm run build`.
+1. **checks**: `npm ci`, lint, tipos, testes e `npm run build`.
 2. **deploy**: só em push na `main` e só se `checks` passar. Usa a Vercel CLI
    (`vercel pull` → `vercel build --prod` → `vercel deploy --prebuilt --prod`).
 
