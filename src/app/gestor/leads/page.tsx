@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { ManagerLeadsPage } from "@/components/pages/manager-leads-page";
+import { ManagerLeadsScreen } from "@/screens/manager-leads-screen";
 
 export const metadata: Metadata = { title: "Leads" };
 
 export default function Page() {
-  return <ManagerLeadsPage />;
+  return <ManagerLeadsScreen />;
 }

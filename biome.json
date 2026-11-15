@@ -17,7 +17,10 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true
+      "recommended": true,
+      "suspicious": {
+        "noImportCycles": "error"
+      }
     },
     "domains": {
       "next": "recommended",
@@ -48,7 +51,513 @@
       }
     },
     {
-      "includes": ["src/components/ui/**"],
+      "includes": [
+        "src/modules/*/domain/**",
+        "src/shared/domain/**",
+        "!**/*.test.ts",
+        "!**/*.test.tsx"
+      ],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": [
+                      "react",
+                      "react/**",
+                      "react-dom",
+                      "react-dom/**",
+                      "next",
+                      "next/**",
+                      "next-themes",
+                      "sonner",
+                      "zod",
+                      "radix-ui",
+                      "lucide-react",
+                      "@dnd-kit/**",
+                      "@hookform/**",
+                      "react-hook-form",
+                      "client-only",
+                      "server-only",
+                      "@supabase/**",
+                      "@/**",
+                      "!@/shared/domain",
+                      "!@/shared/domain/**",
+                      "**/application",
+                      "**/application/**",
+                      "**/infrastructure",
+                      "**/infrastructure/**",
+                      "**/presentation",
+                      "**/presentation/**",
+                      "**/composition"
+                    ],
+                    "message": "domain só importa TypeScript puro, o próprio domain e shared/domain."
+                  }
+                ]
+              }
+            },
+            "noProcessEnv": "error",
+            "noRestrictedGlobals": {
+              "level": "error",
+              "options": {
+                "deniedGlobals": {
+                  "fetch": "Entrada e saída ficam em infrastructure.",
+                  "window": "domain e application não conhecem o navegador.",
+                  "document": "domain e application não conhecem o navegador.",
+                  "localStorage": "domain e application não conhecem o navegador."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "src/modules/*/application/**",
+        "!**/*.test.ts",
+        "!**/*.test.tsx"
+      ],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": [
+                      "react",
+                      "react/**",
+                      "react-dom",
+                      "react-dom/**",
+                      "next",
+                      "next/**",
+                      "next-themes",
+                      "sonner",
+                      "zod",
+                      "radix-ui",
+                      "lucide-react",
+                      "@dnd-kit/**",
+                      "@hookform/**",
+                      "react-hook-form",
+                      "client-only",
+                      "server-only",
+                      "@supabase/**",
+                      "@/**",
+                      "!@/shared/domain",
+                      "!@/shared/domain/**",
+                      "**/infrastructure",
+                      "**/infrastructure/**",
+                      "**/presentation",
+                      "**/presentation/**",
+                      "**/composition"
+                    ],
+                    "message": "application só importa domain e shared/domain."
+                  }
+                ]
+              }
+            },
+            "noProcessEnv": "error",
+            "noRestrictedGlobals": {
+              "level": "error",
+              "options": {
+                "deniedGlobals": {
+                  "fetch": "Entrada e saída ficam em infrastructure.",
+                  "window": "domain e application não conhecem o navegador.",
+                  "document": "domain e application não conhecem o navegador.",
+                  "localStorage": "domain e application não conhecem o navegador."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "src/modules/*/infrastructure/**",
+        "!**/*.test.ts",
+        "!**/*.test.tsx"
+      ],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": [
+                      "react",
+                      "react/**",
+                      "react-dom",
+                      "react-dom/**",
+                      "next",
+                      "next/**",
+                      "next-themes",
+                      "sonner",
+                      "zod",
+                      "radix-ui",
+                      "lucide-react",
+                      "@dnd-kit/**",
+                      "@hookform/**",
+                      "react-hook-form",
+                      "server-only",
+                      "@/components/**",
+                      "@/contexts/**",
+                      "@/errors/**",
+                      "@/hooks/**",
+                      "@/lib/**",
+                      "@/services/**",
+                      "@/app/**",
+                      "@/screens/**",
+                      "@/shell/**",
+                      "@/shared/ui",
+                      "@/shared/ui/**",
+                      "@/modules/**",
+                      "**/presentation",
+                      "**/presentation/**",
+                      "**/composition"
+                    ],
+                    "message": "infrastructure importa domain, application, shared/domain, shared/infrastructure e SDKs. Nunca presentation, composition, shared/ui, outros módulos ou React."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/modules/*/composition.ts"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": [
+                      "react",
+                      "react/**",
+                      "react-dom",
+                      "react-dom/**",
+                      "next",
+                      "next/**",
+                      "next-themes",
+                      "sonner",
+                      "zod",
+                      "radix-ui",
+                      "lucide-react",
+                      "@dnd-kit/**",
+                      "@hookform/**",
+                      "react-hook-form",
+                      "server-only",
+                      "@/components/**",
+                      "@/contexts/**",
+                      "@/errors/**",
+                      "@/hooks/**",
+                      "@/lib/**",
+                      "@/services/**",
+                      "@/app/**",
+                      "@/screens/**",
+                      "@/shell/**",
+                      "@/shared/ui",
+                      "@/shared/ui/**",
+                      "@/modules/**",
+                      "**/presentation",
+                      "**/presentation/**"
+                    ],
+                    "message": "composition liga application a infrastructure. Nunca presentation, shared/ui, outros módulos ou React."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/modules/*/index.ts"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": [
+                      "./composition",
+                      "./infrastructure",
+                      "./infrastructure/**",
+                      "@/modules/**"
+                    ],
+                    "message": "O index do módulo não expõe composition nem infrastructure (o app/ importa o index em Server Components)."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "src/modules/auth/presentation/**",
+        "!**/*.test.ts",
+        "!**/*.test.tsx"
+      ],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": [
+                      "@supabase/**",
+                      "@/shared/infrastructure",
+                      "@/shared/infrastructure/**",
+                      "**/infrastructure",
+                      "**/infrastructure/**",
+                      "@/app/**",
+                      "@/screens/**",
+                      "@/shell/**",
+                      "@/modules/*/**",
+                      "@/modules/brokers",
+                      "@/modules/leads"
+                    ],
+                    "message": "presentation importa application, domain, composition, shared/ui e o index de outros módulos (DAG leads → brokers → auth). Nunca infrastructure nem caminho profundo de outro módulo."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "src/modules/brokers/presentation/**",
+        "!**/*.test.ts",
+        "!**/*.test.tsx"
+      ],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": [
+                      "@supabase/**",
+                      "@/shared/infrastructure",
+                      "@/shared/infrastructure/**",
+                      "**/infrastructure",
+                      "**/infrastructure/**",
+                      "@/app/**",
+                      "@/screens/**",
+                      "@/shell/**",
+                      "@/modules/*/**",
+                      "@/modules/leads"
+                    ],
+                    "message": "presentation importa application, domain, composition, shared/ui e o index de outros módulos (DAG leads → brokers → auth). Nunca infrastructure nem caminho profundo de outro módulo."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "src/modules/leads/presentation/**",
+        "!**/*.test.ts",
+        "!**/*.test.tsx"
+      ],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": [
+                      "@supabase/**",
+                      "@/shared/infrastructure",
+                      "@/shared/infrastructure/**",
+                      "**/infrastructure",
+                      "**/infrastructure/**",
+                      "@/app/**",
+                      "@/screens/**",
+                      "@/shell/**",
+                      "@/modules/*/**"
+                    ],
+                    "message": "presentation importa application, domain, composition, shared/ui e o index de outros módulos (DAG leads → brokers → auth). Nunca infrastructure nem caminho profundo de outro módulo."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "src/screens/**",
+        "src/shell/**",
+        "!**/*.test.ts",
+        "!**/*.test.tsx"
+      ],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": [
+                      "@supabase/**",
+                      "@/shared/infrastructure",
+                      "@/shared/infrastructure/**",
+                      "@/modules/*/**",
+                      "@/app/**"
+                    ],
+                    "message": "screens e shell compõem módulos só pelo index."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/shared/ui/**", "!**/*.test.ts", "!**/*.test.tsx"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": [
+                      "@supabase/**",
+                      "@/shared/infrastructure",
+                      "@/shared/infrastructure/**",
+                      "@/components/**",
+                      "@/contexts/**",
+                      "@/errors/**",
+                      "@/hooks/**",
+                      "@/lib/**",
+                      "@/services/**",
+                      "@/app/**",
+                      "@/screens/**",
+                      "@/shell/**",
+                      "@/modules",
+                      "@/modules/**"
+                    ],
+                    "message": "shared/ui não tem regra de negócio: não importa módulos, telas, shell nem infraestrutura."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "src/shared/infrastructure/**",
+        "!**/*.test.ts",
+        "!**/*.test.tsx"
+      ],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": [
+                      "react",
+                      "react/**",
+                      "react-dom",
+                      "react-dom/**",
+                      "next",
+                      "next/**",
+                      "next-themes",
+                      "sonner",
+                      "zod",
+                      "radix-ui",
+                      "lucide-react",
+                      "@dnd-kit/**",
+                      "@hookform/**",
+                      "react-hook-form",
+                      "server-only",
+                      "@/components/**",
+                      "@/contexts/**",
+                      "@/errors/**",
+                      "@/hooks/**",
+                      "@/lib/**",
+                      "@/services/**",
+                      "@/app/**",
+                      "@/screens/**",
+                      "@/shell/**",
+                      "@/shared/ui",
+                      "@/shared/ui/**",
+                      "@/modules",
+                      "@/modules/**"
+                    ],
+                    "message": "shared/infrastructure não importa React, UI nem módulos."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/app/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": [
+                      "@supabase/**",
+                      "@/shared/infrastructure",
+                      "@/shared/infrastructure/**",
+                      "@/modules/*/**"
+                    ],
+                    "message": "app/ só compõe: sem SDK, sem infraestrutura e só o index dos módulos."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/shared/ui/primitives/**"],
       "linter": {
         "enabled": false
       }

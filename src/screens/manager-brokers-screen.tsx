@@ -1,0 +1,104 @@
+"use client";
+
+import { Users, UserX } from "lucide-react";
+import { useState } from "react";
+import { BrokerCard, useBrokers } from "@/modules/brokers";
+import type { Lead } from "@/modules/leads";
+import { useLeadStats } from "@/modules/leads";
+import { isOneOf } from "@/shared/domain/one-of";
+import { EmptyState } from "@/shared/ui/components/empty-state";
+import { CardSkeleton } from "@/shared/ui/components/loading-state";
+import { PageHeader } from "@/shared/ui/components/page-header";
+import { Tabs, TabsList, TabsTrigger } from "@/shared/ui/primitives/tabs";
+
+const PRESENCE_FILTERS = ["all", "present", "absent"] as const;
+type PresenceFilter = (typeof PRESENCE_FILTERS)[number];
+
+// Leads ainda sem fonte de dados.
+const leads: Lead[] = [];
+
+export function ManagerBrokersScreen() {
+  const { brokers, loading } = useBrokers();
+  const { byBroker, availableBrokers } = useLeadStats(leads, brokers);
+  const [filter, setFilter] = useState<PresenceFilter>("all");
+
+  const absent = byBroker.length - availableBrokers;
+  const rows = byBroker.filter(({ broker }) =>
+    filter === "all"
+      ? true
+      : filter === "present"
+        ? broker.isPresent
+        : !broker.isPresent,
+  );
+
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        title="Corretores"
+        description="Acompanhe a presença dos corretores e a carga de leads de cada um."
+      />
+
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <Tabs
+          value={filter}
+          onValueChange={(v) => {
+            if (isOneOf(v, PRESENCE_FILTERS)) setFilter(v);
+          }}
+        >
+          <TabsList>
+            <TabsTrigger value="all">Todos ({byBroker.length})</TabsTrigger>
+            <TabsTrigger value="present">
+              Disponíveis ({availableBrokers})
+            </TabsTrigger>
+            <TabsTrigger value="absent">Ausentes ({absent})</TabsTrigger>
+          </TabsList>
+        </Tabs>
+        <p className="text-muted-foreground text-xs">
+          Somente corretores disponíveis participam da distribuição.
+        </p>
+      </div>
+
+      {loading ? (
+        <div
+          className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3"
+          aria-busy="true"
+        >
+          <span className="sr-only">Carregando…</span>
+          <CardSkeleton />
+          <CardSkeleton />
+          <CardSkeleton />
+        </div>
+      ) : rows.length === 0 ? (
+        <div className="rounded-xl border border-dashed">
+          {filter === "present" ? (
+            <EmptyState
+              icon={UserX}
+              title="Nenhum corretor disponível"
+              description="Os corretores aparecem aqui assim que confirmarem presença."
+            />
+          ) : (
+            <EmptyState
+              icon={Users}
+              title={
+                filter === "absent"
+                  ? "Nenhum corretor ausente"
+                  : "Nenhum corretor cadastrado"
+              }
+              description={
+                filter === "absent"
+                  ? "Todos os corretores confirmaram presença."
+                  : undefined
+              }
+            />
+          )}
+        </div>
+      ) : (
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {rows.map((row) => (
+            <BrokerCard key={row.broker.id} {...row} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}

@@ -10,344 +10,150 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 # LeadRoll
 
-CRM para gerenciamento e distribuição de leads imobiliários entre corretores.
-Etapa atual: **frontend com autenticação real**. O login usa Supabase Auth, e o
-perfil (gestor ou corretor) fica na tabela `profiles`, protegida por RLS. Os
-corretores são lidos de `profiles` (`BrokersService`). O cadastro, a edição e
-a exclusão de leads gravam na tabela `leads` (`LeadsService.createLead`,
-`LeadsService.updateLead` e `LeadsService.deleteLead`), só para o gestor, e a
-página `/gestor/leads` lista os leads do banco (`LeadsService.listLeads`). A
-página `/corretor/leads` lista só os leads atribuídos ao corretor
-(`LeadsService.listLeads({ brokerId })`), e o corretor responsável muda a etapa
-deles (`LeadsService.changeStage`) e registra observações neles
-(`LeadsService.addObservation`, tabela `lead_observations`). O corretor
-confirma presença e entra numa fila por 5h (`PresenceService.confirmPresence`,
-tabela `broker_presence`). O gestor distribui os leads sem responsável
-seguindo essa fila (`LeadsService.distributeLeads`, função
-`distribute_leads`). A interface e os textos são em português (pt-BR).
+CRM de leads imobiliários: o gestor cadastra, edita, exclui e distribui leads; o
+corretor confirma presença (fila de 5h), acompanha os próprios leads num Kanban,
+muda a etapa e registra observações. Next.js 16 (App Router, `cacheComponents`),
+React 19.3, TypeScript strict, Tailwind v4, shadcn/ui e Supabase (Auth + Postgres
+com RLS), tudo no navegador. Interface e textos em pt-BR.
 
-## Regras desta etapa
+Regras de produto e de interface: [`docs/produto.md`](docs/produto.md).
+Arquitetura em detalhe: [`docs/arquitetura.md`](docs/arquitetura.md).
 
-- A autenticação usa **Supabase Auth** (e-mail e senha), só pelo cliente do
-  navegador (`src/lib/supabase/client.ts`) e pela camada de serviço
-  `AuthService` (`src/services/auth-service.ts`). A sessão fica nos cookies do
-  Supabase e, no React, no `SessionProvider` (`src/contexts/session.tsx`).
-- Continua proibido criar API routes, Route Handlers, Server Actions,
-  `proxy.ts`, leitura de `cookies()` em Server Components e outras integrações
-  externas. Nada além das tabelas `profiles`, `leads`, `lead_observations` e
-  `broker_presence` (e das funções `confirm_presence` e `distribute_leads`) vai para o banco nesta
-  etapa.
-- Não há mocks, store nem implementação local. `manager-leads-page` busca
-  `leads` com `useLeads()` e `broker-leads-page` com `useLeads({ own: true })`
-  (`LeadsService.listLeads`); `manager-brokers-page` ainda declara `leads`
-  como `[]` e repassa por props. As páginas buscam
-  `brokers` com `useBrokers()` (`BrokersService.listBrokers`, que já traz
-  `isPresent` de `broker_presence`; para o corretor, a RLS devolve só o
-  próprio perfil).
-  O cadastro e a edição de lead já chamam `LeadsService.createLead` e
-  `LeadsService.updateLead` (`LeadForm`), e a exclusão chama
-  `LeadsService.deleteLead` (`DeleteLeadDialog`). A mudança de etapa pelo
-  corretor chama `LeadsService.changeStage` (`useChangeStage`), e a
-  observação chama `LeadsService.addObservation` (`useAddObservation`). A
-  confirmação de presença chama `PresenceService.confirmPresence`
-  (`usePresence`), e a distribuição chama `LeadsService.distributeLeads`
-  (`DistributionDialog`). Não recriar dados fictícios nem lógica local para
-  a distribuição: a regra fica toda no banco.
-- Variáveis de ambiente (modelo em `.env.example`; `.env.local` não é
-  versionado): `NEXT_PUBLIC_SUPABASE_URL` e
-  `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`. A chave `service_role` nunca entra no
-  projeto.
-- O build precisa passar sem as variáveis. Nunca crie o cliente Supabase em
-  escopo de módulo nem durante a renderização: só em efeitos e handlers.
-- Links nativos são permitidos: `tel:`, `mailto:` e `https://wa.me/55<número>`
-  (botão "WhatsApp" nos detalhes do lead).
-- Não adicionar funcionalidades não pedidas: nada de imóveis, contratos,
-  comissões, relatórios ou campanhas. O foco é cadastrar, distribuir e
-  acompanhar leads.
-- Não deixar código morto. Ao remover uma tela ou recurso, remova também os
-  componentes, hooks, constantes, rotas e campos de estado que só existiam por
-  causa dele.
-
-## Stack e comandos
-
-- Next.js 16 (App Router, Turbopack, `cacheComponents` e `partialPrefetching`
-  ligados em `next.config.ts`), React 19.3 e TypeScript strict.
-- Tailwind CSS v4, com tokens definidos em `src/app/globals.css`.
-- shadcn/ui (estilo `radix-nova`, base Radix) em `src/components/ui`.
-- Lucide (ícones), Zod 4 (validação), sonner (toasts), next-themes (tema) e
-  `@dnd-kit/core` (arrastar e soltar no Kanban).
-- Fonte Inter via `next/font`, exposta como `--font-inter`.
+## Comandos
 
 ```bash
-npm run dev          # servidor de desenvolvimento (porta 3000)
-npm run build        # build de produção (precisa passar, mesmo sem .env.local)
-npm run lint         # biome check
-npx biome check --write src   # formata e aplica correções seguras
-npx tsc --noEmit
+npm install                    # dependências (npm, package-lock.json)
+npm run dev                    # desenvolvimento em http://localhost:3000
+npm run build                  # build de produção (precisa passar sem .env.local)
+npm run lint                   # Biome: formatação, lint e regras de fronteira
+npx biome check --write src    # formata e aplica correções seguras
+npx tsc --noEmit               # tipos
+npm test                       # todos os testes (Vitest)
+npx vitest run <arquivo>       # um arquivo de teste
+npm run test:coverage          # testes com cobertura
 ```
 
-Antes de concluir qualquer mudança, rode `npm run lint`, `npx tsc --noEmit` e
-`npm run build`.
+Variáveis (modelo em `.env.example`; `.env.local` não é versionado):
+`NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
 
-## Rotas e perfis
+## Arquitetura
 
-| Rota | Acesso | Conteúdo |
-| --- | --- | --- |
-| `/` | todos | redireciona para `/login` ou para a página inicial do perfil |
-| `/login` | público | login com e-mail e senha (Supabase Auth) |
-| `/gestor` | gestor | redireciona para `/gestor/leads` |
-| `/gestor/leads` | gestor | página inicial do gestor: tabela, filtros, CRUD e distribuição |
-| `/gestor/corretores` | gestor | presença e carga de leads de cada corretor |
-| `/corretor` | corretor | redireciona para `/corretor/leads` |
-| `/corretor/leads` | corretor | Kanban com os próprios leads |
-
-- O menu do gestor vem de `src/components/layout/nav-items.ts`, e a página
-  inicial de cada perfil vem de `HOME_BY_ROLE`. Os caminhos ficam em
-  `ROUTES`, em `src/lib/constants.ts`.
-- A tela "Visão geral" (dashboard) foi **removida de propósito**. Não recriar
-  sem pedido.
-- As contas são criadas no painel do Supabase (Authentication → Users). O
-  trigger cria o perfil como corretor; o gestor é promovido por SQL.
-
-## Estrutura de pastas
-
-```
-src/
-  app/                 rotas (page.tsx fino que só renderiza o componente de página)
-  components/
-    pages/             telas completas (manager-leads, manager-brokers, broker-leads)
-    layout/            AppShell, Sidebar, Header, RoleGuard, PresenceToggle, ThemeToggle, UserMenu
-    leads/             tabela, formulário, detalhes, filtros, diálogos de exclusão e distribuição
-    kanban/            LeadKanban, KanbanColumn, LeadCard
-    observations/      ObservationForm, ObservationList
-    brokers/           BrokerCard
-    shared/            EmptyState, LoadingState, PageHeader, Pagination, SearchInput, badges, Kbd
-    providers/         ThemeProvider, SessionProvider, TooltipProvider, Toaster
-    ui/                shadcn/ui (gerado; o lint fica desligado aqui)
-  contexts/session.tsx SessionProvider: user, session, profile e ready da sessão do Supabase
-  contexts/presence.tsx PresenceProvider: presença do corretor (expiresAt, isPresent, confirm)
-  services/            auth-service.ts (AuthService: signIn, signOut, getProfile, restoreSession, onSignedOut)
-                       brokers-service.ts (BrokersService: listBrokers)
-                       leads-service.ts (LeadsService: listLeads, createLead, updateLead, changeStage, addObservation, distributeLeads, deleteLead)
-                       presence-service.ts (PresenceService: getOwnPresence, confirmPresence)
-  errors/              SignInError, SignOutError, ProfileError, BrokersError, LeadsError, CreateLeadError, UpdateLeadError, ChangeStageError, AddObservationError, DistributeLeadsError, DeleteLeadError, PresenceError, ConfirmPresenceError e AuthServiceError
-  lib/                 tipos, constantes, filtros, formatação, validação (Zod)
-    supabase/          client.ts (getSupabaseClient) e database.types.ts
-  hooks/               useSession, useBrokers, useLeads, useLeadStats, useChangeStage, useAddObservation, usePresence, useHotkey, useMediaQuery, useResetOnHide
-supabase/migrations/   SQL das tabelas profiles, leads, lead_observations e broker_presence, funções, triggers e RLS
+```text
+src/app/        rotas: só metadata e composição
+src/screens/    telas que combinam módulos (uma por página)
+src/shell/      moldura do app (AppShell, Header, Sidebar, Providers)
+src/modules/    auth · brokers · leads, cada um com
+                domain/ application/ infrastructure/ presentation/ composition.ts index.ts
+src/shared/     domain (Actor) · infrastructure (env, Supabase) · ui (primitives, componentes, hooks)
+src/test/       dublês e helpers de teste
 ```
 
-## Estado e dados
+- Dependências apontam para dentro: `presentation → application → domain`;
+  `infrastructure` implementa as portas de `application`; só `composition.ts`
+  conhece as duas pontas. O lint (`biome.json`) falha se a regra for violada.
+- Entre módulos, só pelo `index.ts` e só na direção `leads → brokers → auth`.
+- `app/`, `screens/` e `shell/` importam módulos só pelo `index.ts`.
 
-- Com `cacheComponents`, chamar `Date.now()` ou `new Date()` durante a
-  renderização quebra o prerender. Gere datas e ids só em efeitos ou handlers.
-- A sessão fica no `SessionProvider` (`useSession()`). Ele restaura a sessão
-  (`AuthService.restoreSession`) e assina `onSignedOut` (logout em outra aba,
-  sessão revogada), limpando a sessão. O usuário conectado é `profile`
-  (`AuthProfile`), usado pelo `RoleGuard`, pelo menu do usuário e pela página
-  `/`.
-- `ready` (no `useSession()`) indica que a restauração da sessão terminou.
-  Como depende da rede, o `LoadingState` pode aparecer por mais tempo.
-- Login: `AuthService.signIn({ email, password })` retorna
-  `{ user, session, weakPassword }` ou lança `SignInError` (mensagem pronta em
-  pt-BR). O perfil é buscado depois, por `AuthService.getProfile(user.id)`
-  (lança `ProfileError`), e então chama-se `onSession(user, session, profile)`.
-  A restauração da sessão faz o mesmo no `SessionProvider`. O
-  redirecionamento usa `HOME_BY_ROLE[profile.role]`. **Nunca** use `user.role`
-  do Supabase: é o papel do Postgres (`"authenticated"`), não gestor/corretor.
-- Logout: `clearSession()` limpa o estado na hora e depois
-  `AuthService.signOut()` avisa o servidor (lança `SignOutError` se ele não
-  confirmou; o usuário sai mesmo assim).
-- O perfil vem **sempre** da tabela `profiles`, nunca de `user_metadata` (o
-  usuário pode alterá-lo). A RLS deixa o gestor ler todos os perfis e o
-  corretor só o próprio.
-- Listagem: `LeadsService.listLeads()` devolve os leads do mais recente para o
-  mais antigo (a RLS filtra por perfil) e lança `LeadsError` (mensagem pronta
-  em pt-BR). `useLeads()` busca quando há `profile`; enquanto carrega, a
-  página do gestor mostra `TableSkeleton` e a do corretor, um `Spinner`.
-  `useLeads({ own: true })` passa `brokerId: profile.id`, e a consulta filtra
-  por `broker_id` além da RLS; a página ainda filtra por
-  `brokerId === profile.id` no cliente. Lead sem responsável ou de outro
-  corretor nunca chega ao corretor. O lead cadastrado entra na lista pelo
-  `onCreated` do `LeadForm` (`addLead`), sem buscar tudo de novo.
-- Cadastro: `LeadsService.createLead(input)` insere só os campos do
-  formulário; o banco gera `id` e `createdAt`, e o lead nasce com
-  `stage: "new"` e sem responsável. Lança `CreateLeadError` (mensagem pronta
-  em pt-BR). Durante o envio, o botão do `LeadForm` fica desabilitado com
-  `Spinner`.
-- Edição (só gestor): `LeadsService.updateLead(id, input)` atualiza só os
-  campos do formulário (nome, telefone, e-mail, origem e interesse); etapa,
-  responsável e datas não mudam. Lança `UpdateLeadError` (mensagem pronta em
-  pt-BR; `not_found` quando nenhuma linha foi atualizada). O lead salvo
-  substitui o antigo na lista pelo `onUpdated` do `LeadForm` (`replaceLead`).
-- Exclusão (só gestor): `LeadsService.deleteLead(id)` remove o lead. Lança
-  `DeleteLeadError` (mensagem pronta em pt-BR; `not_found` quando nenhuma
-  linha foi removida, o que também acontece se a RLS recusar). Durante o
-  envio, o `DeleteLeadDialog` não fecha e mostra `Spinner`; o lead sai da
-  lista pelo `onDeleted` (`removeLead`).
-- Mudança de etapa (só o corretor responsável): `useChangeStage(replaceLead)`
-  move o lead na hora (o card não volta ao soltar no Kanban), chama
-  `LeadsService.changeStage(id, stage)` e substitui o lead pelo salvo; se o
-  banco recusar, devolve o lead à etapa anterior e mostra o erro. Lança
-  `ChangeStageError` (mensagem pronta em pt-BR; `not_found` quando nenhuma
-  linha foi atualizada, como num lead reatribuído). Vale para o Kanban, o
-  menu do card e o seletor nos detalhes (`LeadDetails` recebe
-  `onStageChange`; sem ele, o seletor não aparece).
-- Observações (só o corretor responsável registra): `listLeads` e as demais
-  consultas de lead trazem `lead_observations` embutidas (a RLS vale nelas
-  também). `useAddObservation(addObservation)` chama
-  `LeadsService.addObservation(leadId, content)`; o banco gera `id`, autor
-  (`auth.uid()`) e data. Lança `AddObservationError` (mensagem pronta em
-  pt-BR). O `addObservation` do `useLeads` acrescenta só a observação ao lead,
-  sem substituir o lead inteiro. Durante o envio, o `ObservationForm` mostra
-  `Spinner`; o texto só é limpo se o banco registrou. `LeadDetails` recebe
-  `onAddObservation`; sem ele, o formulário não aparece (o gestor só lê).
-  Não há edição nem exclusão de observações.
-- O responsável do lead é guardado como `brokerId`. O nome vem da lista
-  `brokers` recebida por props.
-- Etapas (`LeadStage`): `new`, `contacted`, `visit_scheduled`, `proposal`,
-  `won`, `lost`. Os rótulos e as cores de cada etapa estão em `constants.ts`.
-  `ACTIVE_STAGES` define o que conta como "em atendimento".
+## Onde colocar código novo
 
-### Presença (fila)
+| Situação | Local |
+| --- | --- |
+| Regra de negócio, valor ou política (quem pode o quê) | `src/modules/<m>/domain/` (TypeScript puro, com teste) |
+| Operação do app (cadastrar, distribuir, entrar…) | caso de uso `makeX(deps)` em `src/modules/<m>/application/` |
+| Acesso ao Supabase (tabela, RPC, Auth) | `src/modules/<m>/infrastructure/` + porta em `application/ports.ts` + ligação em `composition.ts` |
+| Componente, hook ou texto de uma funcionalidade | `src/modules/<m>/presentation/` (exponha no `index.ts` só o que for usado fora) |
+| Texto de erro mostrado ao usuário | `src/modules/<m>/presentation/<m>-messages.ts` |
+| Tela que junta módulos | `src/screens/` (a página em `src/app/` só a renderiza) |
+| Componente, hook ou formatação sem regra de negócio | `src/shared/ui/` |
+| Componente do shadcn | `npx shadcn@latest add <nome> -y` (gera em `src/shared/ui/primitives/`) |
+| Variável de ambiente | `src/shared/infrastructure/env.ts` |
+| Nova tabela, coluna, policy ou função | migration em `supabase/migrations/` (só com pedido explícito) |
 
-- `broker_presence` tem uma linha por corretor (`queued_at`, `expires_at`). Ele
-  está presente enquanto `expires_at > now()`; a expiração é calculada na
-  leitura, sem job. A fila é a ordem de `queued_at` entre os presentes.
-- "Confirmar presença" chama a RPC `confirm_presence()` (único jeito de
-  escrever na tabela). Ausente (sem linha ou expirado): entra no final da fila
-  (`queued_at = now()`) por 5h. Já presente: `expires_at = now() + 5h` e a
-  posição na fila é mantida. As datas vêm do relógio do banco.
-- Não há "desativar presença": ela só termina ao expirar.
-- `PresenceProvider` (em `app/corretor/layout.tsx`, envolvendo o `RoleGuard`)
-  busca a presença do corretor, expõe `confirm()` e vira ausente sozinho no
-  fim do prazo (`setTimeout`). O `PresenceToggle` (cabeçalho e aviso de
-  "Você está ausente") usa `usePresence()`; para o gestor ele não renderiza.
+## Convenções
 
-### Distribuição (round-robin)
+- Todo caso de uso que depende de quem age recebe o `Actor` e checa a política
+  do domínio antes de chamar a porta.
+- Erros: cada módulo lança o próprio erro (`AuthError`, `BrokersError`,
+  `LeadsError`) com `operation` e `reason`, sem texto. A apresentação mostra
+  `<m>ErrorMessage(error)`. Nunca monte mensagem de usuário em `domain`,
+  `application` ou `infrastructure`.
+- Falhas do PostgREST: `classifyPostgrestFailure` + `narrowFailure`, com as
+  classes que a operação aceita.
+- Repositórios chamam `getSupabaseClient()` dentro dos métodos; infraestrutura e
+  `composition.ts` começam com `import "client-only"`.
+- O `index.ts` de um módulo nunca reexporta `composition.ts` nem
+  `infrastructure/`; todo hook que ele reexporta começa com `"use client"`.
+- Datas e ids só em efeitos ou handlers (com `cacheComponents`, `Date.now()`
+  durante a renderização quebra o prerender). No domínio, o relógio é injetado
+  (`now: Date` ou a porta `Clock`).
+- Valores de `<Select>` e do dnd-kit: estreite com `isOneOf`/`isLeadStage`, sem `as`.
+- Estados transitórios de tela (diálogo aberto, "enviando") são limpos com
+  `useResetOnHide` (as páginas não desmontam ao navegar).
+- Atalhos de teclado só com `useHotkey`. Leia a URL em handlers com
+  `window.location`; evite `useSearchParams`.
+- Nomes de negócio: `Broker`, `Profile`, `Actor`, `Lead`; booleanos com `is`/`has`/`can`.
 
-- `LeadsService.distributeLeads()` chama a RPC `distribute_leads()`
-  (`security definer`, só o gestor; lança `DistributeLeadsError` com mensagem
-  pronta em pt-BR) e devolve os leads distribuídos, que substituem os antigos
-  na lista pelo `onDistributed` do `DistributionDialog` (`replaceLead`).
-  Durante o envio, o diálogo não fecha e mostra `Spinner`. Se o banco não
-  distribuiu nada (presença expirou, outro gestor distribuiu antes), mostra
-  um toast informativo.
-- Regra (no banco): entram somente leads sem responsável (os mais antigos
-  primeiro) e corretores presentes (`expires_at > now()`, ou seja, presença
-  confirmada nas últimas 5h). Cada lead vai para o primeiro da fila (menor
-  `queued_at`), que volta para o fim dela (`queued_at` depois do último da
-  fila). O lead recebe `stage: "new"` e `assignedAt`.
-- A função usa um advisory lock, então duas distribuições simultâneas não
-  disputam a mesma fila. O diálogo mostra as contagens do cliente
-  (`isPresent`), mas quem decide é o banco.
+## Testes
 
-## Permissões
+- Todo arquivo novo de `domain/` e `application/` tem teste unitário, sem React e
+  sem rede (portas falsas).
+- Repositórios: teste com `src/test/fake-supabase.ts` (consulta enviada,
+  mapeamento e `reason` de cada falha).
+- Textos de erro: tabela em `<m>-messages.test.ts`.
+- Componentes e hooks: `// @vitest-environment jsdom`, Testing Library e
+  `renderSignedIn`/`renderHookSignedIn` (`src/test/signed-in.tsx`).
+- Testes ficam ao lado do código, como `*.test.ts(x)`.
 
-- A segurança real está no banco (RLS em `profiles`: `select` do próprio
-  perfil ou de todos para o gestor; nenhuma escrita por `anon` ou
-  `authenticated`. RLS em `leads`: o gestor lê todos e o corretor só os
-  próprios; só o gestor insere, na etapa `new`, sem responsável, e apenas as
-  colunas do formulário; o gestor faz `update` só nas colunas do formulário e
-  o corretor só na `stage` dos próprios leads, separados pelo trigger
-  `leads_enforce_update_columns`; só o gestor faz `delete`. RLS em
-  `lead_observations`: o gestor lê todas e o corretor só as dos leads
-  atribuídos a ele; só o corretor responsável insere, em nome próprio, e
-  apenas `lead_id` e `content`; ninguém altera nem exclui. RLS em
-  `broker_presence`: o gestor lê todas e o corretor só a própria; ninguém
-  escreve direto, só pela RPC `confirm_presence`, que recusa quem não é
-  corretor). O trigger `leads_enforce_update_columns` recusa mudança de etapa
-  pelo gestor, exceto na distribuição (lead sem responsável que recebe um
-  corretor e volta para `new`); só `distribute_leads`, que roda como dono da
-  tabela, grava `broker_id`. Novos usuários entram como `broker` pelo trigger; gestores
-  são promovidos por SQL. O guard no cliente é UX.
-- `RoleGuard` (`components/layout/role-guard.tsx`) é usado em
-  `app/gestor/layout.tsx` e `app/corretor/layout.tsx`. Não remover o
-  comportamento abaixo:
-  - Enquanto `ready` é falso (inclusive no servidor), a página é renderizada
-    **oculta** (`<div hidden>`). O Next precisa disso para validar a
-    "instant navigation". Se a página não for renderizada, o dev mostra o erro
-    "segment was dropped". `<Activity mode="hidden">` **não** resolve, porque
-    não é renderizado no servidor.
-  - Sem sessão, o guard redireciona para `/login`. Com o perfil errado,
-    redireciona para a página inicial do próprio perfil, e o conteúdo protegido
-    não é renderizado.
-- O corretor vê apenas leads com `brokerId === profile.id`. Ele não
-  cadastra, não exclui, não muda o responsável e não distribui leads.
-- O gestor não altera a etapa de um lead. Nos detalhes, ele vê as observações
-  apenas para leitura.
+## Proibições
 
-## Armadilhas do Next 16 já encontradas
+- Nada de API routes, Route Handlers, Server Actions, `proxy.ts` ou `cookies()`.
+- Nada de `any`, `@ts-ignore`, `@ts-expect-error`, `eslint-disable` ou `as` para
+  calar o compilador; não afrouxe regras do `biome.json` nem apague testes.
+- Nunca crie o cliente Supabase em escopo de módulo nem durante a renderização.
+- Nunca use `user.role` do Supabase nem `user_metadata` como perfil: o papel vem
+  de `profiles`.
+- A chave `service_role` nunca entra no projeto; nada sensível com `NEXT_PUBLIC_`.
+- Não recrie lógica de distribuição no cliente; a regra fica no banco.
+- Não adicione dependência sem aprovação.
+- Não reverta os ajustes pedidos pelo usuário listados em `docs/produto.md`.
+- Não deixe código morto: ao remover um recurso, remova componentes, hooks,
+  exports e testes que só existiam por ele.
+- Não encerre um `next dev` do usuário que já esteja rodando na porta 3000.
+- Não edite o bloco `nextjs-agent-rules` deste arquivo.
 
-- **Estado preservado entre navegações (React Activity):** as páginas não são
-  desmontadas ao trocar de rota. Estados transitórios, como diálogos abertos e
-  indicadores de "enviando", precisam ser limpos com
-  `useResetOnHide(() => ...)` (`src/hooks/use-reset-on-hide.ts`). O botão de
-  login ficava travado depois do logout por causa disso.
-- `usePathname` funciona sem `<Suspense>` porque todas as rotas são estáticas.
-  Evite `useSearchParams`, que exige `<Suspense>` com `cacheComponents`. Se
-  precisar ler a URL dentro de um handler, use `window.location`.
-- Antes de usar uma API do Next, consulte a documentação em
-  `node_modules/next/dist/docs/`.
+## Definição de pronto
 
-## UI e estilo
+1. `npm run lint` sem erros nem avisos, `npx tsc --noEmit`, `npm test` e
+   `npm run build` passam.
+2. A regra de dependência foi respeitada (o lint verifica) e não há ciclos.
+3. Regra de negócio nova tem teste no domínio ou no caso de uso.
+4. Este arquivo e os de `docs/` foram atualizados se uma convenção mudou.
 
-- O visual é limpo e minimalista (inspirado em Linear e Vercel): bordas
-  discretas, quase sem sombras e com o índigo (`--primary`) como cor de
-  destaque. Light e dark mode funcionam por tokens no `:root` e em `.dark`, em
-  `globals.css`, incluindo os tokens extras `--success` e `--warning`. Não use
-  cores fixas quando existir um token.
-- Hierarquia de texto: título de página com 22–24px (`PageHeader`), seção com
-  16px, texto com 14px e texto auxiliar com 12–13px.
-- **Abordagem mobile-first:**
-  - **Gestor:** tabela a partir de `md`, cards abaixo disso.
-  - **Corretor:** Kanban com colunas a partir de `md`. Abaixo disso, uma grade
-    de etapas com 2 colunas (3 a partir de 480px) e lista vertical. Não use
-    faixas com rolagem horizontal no mobile.
-  - **Menu:** fixo a partir de `lg` (248px, recolhível); abaixo disso, um Sheet.
-  - **Geral:** nada pode causar rolagem horizontal da página em 360–390px.
-- **Largura do Sheet:** o estilo base do shadcn usa
-  `data-[side=right]:w-3/4 sm:max-w-sm`, que tem precedência sobre classes
-  simples. Para mudar a largura, use as variantes com prefixo, por exemplo
-  `data-[side=right]:w-full data-[side=right]:sm:max-w-lg`.
-- **Feedback:** toda ação mostra um toast (sonner). Listas vazias usam
-  `EmptyState`, e o carregamento usa `LoadingState`, `TableSkeleton` ou
-  `Spinner`.
-- `prefers-reduced-motion` já é respeitado globalmente.
-- **Atalhos:** `Ctrl/Cmd+K` foca a busca (`SearchInput`) e `N` abre o
-  formulário de novo lead (em `/gestor/leads`). `Esc` e `Enter` seguem o
-  comportamento nativo de dialogs e forms. Use `useHotkey`, que ignora a tecla
-  quando o usuário está digitando ou quando há um diálogo aberto.
-- **Ajustes já pedidos pelo usuário (não reverter):**
-  - A página `/corretor/leads` **não tem** a linha de resumo nem a barra de
-    busca e filtros.
-  - A tela de login **não tem** seletor nem lista de contas de demonstração.
-  - O formulário de observação **não mostra** a dica de atalhos de teclado.
-  - O botão de contato nos detalhes do lead é "WhatsApp" (não "Ligar").
-- Listas renderizadas com `.map` precisam de `key` única e estável. Nunca use
-  como chave um valor que pode se repetir.
+## Armadilhas conhecidas
 
-## Validação
+- **Páginas preservadas entre navegações (React Activity)**: limpe estados
+  transitórios com `useResetOnHide`. O botão de login travava depois do logout.
+- **`RoleGuard`**: enquanto `ready` é falso (inclusive no servidor), renderiza a
+  página dentro de `<div hidden>`. O Next precisa disso para validar a
+  navegação instantânea ("segment was dropped"); `<Activity mode="hidden">` não
+  resolve. Os layouts de `app/` compõem `RoleGuard` + `AppShell`.
+- **`Header` só mostra a presença na área do corretor** (`role === "broker"`):
+  o `PresenceProvider` só existe lá, e a área do gestor pode renderizar oculta
+  com um perfil de corretor durante a restauração da sessão.
+- **Overrides do Biome não somam**: a configuração de uma regra num override
+  posterior substitui a anterior. Mantenha um override de fronteira por camada.
+- **`role="..."` literal numa prop** é tomado como atributo ARIA pelo lint
+  (por isso `AppShell` recebe `userRole`).
+- **`NEXT_PUBLIC_*` só é embutida quando escrita por extenso**
+  (`process.env.NEXT_PUBLIC_X`), por isso a leitura literal em `env.ts`.
+- **Largura do Sheet do shadcn**: use variantes com prefixo `data-[side=…]:`.
+- **Login no Supabase**: não faça `await` de outras chamadas do Supabase dentro
+  de `onAuthStateChange` (risco de deadlock).
+- **Verificação no navegador**: use `npm run build` + `npx next start -p <porta>`
+  com Playwright instalado fora do projeto; ele grava dados no Supabase
+  configurado, então só rode com autorização.
 
-- Os schemas Zod ficam em `src/lib/validation.ts`, com mensagens em português.
-  Para mapear os erros para os campos, use `fieldErrors()`.
-- O telefone usa a máscara brasileira (`formatPhone`) e aceita 10 ou 11 dígitos.
-  O e-mail é opcional e só é validado quando preenchido.
+## Dívida técnica
 
-## Lint e formatação
-
-- Biome (`biome.json`): 2 espaços, organização de imports e diretivas Tailwind
-  habilitadas no parser de CSS. O lint fica desligado em `src/components/ui/**`
-  (código gerado pelo shadcn), e `noImportantStyles` fica desligado em
-  `globals.css` (regra de reduced motion).
-- Para adicionar componentes shadcn:
-  `npx shadcn@latest add <nome> -y`. Eles importam `cn` do pacote `cn`; no
-  código do app, use `@/lib/utils`.
-
-## Verificação manual
-
-Não há suíte de testes no repositório. Para validar fluxos, configure um
-projeto Supabase em `.env.local` (veja o `README.md`), crie as contas,
-rode `npm run build` e `npx next start -p <porta>` e use Playwright (instalado fora do projeto) para
-percorrer login, logout, guard de perfil, estados vazios, mobile (360/390px),
-dark mode e console sem erros. Não encerre um `next dev` do usuário que já esteja rodando na porta 3000.
+Pendências, bugs registrados e métricas: [`docs/refactor/03-relatorio-final.md`](docs/refactor/03-relatorio-final.md).
+Plano e decisões da refatoração: [`docs/refactor/02-plano.md`](docs/refactor/02-plano.md).

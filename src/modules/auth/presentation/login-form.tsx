@@ -1,0 +1,152 @@
+"use client";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { AlertCircle, Eye, EyeOff, LogIn } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { Spinner } from "@/shared/ui/components/loading-state";
+import { Button } from "@/shared/ui/primitives/button";
+import { Input } from "@/shared/ui/primitives/input";
+import { Label } from "@/shared/ui/primitives/label";
+import { HOME_BY_ROLE } from "@/shared/ui/routes";
+import { AuthError } from "../application/auth-error";
+import { signIn } from "../composition";
+import { authErrorMessage } from "./auth-messages";
+import { type LoginValues, loginSchema } from "./login-schema";
+import { useSession } from "./use-session";
+
+export function LoginForm() {
+  const [showPassword, setShowPassword] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+
+  const { profile, startSession } = useSession();
+  const router = useRouter();
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setFocus,
+    formState: { isSubmitting, errors },
+  } = useForm<LoginValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: "", password: "" },
+  });
+
+  // Já conectado (sessão restaurada ou login concluído): vai para a página
+  // inicial do perfil. O papel vem da tabela `profiles`, não de `user.role`.
+  useEffect(() => {
+    if (profile) router.replace(HOME_BY_ROLE[profile.role]);
+  }, [profile, router]);
+
+  async function onSubmit(credentials: LoginValues) {
+    try {
+      setAuthError(null);
+      // Sem perfil válido, o caso de uso encerra a sessão recém-aberta.
+      const signedIn = await signIn(credentials);
+      reset();
+      startSession(signedIn);
+    } catch (error) {
+      setAuthError(
+        error instanceof AuthError
+          ? authErrorMessage(error)
+          : "Ocorreu um erro ao tentar fazer login. Por favor, tente novamente.",
+      );
+      setFocus("password");
+    }
+  }
+
+  return (
+    <div className="w-full max-w-[400px]">
+      <div className="mb-8 space-y-1.5 text-center">
+        <h1 className="font-semibold text-2xl tracking-tight">
+          Bem-vindo de volta
+        </h1>
+        <p className="text-muted-foreground text-sm">
+          Entre para gerenciar e acompanhar seus leads.
+        </p>
+      </div>
+
+      <div className="rounded-xl border bg-card p-5 sm:p-6">
+        <form onSubmit={handleSubmit(onSubmit)} noValidate>
+          <fieldset disabled={isSubmitting} className="space-y-4">
+            {authError && (
+              <div
+                role="alert"
+                className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2.5 text-destructive text-sm"
+              >
+                <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden />
+                {authError}
+              </div>
+            )}
+
+            <div className="space-y-1.5">
+              <Label htmlFor="email">E-mail</Label>
+              <Input
+                id="email"
+                type="email"
+                autoComplete="email"
+                inputMode="email"
+                placeholder="voce@empresa.com"
+                aria-invalid={!!errors.email}
+                aria-describedby={errors.email ? "email-error" : undefined}
+                className="h-10"
+                autoFocus
+                {...register("email")}
+              />
+              {errors.email && (
+                <p id="email-error" className="text-destructive text-xs">
+                  {errors.email.message}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="password">Senha</Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  placeholder="••••••"
+                  aria-invalid={!!errors.password}
+                  aria-describedby={
+                    errors.password ? "password-error" : undefined
+                  }
+                  className="h-10 pr-10"
+                  {...register("password")}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="-translate-y-1/2 absolute top-1/2 right-1 text-muted-foreground"
+                  aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                  aria-pressed={showPassword}
+                >
+                  {showPassword ? <EyeOff /> : <Eye />}
+                </Button>
+              </div>
+              {errors.password && (
+                <p id="password-error" className="text-destructive text-xs">
+                  {errors.password.message}
+                </p>
+              )}
+            </div>
+
+            <Button
+              type="submit"
+              size="lg"
+              className="h-10 w-full"
+              aria-busy={isSubmitting}
+            >
+              {isSubmitting ? <Spinner /> : <LogIn />}
+              Entrar
+            </Button>
+          </fieldset>
+        </form>
+      </div>
+    </div>
+  );
+}
