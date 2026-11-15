@@ -126,6 +126,30 @@ npm test               # testes (Vitest)
 npm run test:coverage  # testes com cobertura
 ```
 
+## CI e deploy
+
+O workflow [`.github/workflows/ci.yml`](.github/workflows/ci.yml) roda em todo
+pull request e em todo push na `main`:
+
+1. **checks**: `npm ci`, lint, `tsc --noEmit`, testes e `npm run build`.
+2. **deploy**: só em push na `main` e só se `checks` passar. Usa a Vercel CLI
+   (`vercel pull` → `vercel build --prod` → `vercel deploy --prebuilt --prod`).
+
+O deploy automático da integração Git da Vercel fica desligado no
+[`vercel.json`](vercel.json) (`git.deploymentEnabled: false`); assim nada é
+publicado sem os testes passarem.
+
+Configuração (uma vez):
+
+- No GitHub (Settings → Secrets and variables → Actions), crie os secrets
+  `VERCEL_TOKEN` (Vercel → Account Settings → Tokens), `VERCEL_ORG_ID` e
+  `VERCEL_PROJECT_ID` (rode `npx vercel link` e copie de `.vercel/project.json`).
+- Na Vercel, cadastre `NEXT_PUBLIC_SUPABASE_URL` e
+  `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` no ambiente **Production**; o
+  `vercel pull` as baixa antes do build.
+- Para impedir merge com testes quebrados, marque o job
+  "Lint, tipos, testes e build" como obrigatório na proteção da `main`.
+
 ## Segurança
 
 - O perfil (`role`) vem sempre da tabela `profiles`, nunca de
