@@ -3,6 +3,7 @@
 import { LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import type { UserRole } from "@/shared/domain/actor";
 import { getInitials } from "@/shared/ui/format";
 import { Avatar, AvatarFallback } from "@/shared/ui/primitives/avatar";
 import { Button } from "@/shared/ui/primitives/button";
@@ -18,6 +19,12 @@ import { ROUTES } from "@/shared/ui/routes";
 import { signOut } from "../composition";
 import { authErrorMessage } from "./auth-messages";
 import { useSession } from "./use-session";
+
+const ROLE_LABELS: Record<UserRole, string> = {
+  manager: "Gestor",
+  broker: "Corretor",
+  kiosk: "Totem",
+};
 
 export function UserMenu() {
   const { profile: currentUser, clearSession } = useSession();
@@ -65,7 +72,7 @@ export function UserMenu() {
             {currentUser.email}
           </p>
           <p className="mt-1 text-muted-foreground text-xs">
-            {currentUser.role === "manager" ? "Gestor" : "Corretor"}
+            {ROLE_LABELS[currentUser.role]}
           </p>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />

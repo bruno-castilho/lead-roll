@@ -4,7 +4,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { router, toast } from "@/test/app-mocks";
 import { supabaseFake } from "@/test/fake-supabase";
-import { arrangeSession, MANAGER } from "@/test/fixtures";
+import { arrangeSession, BROKER, KIOSK, MANAGER } from "@/test/fixtures";
 import { SessionProvider } from "./session-provider";
 import { UserMenu } from "./user-menu";
 
@@ -21,8 +21,10 @@ vi.mock(
   async () => (await import("@/test/app-mocks")).navigationMock,
 );
 
-async function openMenu() {
-  arrangeSession(MANAGER);
+async function openMenu(
+  profile: Parameters<typeof arrangeSession>[0] = MANAGER,
+) {
+  arrangeSession(profile);
   render(
     <SessionProvider>
       <UserMenu />
@@ -54,6 +56,17 @@ describe("UserMenu", () => {
     await openMenu();
     expect(await screen.findByText("gestor@leadroll.demo")).toBeTruthy();
     expect(screen.getByText("Gestor")).toBeTruthy();
+  });
+
+  it.each([
+    { profile: BROKER, label: "Corretor" },
+    { profile: KIOSK, label: "Totem" },
+  ])("mostra o perfil $profile.role como $label", async ({
+    profile,
+    label,
+  }) => {
+    await openMenu(profile);
+    expect(await screen.findByText(label)).toBeTruthy();
   });
 
   it("sair: limpa a sessão, vai para o login e avisa", async () => {
