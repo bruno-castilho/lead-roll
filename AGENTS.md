@@ -27,7 +27,7 @@ npm run dev                    # desenvolvimento em http://localhost:3000
 npm run build                  # build de produção (precisa passar sem .env.local)
 npm run lint                   # Biome: formatação, lint e regras de fronteira
 npx biome check --write src    # formata e aplica correções seguras
-npx tsc --noEmit               # tipos
+npm run typecheck              # tipos (next typegen + tsc --noEmit)
 npm test                       # todos os testes (Vitest)
 npx vitest run <arquivo>       # um arquivo de teste
 npm run test:coverage          # testes com cobertura
@@ -127,7 +127,7 @@ src/test/       dublês e helpers de teste
 
 ## Definição de pronto
 
-1. `npm run lint` sem erros nem avisos, `npx tsc --noEmit`, `npm test` e
+1. `npm run lint` sem erros nem avisos, `npm run typecheck`, `npm test` e
    `npm run build` passam.
 2. A regra de dependência foi respeitada (o lint verifica) e não há ciclos.
 3. Regra de negócio nova tem teste no domínio ou no caso de uso.
@@ -144,6 +144,9 @@ src/test/       dublês e helpers de teste
 - **`Header` só mostra a presença na área do corretor** (`role === "broker"`):
   o `PresenceProvider` só existe lá, e a área do gestor pode renderizar oculta
   com um perfil de corretor durante a restauração da sessão.
+- **`LayoutProps`/`PageProps` são globais gerados** em `.next/types` (ignorado
+  pelo git): num clone limpo, `tsc` sozinho falha. Use `npm run typecheck`,
+  que roda `next typegen` antes.
 - **Overrides do Biome não somam**: a configuração de uma regra num override
   posterior substitui a anterior. Mantenha um override de fronteira por camada.
 - **`role="..."` literal numa prop** é tomado como atributo ARIA pelo lint

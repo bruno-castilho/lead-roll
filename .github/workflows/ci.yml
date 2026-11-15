@@ -27,7 +27,8 @@ jobs:
 
       - run: npm ci
       - run: npm run lint
-      - run: npx tsc --noEmit
+      # Os tipos globais do Next (LayoutProps, PageProps) vêm do `next typegen`.
+      - run: npm run typecheck
       - run: npm test
       # O build precisa passar sem .env.local (ver AGENTS.md).
       - run: npm run build
