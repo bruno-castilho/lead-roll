@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { failureOf } from "@/test/failure-of";
 import {
   type FakeResponse,
   postgrestError,
@@ -93,16 +94,6 @@ function writeFailures(options: {
   ];
 }
 
-/** Executa esperando um `LeadsError` e devolve operação e motivo. */
-async function failureOf(operation: () => Promise<unknown>) {
-  const error = await operation().then(
-    () => null,
-    (e: unknown) => e,
-  );
-  if (!(error instanceof LeadsError)) throw new Error("esperava LeadsError");
-  return { operation: error.operation, reason: error.reason };
-}
-
 beforeEach(() => supabaseFake.reset());
 
 describe("list", () => {
@@ -141,7 +132,9 @@ describe("list", () => {
 
   it.each(READ)("falha %# → %s", async (response, reason) => {
     supabaseFake.respondWith(response);
-    await expect(failureOf(() => repository.list({}))).resolves.toEqual({
+    await expect(
+      failureOf(LeadsError, () => repository.list({})),
+    ).resolves.toEqual({
       operation: "listLeads",
       reason,
     });
@@ -168,7 +161,9 @@ describe("create", () => {
     writeFailures({ invalid: true, notFound: false }),
   )("falha %# → %s", async (response, reason) => {
     supabaseFake.respondWith(response);
-    await expect(failureOf(() => repository.create(input))).resolves.toEqual({
+    await expect(
+      failureOf(LeadsError, () => repository.create(input)),
+    ).resolves.toEqual({
       operation: "createLead",
       reason,
     });
@@ -197,7 +192,7 @@ describe("update", () => {
   )("falha %# → %s", async (response, reason) => {
     supabaseFake.respondWith(response);
     await expect(
-      failureOf(() => repository.update("lead-1", input)),
+      failureOf(LeadsError, () => repository.update("lead-1", input)),
     ).resolves.toEqual({ operation: "updateLead", reason });
   });
 });
@@ -224,7 +219,7 @@ describe("changeStage", () => {
   )("falha %# → %s", async (response, reason) => {
     supabaseFake.respondWith(response);
     await expect(
-      failureOf(() => repository.changeStage("lead-1", "won")),
+      failureOf(LeadsError, () => repository.changeStage("lead-1", "won")),
     ).resolves.toEqual({ operation: "changeStage", reason });
   });
 });
@@ -250,7 +245,7 @@ describe("addObservation", () => {
   )("falha %# → %s", async (response, reason) => {
     supabaseFake.respondWith(response);
     await expect(
-      failureOf(() => repository.addObservation("lead-1", "x")),
+      failureOf(LeadsError, () => repository.addObservation("lead-1", "x")),
     ).resolves.toEqual({ operation: "addObservation", reason });
   });
 });
@@ -271,7 +266,9 @@ describe("distribute", () => {
     writeFailures({ invalid: false, notFound: false }),
   )("falha %# → %s", async (response, reason) => {
     supabaseFake.respondWith(response);
-    await expect(failureOf(() => repository.distribute())).resolves.toEqual({
+    await expect(
+      failureOf(LeadsError, () => repository.distribute()),
+    ).resolves.toEqual({
       operation: "distributeLeads",
       reason,
     });
@@ -297,8 +294,8 @@ describe("delete", () => {
     ...writeFailures({ invalid: false, notFound: false }),
   ])("falha %# → %s", async (response, reason) => {
     supabaseFake.respondWith(response);
-    await expect(failureOf(() => repository.delete("lead-1"))).resolves.toEqual(
-      { operation: "deleteLead", reason },
-    );
+    await expect(
+      failureOf(LeadsError, () => repository.delete("lead-1")),
+    ).resolves.toEqual({ operation: "deleteLead", reason });
   });
 });

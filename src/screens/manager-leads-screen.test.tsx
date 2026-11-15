@@ -8,20 +8,10 @@ import {
 } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { SessionProvider } from "@/modules/auth";
-import { PresenceProvider } from "@/modules/brokers";
-import { BrokerLeadsScreen } from "@/screens/broker-leads-screen";
-import { ManagerBrokersScreen } from "@/screens/manager-brokers-screen";
 import { ManagerLeadsScreen } from "@/screens/manager-leads-screen";
-import { TooltipProvider } from "@/shared/ui/primitives/tooltip";
 import { supabaseFake } from "@/test/fake-supabase";
-import {
-  arrangeSession,
-  BROKER,
-  brokerRow,
-  leadRow,
-  MANAGER,
-} from "@/test/fixtures";
+import { arrangeSession, brokerRow, leadRow, MANAGER } from "@/test/fixtures";
+import { ScreenProviders } from "@/test/screen-providers";
 
 vi.mock("@/shared/infrastructure/supabase/client", async (importOriginal) => {
   const { supabaseFake } = await import("@/test/fake-supabase");
@@ -42,16 +32,6 @@ vi.mock("next/link", () => ({
 }));
 
 const IN_1H = new Date(Date.now() + 60 * 60 * 1000).toISOString();
-
-function Providers({ children }: { children: ReactNode }) {
-  return (
-    <SessionProvider>
-      <PresenceProvider>
-        <TooltipProvider>{children}</TooltipProvider>
-      </PresenceProvider>
-    </SessionProvider>
-  );
-}
 
 /** 12 leads: 3 sem responsável e 9 distribuídos entre b1 e b2. */
 function managerLeads() {
@@ -78,7 +58,7 @@ describe("ManagerLeadsScreen", () => {
       { on: "profiles", data: brokers },
       { on: "leads", data: leads },
     );
-    render(<ManagerLeadsScreen />, { wrapper: Providers });
+    render(<ManagerLeadsScreen />, { wrapper: ScreenProviders });
     await waitFor(() =>
       expect(
         screen.queryAllByText(/^Lead 12$|^Nenhum lead cadastrado$/),
@@ -165,128 +145,5 @@ describe("ManagerLeadsScreen", () => {
     expect(
       screen.getByRole("dialog", { name: "Distribuição de leads" }),
     ).toBeTruthy();
-  });
-});
-
-describe("BrokerLeadsScreen", () => {
-  async function renderPage(
-    leads: ReturnType<typeof leadRow>[],
-    presence: object | null,
-  ) {
-    arrangeSession(BROKER);
-    supabaseFake.respondWith(
-      { on: "broker_presence", data: presence },
-      { on: "leads", data: leads },
-      { on: "profiles", data: [brokerRow("broker-1", "Carlos Lima")] },
-    );
-    render(<BrokerLeadsScreen />, { wrapper: Providers });
-    await waitFor(() =>
-      expect(supabaseFake.queries.map((q) => q.table)).toContain("leads"),
-    );
-    await waitFor(() =>
-      expect(screen.queryByLabelText("Carregando leads")).toBeNull(),
-    );
-  }
-
-  it("ausente e sem leads: aviso e convite para escanear o QR code", async () => {
-    await renderPage([], null);
-    expect(await screen.findByText("Você está ausente")).toBeTruthy();
-    expect(
-      screen.getByText(
-        "Escaneie o QR code na tela da empresa para participar da próxima distribuição de leads.",
-      ),
-    ).toBeTruthy();
-    // A confirmação é só pelo QR code: não há mais botão.
-    expect(screen.queryByRole("button", { name: /presença/i })).toBeNull();
-  });
-
-  it("presente e sem leads: aguarda a distribuição", async () => {
-    await renderPage([], { queued_at: IN_1H, expires_at: IN_1H });
-    expect(
-      await screen.findByText(
-        "Você está disponível. Novos leads aparecerão aqui após a próxima distribuição do gestor.",
-      ),
-    ).toBeTruthy();
-    expect(screen.queryByText("Você está ausente")).toBeNull();
-  });
-
-  it("mostra só os próprios leads, agrupados por etapa (mobile)", async () => {
-    await renderPage(
-      [
-        leadRow({ id: "a", name: "Lead A", broker_id: "broker-1" }),
-        leadRow({
-          id: "b",
-          name: "Lead B",
-          broker_id: "broker-1",
-          stage: "contacted",
-        }),
-        leadRow({ id: "x", name: "Lead de outro", broker_id: "outro" }),
-      ],
-      null,
-    );
-    const tabs = screen.getAllByRole("tab").map((t) => t.textContent);
-    expect(tabs).toEqual([
-      "Novo1",
-      "Em contato1",
-      "Visita agendada0",
-      "Proposta0",
-      "Ganho0",
-      "Perdido0",
-    ]);
-    expect(screen.getByText("Lead A")).toBeTruthy();
-    expect(screen.queryByText("Lead de outro")).toBeNull();
-    fireEvent.click(screen.getByRole("tab", { name: /Em contato/ }));
-    expect(screen.getByText("Lead B")).toBeTruthy();
-    expect(screen.queryByText("Lead A")).toBeNull();
-  });
-
-  it("detalhes no modo do corretor: etapa e observação", async () => {
-    await renderPage(
-      [leadRow({ id: "a", name: "Lead A", broker_id: "broker-1" })],
-      null,
-    );
-    fireEvent.click(screen.getByRole("button", { name: "Lead A" }));
-    const details = within(
-      await screen.findByRole("dialog", { name: "Lead A" }),
-    );
-    expect(details.getByText("Etapa do atendimento")).toBeTruthy();
-    expect(details.getByLabelText("Nova observação")).toBeTruthy();
-    expect(details.getByText("Carlos Lima")).toBeTruthy();
-    expect(details.queryByRole("button", { name: "Editar" })).toBeNull();
-  });
-});
-
-describe("ManagerBrokersScreen", () => {
-  async function renderPage(rows = brokers) {
-    arrangeSession(MANAGER);
-    supabaseFake.respondWith({ on: "profiles", data: rows });
-    render(<ManagerBrokersScreen />, { wrapper: Providers });
-    await waitFor(() => expect(screen.queryByText("Carregando…")).toBeNull());
-  }
-
-  it("mostra a presença e a carga (sempre 0, BUG-01)", async () => {
-    await renderPage();
-    expect(screen.getAllByRole("tab").map((t) => t.textContent)).toEqual([
-      "Todos (2)",
-      "Disponíveis (1)",
-      "Ausentes (1)",
-    ]);
-    expect(screen.getByText("Disponível")).toBeTruthy();
-    expect(screen.getByText("Ausente")).toBeTruthy();
-    expect(screen.getAllByText("0")).toHaveLength(4);
-  });
-
-  it("filtra por presença", async () => {
-    await renderPage();
-    fireEvent.mouseDown(screen.getByRole("tab", { name: "Ausentes (1)" }), {
-      button: 0,
-    });
-    expect(screen.getByText("Caio")).toBeTruthy();
-    expect(screen.queryByText("Bia")).toBeNull();
-  });
-
-  it("sem corretores", async () => {
-    await renderPage([]);
-    expect(screen.getByText("Nenhum corretor cadastrado")).toBeTruthy();
   });
 });

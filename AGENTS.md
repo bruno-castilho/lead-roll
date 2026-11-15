@@ -104,7 +104,9 @@ src/test/       dublês e helpers de teste
 - Textos de erro: tabela em `<m>-messages.test.ts`.
 - Componentes e hooks: `// @vitest-environment jsdom`, Testing Library e
   `renderSignedIn`/`renderHookSignedIn` (`src/test/signed-in.tsx`).
-- Testes ficam ao lado do código, como `*.test.ts(x)`.
+- Testes ficam ao lado do código: cada arquivo `x.ts(x)` tem o seu `x.test.ts(x)`,
+  que testa só ele (outros módulos entram como dublês ou wrappers). Nada de
+  arquivo de teste que agrupe vários arquivos de código.
 
 ## Proibições
 

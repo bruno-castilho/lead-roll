@@ -5,7 +5,6 @@ import { postgrestError, supabaseFake } from "@/test/fake-supabase";
 import { arrangeSession, BROKER, leadRow } from "@/test/fixtures";
 import { renderHookSignedIn } from "@/test/signed-in";
 import type { Lead } from "../../domain/lead";
-import { useAddObservation } from "./use-add-observation";
 import { useChangeStage } from "./use-change-stage";
 
 vi.mock("@/shared/infrastructure/supabase/client", async (importOriginal) => {
@@ -87,38 +86,6 @@ describe("useChangeStage", () => {
     expect(onChanged.mock.calls).toEqual([[{ ...lead, stage: "won" }], [lead]]);
     expect(toast.error).toHaveBeenCalledWith(
       "O lead não foi encontrado. Ele pode ter sido excluído ou atribuído a outro corretor.",
-    );
-  });
-});
-
-describe("useAddObservation", () => {
-  it("registra, avisa e devolve true", async () => {
-    const onAdded = vi.fn();
-    supabaseFake.respondWith({
-      data: { id: "o1", content: "Ligou", created_at: "2026-11-03T10:00:00Z" },
-    });
-    const { result } = await renderHookSignedIn(() =>
-      useAddObservation(onAdded),
-    );
-    await expect(result.current(lead, "Ligou")).resolves.toBe(true);
-    expect(onAdded).toHaveBeenCalledWith("lead-1", {
-      id: "o1",
-      content: "Ligou",
-      createdAt: "2026-11-03T10:00:00Z",
-    });
-    expect(toast.success).toHaveBeenCalledWith("Observação adicionada");
-  });
-
-  it("falha: avisa e devolve false", async () => {
-    const onAdded = vi.fn();
-    supabaseFake.respondWith({ status: 400, error: postgrestError("42501") });
-    const { result } = await renderHookSignedIn(() =>
-      useAddObservation(onAdded),
-    );
-    await expect(result.current(lead, "x")).resolves.toBe(false);
-    expect(onAdded).not.toHaveBeenCalled();
-    expect(toast.error).toHaveBeenCalledWith(
-      "Apenas o corretor responsável pode registrar observações neste lead.",
     );
   });
 });

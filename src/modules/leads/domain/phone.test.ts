@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatPhone, phoneDigits } from "./phone";
+import { formatPhone, isValidPhone, phoneDigits } from "./phone";
 
 describe("formatPhone", () => {
   it.each([
@@ -24,5 +24,14 @@ describe("phoneDigits", () => {
   it("mantém só os dígitos", () => {
     expect(phoneDigits("(11) 98765-4321")).toBe("11987654321");
     expect(phoneDigits("sem número")).toBe("");
+  });
+});
+
+describe("isValidPhone", () => {
+  it("aceita 10 ou 11 dígitos, com ou sem máscara", () => {
+    expect(isValidPhone("(11) 3456-7890")).toBe(true);
+    expect(isValidPhone("11987654321")).toBe(true);
+    expect(isValidPhone("(11) 9876-543")).toBe(false);
+    expect(isValidPhone("119876543210")).toBe(false);
   });
 });

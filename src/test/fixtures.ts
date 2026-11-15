@@ -1,4 +1,5 @@
 import { vi } from "vitest";
+import type { Lead } from "@/modules/leads";
 import { supabaseFake } from "./fake-supabase";
 
 export const MANAGER = {
@@ -45,6 +46,24 @@ export function arrangeSession(profile: ProfileRow | null) {
     error: null,
   });
   supabaseFake.respondWith({ data: profile });
+}
+
+/** Lead do domínio, sem responsável e na etapa "new". */
+export function lead(id: string, overrides: Partial<Lead> = {}): Lead {
+  return {
+    id,
+    name: `Lead ${id}`,
+    phone: "(11) 98765-4321",
+    email: null,
+    source: "site",
+    interest: "buy",
+    stage: "new",
+    brokerId: null,
+    createdAt: "2026-11-01T10:00:00Z",
+    assignedAt: null,
+    observations: [],
+    ...overrides,
+  };
 }
 
 /** Linha de `leads` como o PostgREST devolve, com observações embutidas. */

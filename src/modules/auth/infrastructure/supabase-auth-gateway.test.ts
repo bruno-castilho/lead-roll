@@ -5,10 +5,10 @@ import {
 } from "@supabase/supabase-js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SupabaseConfigError } from "@/shared/infrastructure/env";
-import { postgrestError, supabaseFake } from "@/test/fake-supabase";
+import { failureOf } from "@/test/failure-of";
+import { supabaseFake } from "@/test/fake-supabase";
 import { AuthError } from "../application/auth-error";
 import { supabaseAuthGateway } from "./supabase-auth-gateway";
-import { supabaseProfileRepository } from "./supabase-profile-repository";
 
 vi.mock("@/shared/infrastructure/supabase/client", async (importOriginal) => {
   const { supabaseFake } = await import("@/test/fake-supabase");
@@ -19,16 +19,6 @@ vi.mock("@/shared/infrastructure/supabase/client", async (importOriginal) => {
 });
 
 const credentials = { email: "ana@leadroll.demo", password: "123456" };
-
-/** Executa esperando um `AuthError` e devolve operação e motivo. */
-async function failureOf(operation: () => Promise<unknown>) {
-  const error = await operation().then(
-    () => null,
-    (e: unknown) => e,
-  );
-  if (!(error instanceof AuthError)) throw new Error("esperava AuthError");
-  return { operation: error.operation, reason: error.reason };
-}
 
 beforeEach(() => supabaseFake.reset());
 
@@ -59,7 +49,7 @@ describe("supabaseAuthGateway.signIn", () => {
       error: new AuthApiError("x", 400, code),
     });
     await expect(
-      failureOf(() => supabaseAuthGateway.signIn(credentials)),
+      failureOf(AuthError, () => supabaseAuthGateway.signIn(credentials)),
     ).resolves.toEqual({ operation: "signIn", reason });
   });
 
@@ -98,7 +88,7 @@ describe("supabaseAuthGateway.signIn", () => {
   ])("%s → %s", async (_label, arrange, reason) => {
     arrange();
     await expect(
-      failureOf(() => supabaseAuthGateway.signIn(credentials)),
+      failureOf(AuthError, () => supabaseAuthGateway.signIn(credentials)),
     ).resolves.toEqual({ operation: "signIn", reason });
   });
 });
@@ -128,7 +118,7 @@ describe("supabaseAuthGateway.signOut", () => {
   ])("%s → unknown", async (_label, arrange) => {
     arrange();
     await expect(
-      failureOf(() => supabaseAuthGateway.signOut()),
+      failureOf(AuthError, () => supabaseAuthGateway.signOut()),
     ).resolves.toEqual({
       operation: "signOut",
       reason: "unknown",
@@ -166,7 +156,7 @@ describe("supabaseAuthGateway.restoreSession", () => {
       error: new AuthRetryableFetchError("x", 0),
     });
     await expect(
-      failureOf(() => supabaseAuthGateway.restoreSession()),
+      failureOf(AuthError, () => supabaseAuthGateway.restoreSession()),
     ).resolves.toEqual({ operation: "restoreSession", reason: "network" });
   });
 
@@ -202,45 +192,5 @@ describe("supabaseAuthGateway.onSignedOut", () => {
   it("sem as variáveis de ambiente, não falha", () => {
     supabaseFake.makeUnavailable(new SupabaseConfigError());
     expect(supabaseAuthGateway.onSignedOut(vi.fn())).not.toThrow();
-  });
-});
-
-describe("supabaseProfileRepository.findById", () => {
-  const row = { id: "user-1", name: "Ana", email: "a@x.com", role: "broker" };
-
-  it("busca o perfil em profiles", async () => {
-    supabaseFake.respondWith({ data: row });
-    await expect(supabaseProfileRepository.findById("user-1")).resolves.toEqual(
-      row,
-    );
-    expect(supabaseFake.queries).toEqual([
-      {
-        table: "profiles",
-        calls: [
-          { method: "select", args: ["id, name, email, role"] },
-          { method: "eq", args: ["id", "user-1"] },
-          { method: "maybeSingle", args: [] },
-        ],
-      },
-    ]);
-  });
-
-  it("sem linha: null", async () => {
-    supabaseFake.respondWith({ data: null });
-    await expect(
-      supabaseProfileRepository.findById("user-1"),
-    ).resolves.toBeNull();
-  });
-
-  it.each([
-    [0, "XX000", "network"],
-    [401, "XX000", "auth"],
-    [200, "PGRST301", "auth"],
-    [500, "XX000", "unknown"],
-  ] as const)("status %i / %s → %s", async (status, code, reason) => {
-    supabaseFake.respondWith({ status, error: postgrestError(code) });
-    await expect(
-      failureOf(() => supabaseProfileRepository.findById("user-1")),
-    ).resolves.toEqual({ operation: "loadProfile", reason });
   });
 });

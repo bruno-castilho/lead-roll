@@ -1,6 +1,4 @@
 import { describe, expect, it } from "vitest";
-import type { Actor } from "@/shared/domain/actor";
-import { canConfirmPresence, canIssuePresenceToken } from "./presence-policy";
 import { parsePresenceToken, presenceTokenLifetimeMs } from "./presence-token";
 
 const TOKEN = "0b6f3a52-6a4e-4c2e-9d1f-2f7c1e9a8b30";
@@ -41,21 +39,5 @@ describe("presenceTokenLifetimeMs", () => {
         expiresAt: "2026-11-15T12:00:00Z",
       }),
     ).toBe(0);
-  });
-});
-
-describe("políticas de presença", () => {
-  const actor = (role: Actor["role"]): Actor => ({ id: "u", role });
-
-  it("só o corretor confirma presença", () => {
-    expect(canConfirmPresence(actor("broker"))).toBe(true);
-    expect(canConfirmPresence(actor("manager"))).toBe(false);
-    expect(canConfirmPresence(actor("kiosk"))).toBe(false);
-  });
-
-  it("só o totem emite QR codes", () => {
-    expect(canIssuePresenceToken(actor("kiosk"))).toBe(true);
-    expect(canIssuePresenceToken(actor("broker"))).toBe(false);
-    expect(canIssuePresenceToken(actor("manager"))).toBe(false);
   });
 });

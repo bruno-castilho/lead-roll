@@ -93,16 +93,20 @@ override de fronteira. Os arquivos `*.test.ts(x)` ficam fora dessas regras.
 
 ## Testes
 
-- Vitest 4 (`vitest.config.mts`), fuso fixo `America/Sao_Paulo`. Arquivos
-  `*.test.ts(x)` ao lado do código. Componentes e hooks usam
+- Vitest 4 (`vitest.config.mts`), fuso fixo `America/Sao_Paulo`. Um arquivo
+  de teste por arquivo de código, ao lado dele e com o mesmo nome
+  (`lead-form.tsx` → `lead-form.test.tsx`), testando só esse arquivo. Componentes e hooks usam
   `// @vitest-environment jsdom` no topo do arquivo.
 - `src/test/fake-supabase.ts`: cliente falso que grava cada consulta (tabela ou
   RPC e a cadeia de chamadas) e devolve respostas enfileiradas
   (`respondWith`, opcionalmente com `on: "<tabela|rpc>"`). Use-o com
   `vi.mock("@/shared/infrastructure/supabase/client", …)`, como nos testes
   existentes.
-- `src/test/fixtures.ts`: `arrangeSession(MANAGER | BROKER | KIOSK | null)`, `leadRow`,
-  `brokerRow`. `src/test/signed-in.tsx`: `renderSignedIn` e
+- `src/test/fixtures.ts`: `arrangeSession(MANAGER | BROKER | KIOSK | null)`,
+  `lead` (do domínio), `leadRow` e `brokerRow`.
+  `src/test/failure-of.ts`: `failureOf(XError, () => …)` devolve `operation` e
+  `reason` do erro do módulo (testes de repositório).
+  `src/test/screen-providers.tsx`: `ScreenProviders`, wrapper das telas. `src/test/signed-in.tsx`: `renderSignedIn` e
   `renderHookSignedIn` (renderizam com a sessão já restaurada e esquecem a
   consulta do perfil).
 - `src/test/app-mocks.ts`: `toast` (sonner) e `router` (next/navigation).
