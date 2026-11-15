@@ -138,7 +138,6 @@ observáveis. Cada correção pede aprovação e um commit próprio.
 
 | ID | Prioridade sugerida | Resumo |
 | --- | --- | --- |
-| BUG-01 | Alta | `/gestor/corretores` mostra sempre 0 em "Leads atribuídos" e "Em atendimento" (`screens/manager-brokers-screen.tsx`, `const leads: Lead[] = []`). A correção é usar `useLeads()` ali |
 | BUG-03 | Média | Enquanto os corretores carregam, ou se a busca falha, leads distribuídos aparecem como "Sem responsável" na tabela e nos detalhes |
 | BUG-02 | Média | Falha no logout mostra "**Error** ao fazer logout…" e perde o motivo (texto em `auth-messages.ts`, marcado) |
 | BUG-05 | Baixa | Depois de uma falha ao buscar a presença, o corretor vê "Você está ausente" |
@@ -147,7 +146,8 @@ observáveis. Cada correção pede aprovação e um commit próprio.
 
 ## 8. Dívida técnica priorizada
 
-1. **Corrigir os bugs da seção 7**, começando por BUG-01 e BUG-03.
+1. **Corrigir os bugs da seção 7**, começando por BUG-03. (BUG-01, a carga
+   sempre 0 em `/gestor/corretores`, foi corrigido: a tela usa `useLeads()`.)
 2. **Percurso no navegador não verificado** (decisão P-03: nada contra o Supabase
    real). Falta percorrer login, guard, CRUD, distribuição, presença, Kanban
    (inclusive o arraste), observações, 360/390px, modo escuro e console sem erros.

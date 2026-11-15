@@ -3,8 +3,7 @@
 import { Users, UserX } from "lucide-react";
 import { useState } from "react";
 import { BrokerCard, useBrokers } from "@/modules/brokers";
-import type { Lead } from "@/modules/leads";
-import { useLeadStats } from "@/modules/leads";
+import { useLeadStats, useLeads } from "@/modules/leads";
 import { isOneOf } from "@/shared/domain/one-of";
 import { EmptyState } from "@/shared/ui/components/empty-state";
 import { CardSkeleton } from "@/shared/ui/components/loading-state";
@@ -14,11 +13,10 @@ import { Tabs, TabsList, TabsTrigger } from "@/shared/ui/primitives/tabs";
 const PRESENCE_FILTERS = ["all", "present", "absent"] as const;
 type PresenceFilter = (typeof PRESENCE_FILTERS)[number];
 
-// Leads ainda sem fonte de dados.
-const leads: Lead[] = [];
-
 export function ManagerBrokersScreen() {
-  const { brokers, loading } = useBrokers();
+  const { brokers, loading: loadingBrokers } = useBrokers();
+  const { leads, loading: loadingLeads } = useLeads();
+  const loading = loadingBrokers || loadingLeads;
   const { byBroker, availableBrokers } = useLeadStats(leads, brokers);
   const [filter, setFilter] = useState<PresenceFilter>("all");
 

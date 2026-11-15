@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ManagerBrokersScreen } from "@/screens/manager-brokers-screen";
 import { supabaseFake } from "@/test/fake-supabase";
-import { arrangeSession, brokerRow, MANAGER } from "@/test/fixtures";
+import { arrangeSession, brokerRow, leadRow, MANAGER } from "@/test/fixtures";
 import { ScreenProviders } from "@/test/screen-providers";
 
 vi.mock("@/shared/infrastructure/supabase/client", async (importOriginal) => {
@@ -27,18 +27,28 @@ vi.mock("next/link", () => ({
 
 const IN_1H = new Date(Date.now() + 60 * 60 * 1000).toISOString();
 const brokers = [brokerRow("b1", "Bia", IN_1H), brokerRow("b2", "Caio")];
+const leads = [
+  leadRow({ id: "l1", broker_id: "b1", stage: "contacted" }),
+  leadRow({ id: "l2", broker_id: "b1", stage: "new" }),
+  leadRow({ id: "l3", broker_id: "b1", stage: "contacted" }),
+  leadRow({ id: "l4", broker_id: "b2", stage: "contacted" }),
+  leadRow({ id: "l5", broker_id: null }),
+];
 
 beforeEach(() => supabaseFake.reset());
 
 describe("ManagerBrokersScreen", () => {
   async function renderPage(rows = brokers) {
     arrangeSession(MANAGER);
-    supabaseFake.respondWith({ on: "profiles", data: rows });
+    supabaseFake.respondWith(
+      { on: "profiles", data: rows },
+      { on: "leads", data: leads },
+    );
     render(<ManagerBrokersScreen />, { wrapper: ScreenProviders });
     await waitFor(() => expect(screen.queryByText("Carregando…")).toBeNull());
   }
 
-  it("mostra a presença e a carga (sempre 0, BUG-01)", async () => {
+  it("mostra a presença e a carga de cada corretor", async () => {
     await renderPage();
     expect(screen.getAllByRole("tab").map((t) => t.textContent)).toEqual([
       "Todos (2)",
@@ -47,7 +57,14 @@ describe("ManagerBrokersScreen", () => {
     ]);
     expect(screen.getByText("Disponível")).toBeTruthy();
     expect(screen.getByText("Ausente")).toBeTruthy();
-    expect(screen.getAllByText("0")).toHaveLength(4);
+    const workload = (name: string) =>
+      Array.from(
+        screen.getByText(name).closest(".rounded-xl")?.querySelectorAll("dd") ??
+          [],
+        (dd) => dd.textContent,
+      );
+    expect(workload("Bia")).toEqual(["3", "2"]);
+    expect(workload("Caio")).toEqual(["1", "1"]);
   });
 
   it("filtra por presença", async () => {
