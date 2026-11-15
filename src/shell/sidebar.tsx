@@ -3,7 +3,6 @@
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { UserRole } from "@/shared/domain/actor";
 import { cn } from "@/shared/ui/cn";
 import { Button } from "@/shared/ui/primitives/button";
 import {
@@ -12,10 +11,10 @@ import {
   TooltipTrigger,
 } from "@/shared/ui/primitives/tooltip";
 import { Brand } from "./brand";
-import { NAV_ITEMS } from "./nav-items";
+import { NAV_ITEMS, type ShellRole } from "./nav-items";
 
 interface SidebarNavProps {
-  role: UserRole;
+  role: ShellRole;
   collapsed?: boolean;
   onNavigate?: () => void;
 }
@@ -67,7 +66,7 @@ export function SidebarNav({
 }
 
 interface SidebarProps {
-  role: UserRole;
+  role: ShellRole;
   collapsed: boolean;
   onToggleCollapsed: () => void;
 }

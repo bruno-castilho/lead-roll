@@ -3,7 +3,7 @@
  * `supabase/migrations/*.sql`. Atualize junto com a migration
  * (ou gere com `npx supabase gen types typescript`).
  */
-type UserRoleEnum = "manager" | "broker";
+type UserRoleEnum = "manager" | "broker" | "kiosk";
 type LeadStageEnum =
   | "new"
   | "contacted"
@@ -167,13 +167,48 @@ export interface Database {
           },
         ];
       };
+      // Sem privilégios para anon/authenticated: só as funções
+      // issue_presence_token() e confirm_presence(uuid) acessam a tabela.
+      presence_tokens: {
+        Row: {
+          token: string;
+          issued_by: string;
+          issued_at: string;
+          expires_at: string;
+        };
+        Insert: {
+          token?: string;
+          issued_by: string;
+          issued_at?: string;
+          expires_at: string;
+        };
+        Update: {
+          token?: string;
+          issued_by?: string;
+          issued_at?: string;
+          expires_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "presence_tokens_issued_by_fkey";
+            columns: ["issued_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: Record<never, never>;
     Functions: {
       is_manager: { Args: Record<never, never>; Returns: boolean };
       confirm_presence: {
-        Args: Record<never, never>;
+        Args: { p_token: string };
         Returns: Database["public"]["Tables"]["broker_presence"]["Row"];
+      };
+      issue_presence_token: {
+        Args: Record<never, never>;
+        Returns: Database["public"]["Tables"]["presence_tokens"]["Row"];
       };
       distribute_leads: {
         Args: Record<never, never>;

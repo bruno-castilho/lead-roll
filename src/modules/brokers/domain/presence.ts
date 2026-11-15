@@ -1,7 +1,8 @@
 /**
  * Presença do corretor na fila (`broker_presence`). A ordem da fila é
  * `queuedAt`; cada confirmação vale até `expiresAt` (o prazo de 5h é
- * calculado pelo banco, em `confirm_presence`).
+ * calculado pelo banco, em `confirm_presence`, que só aceita o token de um
+ * QR code válido).
  */
 export interface BrokerPresence {
   queuedAt: string;

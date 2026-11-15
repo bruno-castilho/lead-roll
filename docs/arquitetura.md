@@ -17,7 +17,7 @@ internamente), e não com `server-only`.
 src/
 ├── app/            rotas do Next: metadata e composição de screens/shell/módulos
 ├── screens/        telas que combinam módulos (uma por página)
-├── shell/          moldura: AppShell, Header, Sidebar, Brand, ThemeToggle, Providers, nav-items
+├── shell/          moldura: AppShell, Header, Sidebar, KioskShell, Brand, ThemeToggle, Providers, nav-items
 ├── modules/<m>/    auth · brokers · leads
 │   ├── domain/         entidades, valores (`as const`), regras e políticas puras
 │   ├── application/    casos de uso (`makeX(deps)`), portas, erro do módulo
@@ -28,7 +28,7 @@ src/
 ├── shared/
 │   ├── domain/         Actor, UserRole, isOneOf
 │   ├── infrastructure/ env.ts, supabase/client.ts, database.types.ts, postgrest-failure.ts
-│   └── ui/             primitives (shadcn), components, hooks, format, routes, cn, error-message, form-errors
+│   └── ui/             primitives (shadcn), components (inclusive QrCode), hooks (inclusive useCountdown), format, routes, cn, error-message, form-errors
 └── test/           cliente Supabase falso, fixtures, wrappers e setup do jsdom
 ```
 
@@ -101,7 +101,7 @@ override de fronteira. Os arquivos `*.test.ts(x)` ficam fora dessas regras.
   (`respondWith`, opcionalmente com `on: "<tabela|rpc>"`). Use-o com
   `vi.mock("@/shared/infrastructure/supabase/client", …)`, como nos testes
   existentes.
-- `src/test/fixtures.ts`: `arrangeSession(MANAGER | BROKER | null)`, `leadRow`,
+- `src/test/fixtures.ts`: `arrangeSession(MANAGER | BROKER | KIOSK | null)`, `leadRow`,
   `brokerRow`. `src/test/signed-in.tsx`: `renderSignedIn` e
   `renderHookSignedIn` (renderizam com a sessão já restaurada e esquecem a
   consulta do perfil).

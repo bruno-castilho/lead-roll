@@ -76,6 +76,27 @@ describe("LoginForm", () => {
     expect(supabaseFake.auth.signOut).not.toHaveBeenCalled();
   });
 
+  it("volta para a página pedida antes do login (link do QR code)", async () => {
+    window.history.replaceState(
+      null,
+      "",
+      "/login?next=%2Fcorretor%2Fpresenca%3Ftoken%3Dabc",
+    );
+    try {
+      await renderLogin();
+      signInSucceeds();
+      supabaseFake.respondWith({ data: BROKER });
+      submit("carlos@leadroll.demo", "123456");
+      await waitFor(() =>
+        expect(router.replace).toHaveBeenCalledWith(
+          "/corretor/presenca?token=abc",
+        ),
+      );
+    } finally {
+      window.history.replaceState(null, "", "/");
+    }
+  });
+
   it("mostra o erro do login sem buscar o perfil", async () => {
     await renderLogin();
     supabaseFake.auth.signInWithPassword.mockResolvedValue({

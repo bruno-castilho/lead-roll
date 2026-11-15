@@ -1,7 +1,6 @@
 "use client";
 
 import { type ReactNode, useState } from "react";
-import type { UserRole } from "@/shared/domain/actor";
 import { cn } from "@/shared/ui/cn";
 import {
   Sheet,
@@ -12,11 +11,12 @@ import {
 } from "@/shared/ui/primitives/sheet";
 import { Brand } from "./brand";
 import { Header } from "./header";
+import type { ShellRole } from "./nav-items";
 import { Sidebar, SidebarNav } from "./sidebar";
 
 interface AppShellProps {
   /** Perfil da área (gestor ou corretor): define o menu e o cabeçalho. */
-  userRole: UserRole;
+  userRole: ShellRole;
   children: ReactNode;
 }
 

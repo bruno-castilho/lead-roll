@@ -31,8 +31,25 @@ describe("brokersErrorMessage", () => {
     ],
     [
       "confirmPresence",
+      "invalid_token",
+      "Este QR code expirou. Escaneie o código que está na tela da empresa agora.",
+    ],
+    [
+      "confirmPresence",
       "unknown",
       "Não foi possível confirmar sua presença. Tente novamente.",
+    ],
+    ["issuePresenceToken", "network", NETWORK],
+    ["issuePresenceToken", "auth", SESSION],
+    [
+      "issuePresenceToken",
+      "forbidden",
+      "Apenas o totem pode gerar o QR code de presença.",
+    ],
+    [
+      "issuePresenceToken",
+      "unknown",
+      "Não foi possível gerar o QR code de presença.",
     ],
   ] as const)("%s / %s", (operation, reason, message) => {
     expect(brokersErrorMessage(new BrokersError(operation, reason))).toBe(

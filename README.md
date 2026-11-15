@@ -5,9 +5,11 @@ corretores. O login usa **Supabase Auth**, e o perfil de cada usuário (gestor
 ou corretor) fica na tabela `profiles`, protegida por RLS. O gestor já cadastra,
 edita, exclui e lista os leads (tabela `leads`). O corretor vê os próprios
 leads, muda a etapa e registra observações neles (tabela
-`lead_observations`). O corretor confirma presença e entra numa fila por 5h
-(tabela `broker_presence`), e o gestor distribui os leads sem responsável
-seguindo essa fila (função `distribute_leads`).
+`lead_observations`). O corretor confirma presença lendo com o celular o QR
+code exibido num totem da empresa (renovado a cada 5 minutos) e entra numa
+fila por 5h (tabelas `presence_tokens` e `broker_presence`), e o gestor
+distribui os leads sem responsável seguindo essa fila (função
+`distribute_leads`).
 
 Stack: Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS v4,
 shadcn/ui e Supabase (`@supabase/ssr`). O código é organizado por módulos de
@@ -45,7 +47,17 @@ Aplique, nesta ordem:
    dos corretores, 5h por confirmação);
 8. `supabase/migrations/20261114010000_distribute_leads.sql`, que cria a
    função `distribute_leads` (o gestor distribui os leads sem responsável
-   entre os corretores presentes, seguindo a fila).
+   entre os corretores presentes, seguindo a fila);
+9. `supabase/migrations/20261115000000_kiosk_role.sql`, que cria o perfil
+   `kiosk` (totem);
+10. `supabase/migrations/20261115010000_presence_qr.sql`, que cria a tabela
+    `presence_tokens` e a função `issue_presence_token` (QR code de 5 min,
+    só o totem) e troca `confirm_presence()` por `confirm_presence(p_token)`
+    (a presença só vale com o token de um QR code válido).
+
+As migrations 9 e 10 precisam ser aplicadas em transações separadas (o
+Postgres só deixa usar o valor novo do enum depois do commit). O
+`supabase db push` já faz isso; no SQL Editor, rode um arquivo de cada vez.
 
 Há duas formas:
 
@@ -85,6 +97,17 @@ rode no SQL Editor:
 update public.profiles set role = 'manager' where email = 'pessoa@empresa.com';
 ```
 
+O totem é uma conta própria (por exemplo, `totem@empresa.com`), aberta no
+navegador da tela da empresa. Depois de criá-la, rode:
+
+```sql
+update public.profiles set role = 'kiosk' where email = 'totem@empresa.com';
+```
+
+Ao entrar, o totem vai para `/totem` e exibe o QR code de presença. O
+corretor lê o código com o celular; se não estiver conectado, entra e volta
+para o link automaticamente.
+
 ### 6. Rodar
 
 ```bash
@@ -118,5 +141,10 @@ npm run test:coverage  # testes com cobertura
 - Na tabela `lead_observations`, só o corretor responsável pelo lead registra
   observações, sempre em nome próprio. O gestor lê todas; o corretor, só as
   dos próprios leads. Observações não são editadas nem excluídas.
+- A presença só é confirmada com o token de um QR code emitido pelo totem há
+  menos de 5 minutos; o banco confere a validade. A tabela `presence_tokens`
+  não pode ser lida por ninguém pelo app, só pelas funções
+  `issue_presence_token` (apenas o totem) e `confirm_presence` (apenas
+  corretores).
 - O controle de acesso às rotas (`RoleGuard`) é feito no cliente e serve à
   experiência de uso. A proteção dos dados está na RLS.

@@ -15,14 +15,20 @@ precisa conhecer.
 | `/gestor/corretores` | gestor | presença e carga de cada corretor (`ManagerBrokersScreen`) |
 | `/corretor` | corretor | redireciona para `/corretor/leads` |
 | `/corretor/leads` | corretor | Kanban com os próprios leads (`BrokerLeadsScreen`) |
+| `/corretor/presenca` | corretor | destino do QR code: confirma a presença com `?token=` (`BrokerPresenceScreen`) |
+| `/totem` | totem | QR code de presença em tela cheia, renovado a cada 5 min (`KioskScreen`) |
 
 - Caminhos e página inicial por perfil: `ROUTES` e `HOME_BY_ROLE` em
-  `src/shared/ui/routes.ts`; menu do gestor em `src/shell/nav-items.ts`.
-- O perfil (`manager` ou `broker`) vem sempre da tabela `profiles`
+  `src/shared/ui/routes.ts`; menu do gestor em `src/shell/nav-items.ts`. O
+  totem não tem menu: usa a moldura `KioskShell`.
+- Sem sessão, o `RoleGuard` manda para `/login?next=<página>` e o login volta
+  para ela (o link do QR code aberto num celular deslogado). Quem acabou de
+  sair vai para `/login` sem destino. `?next=` só aceita caminhos internos.
+- O perfil (`manager`, `broker` ou `kiosk`) vem sempre da tabela `profiles`
   (`toProfile`), nunca de `user.role` do Supabase (papel do Postgres) nem de
   `user_metadata`.
 - Contas são criadas no painel do Supabase; o trigger cria o perfil como
-  corretor, e o gestor é promovido por SQL (veja o `README.md`).
+  corretor, e o gestor e o totem são definidos por SQL (veja o `README.md`).
 - A tela "Visão geral" (dashboard) foi removida de propósito.
 
 ## Leads
@@ -45,9 +51,23 @@ precisa conhecer.
 - `broker_presence` tem uma linha por corretor. Ele está presente enquanto
   `expires_at > agora` (`isPresenceActive`); não há job, a expiração é
   calculada na leitura.
-- "Confirmar presença" (`confirm_presence`, só corretores): ausente entra no
-  fim da fila por 5h; presente renova por 5h e mantém a posição. Não existe
-  "desativar presença".
+- A presença só é confirmada pelo QR code do totem. Não existe botão de
+  confirmar, renovar nem desativar presença.
+- O totem (`/totem`, perfil `kiosk`) chama `issue_presence_token` e exibe um QR
+  code com o link `/corretor/presenca?token=<uuid>`. Cada token vale 5 min a
+  partir da emissão; o totem pede um novo quando o atual vence (medido pela
+  duração dada pelo banco, não pelo relógio do totem). Se a emissão falhar, o
+  código sai da tela e o totem tenta de novo a cada 15 s.
+- `confirm_presence(p_token)` (só corretores) recusa token vencido ou
+  inexistente (`22023` → `invalid_token`). Com token válido, ausente entra no
+  fim da fila por 5h; presente renova por 5h e mantém a posição. Vários
+  corretores podem usar o mesmo código enquanto ele vale.
+- A tela de check-in espera a presença atual carregar (para dizer se foi
+  confirmação ou renovação), confirma uma vez e tira o token da URL.
+- `presence_tokens` não tem policies nem privilégios: só as duas funções a
+  acessam, e ninguém consegue ler o token atual sem estar diante do totem.
+- O cabeçalho do corretor mostra a contagem regressiva até o fim da presença
+  (`PresenceCountdown`) ou "Ausente" com a dica de escanear o QR code.
 - O `PresenceProvider` existe só na área do corretor e vira "ausente" sozinho
   no fim do prazo.
 
@@ -93,3 +113,6 @@ precisa conhecer.
 - O formulário de observação não mostra a dica de atalhos de teclado.
 - O botão de contato nos detalhes do lead é "WhatsApp" (não "Ligar").
 - Não adicionar imóveis, contratos, comissões, relatórios nem campanhas.
+- A presença é confirmada só pelo QR code do totem (renovado a cada 5 min);
+  no lugar do botão, o cabeçalho do corretor mostra um contador até a
+  presença expirar.

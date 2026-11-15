@@ -188,14 +188,16 @@ describe("BrokerLeadsScreen", () => {
     );
   }
 
-  it("ausente e sem leads: aviso e convite para confirmar presença", async () => {
+  it("ausente e sem leads: aviso e convite para escanear o QR code", async () => {
     await renderPage([], null);
     expect(await screen.findByText("Você está ausente")).toBeTruthy();
     expect(
       screen.getByText(
-        "Confirme sua presença para participar da próxima distribuição de leads.",
+        "Escaneie o QR code na tela da empresa para participar da próxima distribuição de leads.",
       ),
     ).toBeTruthy();
+    // A confirmação é só pelo QR code: não há mais botão.
+    expect(screen.queryByRole("button", { name: /presença/i })).toBeNull();
   });
 
   it("presente e sem leads: aguarda a distribuição", async () => {

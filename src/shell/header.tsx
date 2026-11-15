@@ -2,14 +2,14 @@
 
 import { Menu } from "lucide-react";
 import { UserMenu } from "@/modules/auth";
-import { PresenceToggle } from "@/modules/brokers";
-import type { UserRole } from "@/shared/domain/actor";
+import { PresenceCountdown } from "@/modules/brokers";
 import { Button } from "@/shared/ui/primitives/button";
 import { Brand } from "./brand";
+import type { ShellRole } from "./nav-items";
 import { ThemeToggle } from "./theme-toggle";
 
 interface HeaderProps {
-  role: UserRole;
+  role: ShellRole;
   onOpenMobileMenu: () => void;
 }
 
@@ -32,11 +32,11 @@ export function Header({ role, onOpenMobileMenu }: HeaderProps) {
         {/* Só na área do corretor: o PresenceProvider existe apenas nela.
             Durante a restauração da sessão, a área do gestor é renderizada
             oculta e o perfil já pode ser de corretor; sem este teste o
-            PresenceToggle pediria um provider que não existe. */}
+            PresenceCountdown pediria um provider que não existe. */}
         {role === "broker" && (
           <>
-            <PresenceToggle compact className="sm:hidden" />
-            <PresenceToggle className="hidden sm:flex" />
+            <PresenceCountdown compact className="sm:hidden" />
+            <PresenceCountdown className="hidden sm:inline-flex" />
           </>
         )}
         <ThemeToggle />

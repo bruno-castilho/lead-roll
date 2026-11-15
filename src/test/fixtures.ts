@@ -15,7 +15,14 @@ export const BROKER = {
   role: "broker",
 } as const;
 
-type ProfileRow = typeof MANAGER | typeof BROKER;
+export const KIOSK = {
+  id: "kiosk-1",
+  name: "Totem da recepção",
+  email: "totem@leadroll.demo",
+  role: "kiosk",
+} as const;
+
+type ProfileRow = typeof MANAGER | typeof BROKER | typeof KIOSK;
 
 /**
  * Prepara o cliente falso para o `SessionProvider` restaurar a sessão deste

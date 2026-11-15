@@ -3,12 +3,18 @@ import type { Actor } from "@/shared/domain/actor";
 import { BrokersError } from "./brokers-error";
 import { makeListBrokers } from "./list-brokers";
 import type { BrokerRecord, PresenceRepository } from "./ports";
-import { makeConfirmPresence, makeLoadOwnPresence } from "./presence-use-cases";
+import {
+  makeConfirmPresence,
+  makeIssuePresenceToken,
+  makeLoadOwnPresence,
+} from "./presence-use-cases";
 
 const NOW = new Date("2026-11-14T15:00:00.000Z");
 const now = () => NOW;
 const broker: Actor = { id: "broker-1", role: "broker" };
 const manager: Actor = { id: "manager-1", role: "manager" };
+const kiosk: Actor = { id: "kiosk-1", role: "kiosk" };
+const TOKEN = "0b6f3a52-6a4e-4c2e-9d1f-2f7c1e9a8b30";
 
 const record = (
   id: string,
@@ -106,7 +112,7 @@ describe("loadOwnPresence", () => {
 });
 
 describe("confirmPresence", () => {
-  it("confirma pelo banco e devolve o novo prazo", async () => {
+  it("confirma pelo banco com o token do QR code e devolve o novo prazo", async () => {
     const presence = presenceRepository({
       confirm: vi.fn().mockResolvedValue({
         queuedAt: "2026-11-14T15:00:00Z",
@@ -114,23 +120,67 @@ describe("confirmPresence", () => {
       }),
     });
     await expect(
-      makeConfirmPresence({ presence, now })(broker),
+      makeConfirmPresence({ presence, now })(broker, TOKEN.toUpperCase()),
     ).resolves.toEqual({
       expiresAt: "2026-11-14T20:00:00Z",
       activeUntil: "2026-11-14T20:00:00Z",
     });
+    expect(presence.confirm).toHaveBeenCalledWith(TOKEN);
   });
 
-  it("recusa quem não é corretor sem chamar o banco", async () => {
+  it.each([
+    ["quem não é corretor", manager, TOKEN, "forbidden"],
+    ["o totem", kiosk, TOKEN, "forbidden"],
+    ["link sem token", broker, null, "invalid_token"],
+    ["token com formato errado", broker, "abc", "invalid_token"],
+  ] as const)("recusa %s sem chamar o banco", async (_label, actor, token, reason) => {
     const presence = presenceRepository();
-    const error = await makeConfirmPresence({ presence, now })(manager).catch(
+    const error = await makeConfirmPresence({ presence, now })(
+      actor,
+      token,
+    ).catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(BrokersError);
+    expect(error).toMatchObject({ operation: "confirmPresence", reason });
+    expect(presence.confirm).not.toHaveBeenCalled();
+  });
+
+  it("repassa a recusa do banco (QR code vencido)", async () => {
+    const failure = new BrokersError("confirmPresence", "invalid_token");
+    const presence = presenceRepository({
+      confirm: vi.fn().mockRejectedValue(failure),
+    });
+    await expect(
+      makeConfirmPresence({ presence, now })(broker, TOKEN),
+    ).rejects.toBe(failure);
+  });
+});
+
+describe("issuePresenceToken", () => {
+  const issued = {
+    token: TOKEN,
+    issuedAt: "2026-11-14T15:00:00Z",
+    expiresAt: "2026-11-14T15:05:00Z",
+  };
+
+  it("o totem emite um QR code pelo banco", async () => {
+    const tokens = { issue: vi.fn().mockResolvedValue(issued) };
+    await expect(makeIssuePresenceToken({ tokens })(kiosk)).resolves.toEqual(
+      issued,
+    );
+  });
+
+  it.each([
+    ["corretor", broker],
+    ["gestor", manager],
+  ])("recusa o %s sem chamar o banco", async (_label, actor) => {
+    const tokens = { issue: vi.fn() };
+    const error = await makeIssuePresenceToken({ tokens })(actor).catch(
       (e: unknown) => e,
     );
-    expect(error).toBeInstanceOf(BrokersError);
     expect(error).toMatchObject({
-      operation: "confirmPresence",
+      operation: "issuePresenceToken",
       reason: "forbidden",
     });
-    expect(presence.confirm).not.toHaveBeenCalled();
+    expect(tokens.issue).not.toHaveBeenCalled();
   });
 });

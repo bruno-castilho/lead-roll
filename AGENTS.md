@@ -11,8 +11,8 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 # LeadRoll
 
 CRM de leads imobiliários: o gestor cadastra, edita, exclui e distribui leads; o
-corretor confirma presença (fila de 5h), acompanha os próprios leads num Kanban,
-muda a etapa e registra observações. Next.js 16 (App Router, `cacheComponents`),
+corretor confirma presença (fila de 5h) lendo o QR code do totem da empresa,
+acompanha os próprios leads num Kanban, muda a etapa e registra observações. Next.js 16 (App Router, `cacheComponents`),
 React 19.3, TypeScript strict, Tailwind v4, shadcn/ui e Supabase (Auth + Postgres
 com RLS), tudo no navegador. Interface e textos em pt-BR.
 
@@ -92,6 +92,8 @@ src/test/       dublês e helpers de teste
 - Atalhos de teclado só com `useHotkey`. Leia a URL em handlers com
   `window.location`; evite `useSearchParams`.
 - Nomes de negócio: `Broker`, `Profile`, `Actor`, `Lead`; booleanos com `is`/`has`/`can`.
+- Perfis: `manager`, `broker` e `kiosk` (totem). Menu e cabeçalho do app só
+  existem para `ShellRole` (gestor e corretor); o totem usa `KioskShell`.
 
 ## Testes
 
@@ -114,6 +116,8 @@ src/test/       dublês e helpers de teste
   de `profiles`.
 - A chave `service_role` nunca entra no projeto; nada sensível com `NEXT_PUBLIC_`.
 - Não recrie lógica de distribuição no cliente; a regra fica no banco.
+- Presença só pelo QR code: não volte a ter botão nem RPC de presença sem
+  token, e não valide a expiração do token no cliente (quem decide é o banco).
 - Não adicione dependência sem aprovação.
 - Não reverta os ajustes pedidos pelo usuário listados em `docs/produto.md`.
 - Não deixe código morto: ao remover um recurso, remova componentes, hooks,

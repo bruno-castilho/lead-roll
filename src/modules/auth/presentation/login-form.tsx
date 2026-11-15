@@ -8,7 +8,7 @@ import { Spinner } from "@/shared/ui/components/loading-state";
 import { Button } from "@/shared/ui/primitives/button";
 import { Input } from "@/shared/ui/primitives/input";
 import { Label } from "@/shared/ui/primitives/label";
-import { HOME_BY_ROLE } from "@/shared/ui/routes";
+import { HOME_BY_ROLE, readReturnPath } from "@/shared/ui/routes";
 import { AuthError } from "../application/auth-error";
 import { signIn } from "../composition";
 import { authErrorMessage } from "./auth-messages";
@@ -33,10 +33,14 @@ export function LoginForm() {
     defaultValues: { email: "", password: "" },
   });
 
-  // Já conectado (sessão restaurada ou login concluído): vai para a página
-  // inicial do perfil. O papel vem da tabela `profiles`, não de `user.role`.
+  // Já conectado (sessão restaurada ou login concluído): volta para a página
+  // pedida antes do login (`?next=`) ou vai para a página inicial do perfil.
+  // O papel vem da tabela `profiles`, não de `user.role`.
   useEffect(() => {
-    if (profile) router.replace(HOME_BY_ROLE[profile.role]);
+    if (!profile) return;
+    router.replace(
+      readReturnPath(window.location.search) ?? HOME_BY_ROLE[profile.role],
+    );
   }, [profile, router]);
 
   async function onSubmit(credentials: LoginValues) {

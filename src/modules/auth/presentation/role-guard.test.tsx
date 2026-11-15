@@ -1,11 +1,12 @@
 // @vitest-environment jsdom
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { router } from "@/test/app-mocks";
 import { supabaseFake } from "@/test/fake-supabase";
 import { arrangeSession, BROKER, MANAGER } from "@/test/fixtures";
 import { RoleGuard } from "./role-guard";
 import { SessionProvider } from "./session-provider";
+import { useSession } from "./use-session";
 
 vi.mock("@/shared/infrastructure/supabase/client", async (importOriginal) => {
   const { supabaseFake } = await import("@/test/fake-supabase");
@@ -30,6 +31,15 @@ function renderGuard() {
   );
 }
 
+function SignOutButton() {
+  const { clearSession } = useSession();
+  return (
+    <button type="button" onClick={clearSession}>
+      sair
+    </button>
+  );
+}
+
 const loading = () => screen.queryByText("Carregando…");
 
 beforeEach(() => supabaseFake.reset());
@@ -49,6 +59,43 @@ describe("RoleGuard", () => {
     await waitFor(() => expect(router.replace).toHaveBeenCalledWith("/login"));
     expect(screen.queryByText("conteúdo protegido")).toBeNull();
     expect(loading()).not.toBeNull();
+  });
+
+  it("sem sessão num link (QR code), o login volta para ele depois", async () => {
+    window.history.replaceState(null, "", "/corretor/presenca?token=abc");
+    try {
+      arrangeSession(null);
+      renderGuard();
+      await waitFor(() =>
+        expect(router.replace).toHaveBeenCalledWith(
+          "/login?next=%2Fcorretor%2Fpresenca%3Ftoken%3Dabc",
+        ),
+      );
+    } finally {
+      window.history.replaceState(null, "", "/");
+    }
+  });
+
+  it("ao sair da conta, vai para o login sem destino de volta", async () => {
+    window.history.replaceState(null, "", "/corretor/leads");
+    try {
+      arrangeSession(BROKER);
+      render(
+        <SessionProvider>
+          <SignOutButton />
+          <RoleGuard allow="broker">
+            <p>conteúdo protegido</p>
+          </RoleGuard>
+        </SessionProvider>,
+      );
+      await waitFor(() => expect(loading()).toBeNull());
+      fireEvent.click(screen.getByRole("button", { name: "sair" }));
+      await waitFor(() =>
+        expect(router.replace).toHaveBeenCalledWith("/login"),
+      );
+    } finally {
+      window.history.replaceState(null, "", "/");
+    }
   });
 
   it("com outro perfil, vai para a página inicial dele", async () => {

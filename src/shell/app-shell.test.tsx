@@ -97,8 +97,9 @@ describe("AppShell", () => {
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
-  it("o gestor não vê o botão de presença", async () => {
+  it("o gestor não vê a presença", async () => {
     await renderShell();
-    expect(screen.queryByText("Confirmar presença")).toBeNull();
+    expect(screen.queryByText("Ausente")).toBeNull();
+    expect(screen.queryByText("Disponível")).toBeNull();
   });
 });

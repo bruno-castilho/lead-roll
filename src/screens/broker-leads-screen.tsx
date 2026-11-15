@@ -1,9 +1,9 @@
 "use client";
 
-import { Inbox } from "lucide-react";
+import { Inbox, QrCode } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useSession } from "@/modules/auth";
-import { PresenceToggle, useBrokers, usePresence } from "@/modules/brokers";
+import { useBrokers, usePresence } from "@/modules/brokers";
 import {
   isResponsibleFor,
   LeadDetails,
@@ -45,15 +45,19 @@ export function BrokerLeadsScreen() {
       <PageHeader title="Meus leads" />
 
       {!presenceLoading && !isPresent && (
-        <div className="flex flex-col gap-3 rounded-xl border border-dashed p-4 sm:flex-row sm:items-center">
+        <div className="flex items-start gap-3 rounded-xl border border-dashed p-4">
+          <QrCode
+            className="mt-0.5 size-5 shrink-0 text-muted-foreground"
+            aria-hidden
+          />
           <div className="flex-1">
             <p className="font-medium text-sm">Você está ausente</p>
             <p className="text-muted-foreground text-xs">
-              Confirme sua presença para receber novos leads na próxima
-              distribuição. Seus leads atuais não são alterados.
+              Escaneie o QR code na tela da empresa para confirmar sua presença
+              e receber novos leads na próxima distribuição. Seus leads atuais
+              não são alterados.
             </p>
           </div>
-          <PresenceToggle className="w-full sm:w-auto" />
         </div>
       )}
 
@@ -72,7 +76,7 @@ export function BrokerLeadsScreen() {
             description={
               isPresent
                 ? "Você está disponível. Novos leads aparecerão aqui após a próxima distribuição do gestor."
-                : "Confirme sua presença para participar da próxima distribuição de leads."
+                : "Escaneie o QR code na tela da empresa para participar da próxima distribuição de leads."
             }
           />
         </div>

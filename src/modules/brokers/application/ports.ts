@@ -1,4 +1,5 @@
 import type { BrokerPresence } from "../domain/presence";
+import type { PresenceToken } from "../domain/presence-token";
 
 /** Relógio injetado nos casos de uso (testes usam um horário fixo). */
 export type Clock = () => Date;
@@ -21,6 +22,15 @@ export interface BrokerRepository {
 export interface PresenceRepository {
   /** Presença do corretor (pode estar expirada); `null` se nunca confirmou. */
   findByBroker(brokerId: string): Promise<BrokerPresence | null>;
-  /** Confirma ou renova a presença de quem está conectado (regra no banco). */
-  confirm(): Promise<BrokerPresence>;
+  /**
+   * Confirma ou renova a presença de quem está conectado com o token do QR
+   * code (regra da fila e validade do token no banco).
+   */
+  confirm(token: string): Promise<BrokerPresence>;
+}
+
+/** QR codes de presença. Lança `BrokersError`. */
+export interface PresenceTokenRepository {
+  /** Emite um token novo, válido por 5 minutos (só o totem). */
+  issue(): Promise<PresenceToken>;
 }

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  formatCountdown,
   formatDate,
   formatDateTime,
   formatShortDateTime,
@@ -56,5 +57,21 @@ describe("pluralize", () => {
 describe("normalize", () => {
   it("remove acentos e caixa", () => {
     expect(normalize("Ação É Ótima")).toBe("acao e otima");
+  });
+});
+
+describe("formatCountdown", () => {
+  it.each([
+    [5 * 3600 * 1000, "5:00:00"],
+    [(4 * 3600 + 59 * 60 + 7) * 1000, "4:59:07"],
+    [3600 * 1000, "1:00:00"],
+    [3599 * 1000, "59:59"],
+    [5 * 60 * 1000, "5:00"],
+    [61_000, "1:01"],
+    [1, "0:01"],
+    [0, "0:00"],
+    [-5000, "0:00"],
+  ])("%i ms → %s", (ms, text) => {
+    expect(formatCountdown(ms)).toBe(text);
   });
 });

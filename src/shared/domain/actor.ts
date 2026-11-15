@@ -1,5 +1,8 @@
-/** Perfis do LeadRoll, na ordem do enum `user_role` do banco. */
-export const USER_ROLES = ["manager", "broker"] as const;
+/**
+ * Perfis do LeadRoll, na ordem do enum `user_role` do banco: gestor, corretor
+ * e totem (a tela da empresa que exibe o QR code de presença).
+ */
+export const USER_ROLES = ["manager", "broker", "kiosk"] as const;
 
 export type UserRole = (typeof USER_ROLES)[number];
 

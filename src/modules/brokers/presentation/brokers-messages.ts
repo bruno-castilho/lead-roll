@@ -21,7 +21,13 @@ const MESSAGES: Record<
   },
   confirmPresence: {
     forbidden: "Apenas corretores podem confirmar presença.",
+    invalid_token:
+      "Este QR code expirou. Escaneie o código que está na tela da empresa agora.",
     unknown: "Não foi possível confirmar sua presença. Tente novamente.",
+  },
+  issuePresenceToken: {
+    forbidden: "Apenas o totem pode gerar o QR code de presença.",
+    unknown: "Não foi possível gerar o QR code de presença.",
   },
 };
 

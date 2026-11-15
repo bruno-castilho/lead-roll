@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { act, render, screen, waitFor } from "@testing-library/react";
+import { useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SessionProvider } from "@/modules/auth";
 import { toast } from "@/test/app-mocks";
@@ -21,16 +22,21 @@ vi.mock("sonner", async () => (await import("@/test/app-mocks")).sonnerMock);
 const NOW = new Date("2026-11-14T15:00:00Z");
 const in1h = "2026-11-14T16:00:00Z";
 const in5h = "2026-11-14T20:00:00Z";
+const TOKEN = "0b6f3a52-6a4e-4c2e-9d1f-2f7c1e9a8b30";
 
 function Probe() {
-  const { isPresent, loading, confirming, expiresAt, confirm } = usePresence();
+  const { isPresent, loading, expiresAt, confirm } = usePresence();
+  const [result, setResult] = useState("");
   return (
     <>
       <output aria-label="state">
         {loading ? "loading" : isPresent ? `present:${expiresAt}` : "absent"}
       </output>
-      <output aria-label="confirming">{String(confirming)}</output>
-      <button type="button" onClick={confirm}>
+      <output aria-label="result">{result}</output>
+      <button
+        type="button"
+        onClick={() => confirm(TOKEN).then((r) => setResult(JSON.stringify(r)))}
+      >
         confirmar
       </button>
     </>
@@ -126,12 +132,14 @@ describe("PresenceProvider", () => {
     await waitFor(() => expect(state()).toBe(`present:${in5h}`));
     expect(supabaseFake.queries[2]).toEqual({
       rpc: "confirm_presence",
-      calls: [],
+      calls: [{ method: "args", args: [{ p_token: TOKEN }] }],
     });
     expect(toast.success).toHaveBeenCalledWith("Presença confirmada", {
       description: "Você entrou no final da fila e fica disponível até 17:00.",
     });
-    expect(screen.getByLabelText("confirming").textContent).toBe("false");
+    expect(screen.getByLabelText("result").textContent).toBe(
+      JSON.stringify({ status: "confirmed", expiresAt: in5h }),
+    );
   });
 
   it("confirmar quando presente: renova mantendo a posição", async () => {
@@ -147,23 +155,37 @@ describe("PresenceProvider", () => {
     expect(toast.success).toHaveBeenCalledWith("Presença renovada", {
       description: "Você continua na mesma posição da fila até 17:00.",
     });
+    expect(screen.getByLabelText("result").textContent).toBe(
+      JSON.stringify({ status: "renewed", expiresAt: in5h }),
+    );
   });
 
-  it("falha ao confirmar: avisa e continua como estava", async () => {
+  it("QR code vencido: avisa e continua como estava", async () => {
     arrangeSession(BROKER);
     supabaseFake.respondWith(
       { data: null },
-      { status: 400, error: postgrestError("42501") },
+      { status: 400, error: postgrestError("22023") },
     );
     renderPresence();
     await waitFor(() => expect(state()).toBe("absent"));
     act(() => screen.getByText("confirmar").click());
-    await waitFor(() =>
-      expect(toast.error).toHaveBeenCalledWith(
-        "Apenas corretores podem confirmar presença.",
-      ),
-    );
+    const message =
+      "Este QR code expirou. Escaneie o código que está na tela da empresa agora.";
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith(message));
     expect(state()).toBe("absent");
-    expect(screen.getByLabelText("confirming").textContent).toBe("false");
+    expect(screen.getByLabelText("result").textContent).toBe(
+      JSON.stringify({ status: "failed", message }),
+    );
+  });
+
+  it("sem corretor conectado, confirmar não faz nada", async () => {
+    arrangeSession(MANAGER);
+    renderPresence();
+    await waitFor(() => expect(supabaseFake.queries).toHaveLength(1));
+    act(() => screen.getByText("confirmar").click());
+    await waitFor(() =>
+      expect(screen.getByLabelText("result").textContent).toBe("null"),
+    );
+    expect(supabaseFake.queries).toHaveLength(1);
   });
 });
